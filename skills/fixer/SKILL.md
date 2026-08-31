@@ -12,6 +12,12 @@ that turns an aligned retro into shipped fixes. It is deliberately simple —
 one agent working the approved records in order; the agent-team fan-out comes
 later.
 
+Every fix ships through the discipline in
+[references/fix-discipline.md](references/fix-discipline.md): control-test
+(the failure must reproduce with the fix absent, or the fix is withdrawn
+unbuilt) → author → verify (the signature gone, not lessened) → re-run the
+original failure verbatim.
+
 All `retroloop` commands run from the app checkout as
 `cd ~/Developer/retroloop-app && bun run --silent retroloop <args>` (or plain
 `retroloop <args>` if the binary is on PATH).
