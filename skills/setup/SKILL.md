@@ -53,6 +53,17 @@ cd ~/Developer/retroloop-app && bun run --silent retroloop --version
 
 A bare version string on stdout means the app is installed.
 
+Now record where it went:
+
+```
+mkdir -p "${RETROLOOP_HOME:-$HOME/.ai-team/retro}" && printf '%s\n' "<the install dir>" > "${RETROLOOP_HOME:-$HOME/.ai-team/retro}/app-path"
+```
+
+This one line is how the SessionStart hook and the finish watch find the app
+when it is not at the default path — without it, a user who chose their own
+install directory is told "Retroloop is installed but not set up" at every
+session start. `RETROLOOP_APP` in the environment overrides the file.
+
 ## 3 · Start the review server and verify it
 
 ```
@@ -117,6 +128,8 @@ Walk these and report each with its evidence (the actual command output), then
 tell the user to restart their Claude Code session so the new plugin loads:
 
 - **CLI answers** — `retroloop --version` printed a version.
+- **App path recorded** — `cat ~/.ai-team/retro/app-path` prints the install
+  directory.
 - **Server up** — `retroloop up --json` reported a URL.
 - **Review page loads** — the URL answered 200.
 - **Personalization plugin installed** — `claude plugin list` (or the

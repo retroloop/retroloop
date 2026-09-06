@@ -4,11 +4,18 @@
 
 set -u
 
+# Which CLI counts as "set up" is decided in exactly one place, and the finish
+# watch sources the same file. This hook used to probe PATH and one hardcoded
+# directory, so an app installed anywhere else was invisible to it forever.
+_rl_dir="${BASH_SOURCE[0]%/*}"
+[ "$_rl_dir" = "${BASH_SOURCE[0]}" ] && _rl_dir='.'
+_rl_resolver="$_rl_dir/../scripts/resolve-cli.sh"
+
 found=0
-if command -v retroloop >/dev/null 2>&1; then
-  found=1
-elif [ -f "$HOME/Developer/retroloop-app/apps/cli/src/bin.ts" ]; then
-  found=1
+if [ -f "$_rl_resolver" ]; then
+  # shellcheck source=../scripts/resolve-cli.sh
+  . "$_rl_resolver"
+  retroloop_resolve_cli && found=1
 fi
 
 if [ "$found" -eq 1 ]; then

@@ -71,9 +71,19 @@ also means re-arm.
 A killed or exited watcher is RE-ARMED, never abandoned, for as long as the
 review is open. A kill is a notification, not a stop gesture.
 
-Environment:
-  WATCH_REVIEW_CLI   the retroloop CLI to run (default: an app checkout at
-                     ~/Developer/retroloop-app, the current repo's, then PATH)
+Environment — the shared resolver (scripts/resolve-cli.sh), first hit wins:
+  1  retroloop on PATH
+  2  RETROLOOP_APP      an app checkout directory, a .ts CLI entry, or an
+                        executable; anything else falls through
+     WATCH_REVIEW_CLI   the older spelling, still honored: a whole command
+                        string, split on whitespace
+  3  the app-path file  $RETROLOOP_HOME/app-path, else $RETRO_HOME/app-path,
+                        else ~/.ai-team/retro/app-path — one line naming the
+                        install directory, written by /retroloop:setup
+  4  ~/Developer/retroloop-app
+  5  this repo's apps/cli/src/bin.ts
+
+`where` prints what each of these is worth right now.
 USAGE
   exit 2
 }
@@ -83,35 +93,18 @@ if ! ROOT="$(git rev-parse --show-toplevel 2>/dev/null)"; then
 fi
 
 # ── what this runs ────────────────────────────────────────────────────────────
-declare -a CLI=()
-resolve_cli() {
-  if [[ -n "${WATCH_REVIEW_CLI:-}" ]]; then
-    read -r -a CLI <<<"$WATCH_REVIEW_CLI"
-    # An override that is all whitespace resolves to no command at all, and
-    # running "${CLI[@]}" empty would arm nothing quietly — which is the failure
-    # mode this whole script exists to remove.
-    [[ ${#CLI[@]} -gt 0 ]] || return 1
-    return 0
-  fi
-  if [[ -f "$HOME/Developer/retroloop-app/apps/cli/src/bin.ts" ]]; then
-    CLI=(bun "$HOME/Developer/retroloop-app/apps/cli/src/bin.ts")
-    return 0
-  fi
-  if [[ -n "$ROOT" && -f "$ROOT/apps/cli/src/bin.ts" ]]; then
-    CLI=(bun "$ROOT/apps/cli/src/bin.ts")
-    return 0
-  fi
-  local found
-  if found="$(command -v retroloop 2>/dev/null)"; then
-    CLI=("$found")
-    return 0
-  fi
-  return 1
-}
+# One resolver for the whole plugin. This script and the SessionStart hook used
+# to disagree about where the app is, which meant the hook could call an
+# installed app "not set up" while the watch ran it happily.
+RESOLVER="${BASH_SOURCE[0]%/*}/resolve-cli.sh"
+[[ -f "$RESOLVER" ]] ||
+  refuse "no resolver at $RESOLVER — this plugin checkout is incomplete."
+# shellcheck source=resolve-cli.sh
+. "$RESOLVER"
 
 require_cli() {
-  resolve_cli ||
-    refuse "no retroloop CLI — no app checkout found and none on PATH. Run /retroloop:setup, or set WATCH_REVIEW_CLI."
+  retroloop_resolve_cli "$ROOT" ||
+    refuse "no retroloop CLI — nothing on PATH, no usable RETROLOOP_APP, no app path in $RETROLOOP_CLI_POINTER, no checkout at ~/Developer/retroloop-app. Run /retroloop:setup, or set RETROLOOP_APP to the app checkout."
 }
 
 # ── arm ───────────────────────────────────────────────────────────────────────
@@ -134,17 +127,46 @@ arm() {
   # `exec`, and that is the whole design. The record this fixes is a monitor that
   # looped forever printing lines into a file nobody read; there is no loop that
   # can be written after this line, because there is no shell after this line.
-  exec "${CLI[@]}" review wait --follow --retro "$retro" --timeout "$timeout" --json
+  exec "${RETROLOOP_CLI[@]}" review wait --follow --retro "$retro" --timeout "$timeout" --json
 }
 
 # ── where ─────────────────────────────────────────────────────────────────────
+# What this resolves to, and what every input is worth right now — so a watch
+# that runs the wrong CLI, or none, is one command away from being explained.
 where() {
-  if resolve_cli; then
-    printf 'cli:         %s\n' "${CLI[*]}"
+  if retroloop_resolve_cli "$ROOT"; then
+    printf 'cli:              %s  (%s)\n' "${RETROLOOP_CLI[*]}" "$RETROLOOP_CLI_SOURCE"
   else
-    printf 'cli:         <none — set WATCH_REVIEW_CLI or run /retroloop:setup>\n'
+    printf 'cli:              <none — put retroloop on PATH, set RETROLOOP_APP, or run /retroloop:setup>\n'
   fi
-  printf 'repo root:   %s\n' "${ROOT:-<not a git worktree>}"
+
+  if [[ -n "${RETROLOOP_APP:-}" ]]; then
+    if retroloop_cli_from_hint "$RETROLOOP_APP"; then
+      printf 'RETROLOOP_APP:    %s  (%s)\n' "$RETROLOOP_APP" "${RETROLOOP_CLI[*]}"
+    else
+      printf 'RETROLOOP_APP:    [%s]  (set but unusable)\n' "$RETROLOOP_APP"
+    fi
+  fi
+
+  if [[ -n "${WATCH_REVIEW_CLI:-}" ]]; then
+    if retroloop_cli_from_command "$WATCH_REVIEW_CLI"; then
+      printf 'WATCH_REVIEW_CLI: %s  (alias)\n' "${RETROLOOP_CLI[*]}"
+    else
+      printf 'WATCH_REVIEW_CLI: [%s]  (alias; set but unusable)\n' "$WATCH_REVIEW_CLI"
+    fi
+  fi
+
+  if retroloop_cli_read_pointer; then
+    if retroloop_cli_from_hint "$RETROLOOP_CLI_POINTER_LINE"; then
+      printf 'app-path file:    %s  (%s)\n' "$RETROLOOP_CLI_POINTER" "$RETROLOOP_CLI_POINTER_LINE"
+    else
+      printf 'app-path file:    %s  (set but unusable: %s)\n' "$RETROLOOP_CLI_POINTER" "$RETROLOOP_CLI_POINTER_LINE"
+    fi
+  else
+    printf 'app-path file:    %s  (not written)\n' "$RETROLOOP_CLI_POINTER"
+  fi
+
+  printf 'repo root:        %s\n' "${ROOT:-<not a git worktree>}"
   exit 0
 }
 

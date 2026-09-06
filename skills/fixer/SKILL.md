@@ -18,8 +18,9 @@ Every fix ships through the discipline in
 unbuilt) → author → verify (the signature gone, not lessened) → re-run the
 original failure verbatim.
 
-All `retroloop` commands run from the app checkout as
-`cd ~/Developer/retroloop-app && bun run --silent retroloop <args>` (or plain
+All `retroloop` commands run from the app checkout — the path setup recorded in
+`~/.ai-team/retro/app-path`; default `~/Developer/retroloop-app` — as
+`cd <the app checkout> && bun run --silent retroloop <args>` (or plain
 `retroloop <args>` if the binary is on PATH).
 
 ## 1 · Arm the finish watch
