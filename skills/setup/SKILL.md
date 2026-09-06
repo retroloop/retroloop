@@ -60,9 +60,12 @@ cd ~/Developer/retroloop-app && bun run --silent retroloop up --json
 ```
 
 `up` is idempotent — it starts the server or reports the one already running.
-Read the JSON it prints: it carries the server URL (and a `lanUrl` when the
-server is reachable from other devices — that is the URL for reviewing from a
-tablet).
+Read the JSON it prints: it carries the server URL. Never pass `--bind`
+yourself: the server binds `127.0.0.1` unless the human asks for the network.
+Reviewing from a tablet is the human's own choice, made in his terminal:
+`retroloop down && retroloop up --bind <this machine's LAN IP>` (wildcards such
+as `0.0.0.0` are refused). If the JSON carries a `lanUrl`, he made that choice;
+hand him `url` and leave `lanUrl` alone unless he asks.
 
 Verify the page actually serves:
 
@@ -115,8 +118,7 @@ tell the user to restart their Claude Code session so the new plugin loads:
 
 - **CLI answers** — `retroloop --version` printed a version.
 - **Server up** — `retroloop up --json` reported a URL.
-- **Review page loads** — the URL answered 200 (name the LAN URL too if one
-  was reported).
+- **Review page loads** — the URL answered 200.
 - **Personalization plugin installed** — `claude plugin list` (or the
   `/plugin` menu) shows it.
 
