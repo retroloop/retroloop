@@ -13,18 +13,23 @@
 #            a press sat in the database for the length of the sleep. `review
 #            wait --follow` made it live. The hop fixed: store → wait latency.
 #   retro 12 `r-monitor-notify-gap`      — the watcher SAW the press, printed
-#            `review finished: revision 1` to a file, and told nobody: an agent
-#            harness re-invokes an agent when a background task EXITS, never
-#            when it prints a line. The hop fixed: watcher → agent.
+#            `review finished: revision 1` to a file, and told nobody. There
+#            are two ways to wake a session and they listen for different
+#            things: a BACKGROUND TASK wakes its session when the task EXITS,
+#            and a MONITOR WATCH (the Monitor tool, or a plugin monitor) wakes
+#            it on every LINE the command prints to stdout. That watcher wrote
+#            into a file, so it used neither. The hop fixed: watcher → agent.
 #   retro 13 `r-fourth-finish-channel-failure` — the harness killed the watcher
 #            twice from outside and the watch was stood down by hand. The hop
 #            that broke: watcher survival.
 #
 # This script is the shape that survived, CORRECT BY CONSTRUCTION: arming runs
 # EXACTLY ONE wait and then `exec`s it, so the process you are watching IS the
-# wait and its EXIT is the notification — the one signal every harness in use
+# wait and its EXIT is the notification — the signal the background-task path
 # delivers. There is no loop here to get wrong: after the exec there is no
-# script left to loop. The end-to-end certification of this chain (red leg,
+# script left to loop. A session that watches through a Monitor instead wants
+# the other shape, a loop whose every printed line is a wake-up; that is
+# scripts/watch-finish.sh. The end-to-end certification of this chain (red leg,
 # full chain, killed-watcher drill) lives in the Retroloop app repository's
 # test suite, where a throwaway stage and the finish-pressing test tool exist.
 #
