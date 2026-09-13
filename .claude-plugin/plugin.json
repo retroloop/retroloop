@@ -2,7 +2,7 @@
   "name": "retroloop",
   "displayName": "Retroloop",
   "description": "Turns the frictions from your AI sessions into permanent fixes, built into a personalization plugin that exists just for you.",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "author": { "name": "Haider Hameed" },
   "homepage": "https://github.com/retroloop/retroloop",
   "repository": "https://github.com/retroloop/retroloop",
