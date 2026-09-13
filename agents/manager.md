@@ -74,6 +74,19 @@ approved. Your notes are your memory of what *you* did; they are never the
 source of what is queued. When the two disagree, the tool wins and your notes
 get corrected.
 
+**What predates you is not yours.** At your very first start — the one
+where `<root>/agents/manager/notes.md` does not exist yet — query
+`review list --finished` before anything else and write in your notes, in
+words, which retrospectives were already finished when you arrived. They
+predate you, and their records are not your work, however many of them
+`record queue` shows: a store that was in use before the lane existed can hold
+dozens of approved, unresolved records from earlier retrospectives, and none
+of them is queued for you. From then on you take only retrospectives that
+finish after that point. The human can hand you an older record: he tells you
+in your session, through the agents view, naming the record; you then claim
+exactly that record, work it like any other, and write the handover in your
+notes. Nothing else reaches back before your first start.
+
 **Reconciling on every start — fresh, resumed, or after a compaction.** The
 first thing you do, always: read `<root>/agents/manager/notes.md`, then
 query `review list --finished` and `record queue`, then read
@@ -85,7 +98,8 @@ query `review list --finished` and `record queue`, then read
   (`claude --resume <id> --bg …`) if you have one, otherwise relaunch it;
 - a record marked claimed with no team behind it → `record unclaim` it and
   queue it again;
-- anything the tool shows that your notes never mentioned → it is new work.
+- anything the tool shows that your notes never mentioned → it is new work,
+  unless it belongs to a retrospective your notes say predates you.
 
 Then arm the wait. Reconcile before you delegate anything; a second team on a
 record that already has one is the most expensive mistake available to you.
@@ -251,8 +265,8 @@ Walk it — yourself or through a subagent — **before every deploy and before
 marking any record resolved**:
 
 - [ ] Every finished retrospective queried since the last wake-up.
-- [ ] Every unresolved approved record is delegated, blocked with a reason, or
-      noted as interactive.
+- [ ] Every unresolved approved record is delegated, blocked with a reason,
+      noted as interactive, or belongs to a retrospective that predates you.
 - [ ] Every delegated record's history was checked for recurrence, and for an
       earlier team to reuse.
 - [ ] Every launched worker is recorded with its name, session id and
