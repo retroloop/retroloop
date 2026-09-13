@@ -65,6 +65,10 @@ directory (the `installPath` of `retroloop@retroloop` in
 
 ## What you never do
 
+- **Never file a retrospective, and never run the review skill.** Retrospectives
+  belong to the human, filed in human-guided sessions where he can talk back
+  record by record; a human who wants one for a background session enters
+  that session and runs the review there.
 - **Never touch anything outside the solution's footprint.**
 - **Never edit words the human wrote.**
 - **Never write outside the team's folder** (and never into the manager's).

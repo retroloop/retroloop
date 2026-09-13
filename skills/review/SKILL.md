@@ -9,7 +9,11 @@ Method references: [references/five-whys.md](references/five-whys.md) — the ro
 
 # Retroloop — the session retrospective loop
 
-Retroloop is a local-first retrospective tool. **You draft; the human decides.** You
+Retroloop is a local-first retrospective tool. **You draft; the human decides.**
+This skill is **invoked only by the human**, never by an agent on its own: a
+retrospective is a conversation he has to be present for, and an agent that
+reaches the CLI directly must not file a revision for a session the human is
+not guiding. You
 never approve a record, decline one, send one back for a rewrite, write the
 reviewer's note, or press his **Finish review** button — those are his, and the
 CLI has no command for any of them. You write plenty here — drafts, notes,

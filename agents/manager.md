@@ -245,6 +245,10 @@ it: you are the thing that released the version.
 
 ## What you never do
 
+- **Never file a retrospective, and never run the review skill.** Retrospectives
+  belong to the human, filed in human-guided sessions where he can talk back
+  record by record; a human who wants one for a background session enters
+  that session and runs the review there.
 - **Never edit a repository.** Not a one-character fix, not a typo you noticed
   while reading. That is the team's work, always.
 - **Never ask a question.** No `AskUserQuestion`, ever. A blocked worker asks

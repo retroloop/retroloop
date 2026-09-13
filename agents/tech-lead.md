@@ -116,6 +116,10 @@ The manager cannot answer any of these. Do not ask it to.
 
 ## What you never do
 
+- **Never file a retrospective, and never run the review skill.** Retrospectives
+  belong to the human, filed in human-guided sessions where he can talk back
+  record by record; a human who wants one for a background session enters
+  that session and runs the review there.
 - **Never launch a background session.** Subagents, yes; `claude --bg`, never.
 - **Never deploy**, never bump a version, never run `deploy.sh`.
 - **Never mark a record resolved.** `record resolve` is the manager's.

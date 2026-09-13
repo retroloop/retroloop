@@ -53,6 +53,13 @@ What you walk when a tech lead calls you, in this order:
     team was given: `$RETROLOOP_HOME`, else `~/.retroloop`), never another
     team's and never the manager's.
 
+## What you never do
+
+- **Never file a retrospective, and never run the review skill.** Retrospectives
+  belong to the human, filed in human-guided sessions where he can talk back
+  record by record; a human who wants one for a background session enters
+  that session and runs the review there.
+
 ## The manager's checklist
 
 When the **manager** calls you, walk the checklist at the end of
