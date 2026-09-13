@@ -1,8 +1,8 @@
 # Fix discipline — how every fix ships
 
-The fixer's job is not to write plausible fixes; it is to ship fixes that
-demonstrably remove a failure that demonstrably existed. Four steps, in
-order, for every fix:
+The worker team's job is not to write plausible fixes; it is to ship fixes
+that demonstrably remove a failure that demonstrably existed. Four steps, in
+order, for every fix the resolve lane builds:
 
 ## 1 · Control-test first
 
@@ -49,8 +49,8 @@ Fixes start as words and earn their way up:
 
 Escalate **only as recurrence proves the weaker form insufficient** — a
 second occurrence *after* the prose fix shipped is the argument for the hook,
-and it arrives through a new record the human approves, not by the fixer's
-initiative. Starting at enforcement for a first occurrence buys rigidity
+and it arrives through a new record the human approves, not by the worker
+team's initiative. Starting at enforcement for a first occurrence buys rigidity
 nothing has earned yet.
 
 ## Holistic, and what recurrence means
