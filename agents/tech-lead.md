@@ -93,7 +93,9 @@ Five things block you, and they are all the same shape — something the human
 owns is unsettled:
 
 - the control test cannot reproduce the failure → **the fix is withdrawn
-  unbuilt** (`skills/resolve/references/fix-discipline.md`);
+  unbuilt** (`skills/resolve/references/fix-discipline.md` in the Retroloop
+  plugin's installed directory — the `installPath` of `retroloop@retroloop`
+  in `claude plugin list --json`);
 - the solution cannot be built at its level;
 - what you would have to build differs materially from what he approved;
 - the record's involvement is `undecided`;

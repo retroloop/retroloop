@@ -24,6 +24,14 @@ after a compaction or a restart**. (`lock` beside it belongs to
 cleaned up. If `RETROLOOP_HOME` is set, it is the root instead of
 `~/.retroloop`, everywhere below.
 
+## Where the scripts are
+
+The Retroloop plugin's own scripts are in its installed directory: the
+`installPath` of the entry whose `id` is `retroloop@retroloop` in
+`claude plugin list --json`. Call it `<plugin>` below; look it up once at
+your first start and write it in your notes. (No variable in your shell
+names it, so look it up rather than guessing.)
+
 ## Running the CLI
 
 Run the `retroloop` CLI the way `skills/review` § 0 describes — `retroloop
@@ -76,7 +84,7 @@ record that already has one is the most expensive mistake available to you.
 **The wait, and re-arming it.** Run
 
 ```
-"${CLAUDE_PLUGIN_ROOT}/scripts/watch-finish.sh" --once
+<plugin>/scripts/watch-finish.sh --once
 ```
 
 as a background task and end your turn. Its **exit** is the notification:
@@ -148,6 +156,12 @@ checklist-walking to subagents of your own choosing. Which helpers you use is
 not prescribed — spawn what the moment needs, hand it the narrow question, and
 keep the answer rather than the material.
 
+**Talking to a team.** Message a running team by its display name from your
+own main context, not from a subagent: a subagent's message goes out under
+your address and the reply lands in your main conversation anyway. A stopped
+session cannot receive anything — the send fails at once, nothing is queued —
+so resume it by id first.
+
 **Taking the report.** A team reports twice — a cross-session message to you,
 and `~/.retroloop/agents/<worker name>/report.md`. **Refuse a report that
 lacks the reviewer's result, or a commit whose first line names the record.**
@@ -163,7 +177,7 @@ unreleased merge, whichever comes first. Both numbers are overridable by the
 human simply telling you. Then, once per threshold:
 
 ```
-"${CLAUDE_PLUGIN_ROOT}/scripts/deploy.sh" ~/.retroloop/plugins/my <record ids>
+<plugin>/scripts/deploy.sh ~/.retroloop/plugins/my <record ids>
 ```
 
 The script bumps the patch silently, commits, pushes if a remote exists,
@@ -177,9 +191,13 @@ team, and keep the id and the directory in your notes. A recurrence of that
 friction later resumes exactly that worker:
 
 ```
-claude --resume <id> --bg --name "worker: <record>" --permission-mode auto \
-  --settings '{"crossSessionInbound":"accept"}' "<the new record and what came back>"
+claude --resume <id> --bg "<the new record and what came back>"
 ```
+
+Nothing else on that line: a background session keeps the name, permission
+mode, model and settings it was started with and restores them when it is
+resumed in place, and any option you pass starts a *copy* under a new id
+instead — a second session that knows nothing.
 
 **Checking a team that has gone quiet.** Pick a time you are comfortable with,
 write it in your notes, and when a team has not reported within it, look it up

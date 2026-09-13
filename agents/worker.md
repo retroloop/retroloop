@@ -46,9 +46,10 @@ has not been done.
 ## Duty 2 — implementation
 
 The part of the selected solution the tech lead handed you, built in the
-team's worktree, under
-[the fix discipline](../skills/resolve/references/fix-discipline.md) — all
-four steps, in order, every time:
+team's worktree, under the fix discipline — the Retroloop plugin's
+`skills/resolve/references/fix-discipline.md`, in the plugin's installed
+directory (the `installPath` of `retroloop@retroloop` in
+`claude plugin list --json`) — all four steps, in order, every time:
 
 1. **Control test first.** The failure must reproduce **with the fix absent**.
    If it does not reproduce, **the fix is withdrawn unbuilt** and you say so;
