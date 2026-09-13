@@ -77,11 +77,8 @@ Environment — the shared resolver (scripts/resolve-cli.sh), first hit wins:
                         executable; anything else falls through
      WATCH_REVIEW_CLI   the older spelling, still honored: a whole command
                         string, split on whitespace
-  3  the app-path file  $RETROLOOP_HOME/app-path, else $RETRO_HOME/app-path,
-                        else ~/.ai-team/retro/app-path — one line naming the
-                        install directory, written by /retroloop:setup
-  4  ~/Developer/retroloop-app
-  5  this repo's apps/cli/src/bin.ts
+  3  <root>/apps/retroloop, where <root> is $RETROLOOP_HOME, else ~/.retroloop
+  4  this repo's apps/cli/src/bin.ts
 
 `where` prints what each of these is worth right now.
 USAGE
@@ -104,7 +101,7 @@ RESOLVER="${BASH_SOURCE[0]%/*}/resolve-cli.sh"
 
 require_cli() {
   retroloop_resolve_cli "$ROOT" ||
-    refuse "no retroloop CLI — nothing on PATH, no usable RETROLOOP_APP, no app path in $RETROLOOP_CLI_POINTER, no checkout at ~/Developer/retroloop-app. Run /retroloop:setup, or set RETROLOOP_APP to the app checkout."
+    refuse "no retroloop CLI — nothing on PATH, no usable RETROLOOP_APP, no checkout at $(retroloop_root)/apps/retroloop. Run /retroloop:setup, or set RETROLOOP_APP to the app checkout."
 }
 
 # ── arm ───────────────────────────────────────────────────────────────────────
@@ -156,14 +153,11 @@ where() {
     fi
   fi
 
-  if retroloop_cli_read_pointer; then
-    if retroloop_cli_from_hint "$RETROLOOP_CLI_POINTER_LINE"; then
-      printf 'app-path file:    %s  (%s)\n' "$RETROLOOP_CLI_POINTER" "$RETROLOOP_CLI_POINTER_LINE"
-    else
-      printf 'app-path file:    %s  (set but unusable: %s)\n' "$RETROLOOP_CLI_POINTER" "$RETROLOOP_CLI_POINTER_LINE"
-    fi
+  local app="$(retroloop_root)/apps/retroloop"
+  if [[ -f "$app/apps/cli/src/bin.ts" ]]; then
+    printf 'root install:     %s\n' "$app"
   else
-    printf 'app-path file:    %s  (not written)\n' "$RETROLOOP_CLI_POINTER"
+    printf 'root install:     %s  (no checkout there)\n' "$app"
   fi
 
   printf 'repo root:        %s\n' "${ROOT:-<not a git worktree>}"

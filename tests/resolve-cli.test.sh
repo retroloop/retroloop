@@ -14,6 +14,11 @@
 # them (the child is started under `env -i`, so nothing leaks in from here).
 # `bun` is never needed: the resolver decides a command, it never runs one.
 #
+# RL-49 moved the app to one fixed place under one root: the root is
+# `$RETROLOOP_HOME`, else `~/.retroloop`, and the app is `<root>/apps/retroloop`.
+# There is no pointer file of any kind, and `RETRO_HOME` is retired — a set
+# `RETRO_HOME` must not move the answer by one character (A9).
+#
 # Three probes, one per surface:
 #   run_hook       runs hooks/session-start.sh and captures its one line
 #   run_resolver   sources scripts/resolve-cli.sh in a subshell and reports
@@ -27,6 +32,10 @@ HOOK="$REPO_ROOT/hooks/session-start.sh"
 WATCH="$REPO_ROOT/scripts/watch-review.sh"
 RESOLVER="$REPO_ROOT/scripts/resolve-cli.sh"
 
+# This suite never feeds the hook a session id (every probe runs with stdin on
+# /dev/null), so the line under test here is the one the hook prints when it
+# cannot read one. The session-folder line has its own suite:
+# tests/session-dir.test.sh.
 TRACKED='This session is tracked by Retroloop: keep friction notes (skill: notes); /retroloop:review when the session winds down.'
 NOT_SET_UP='Retroloop is installed but not set up — run /retroloop:setup'
 
@@ -49,14 +58,14 @@ fake_checkout() {
   : >"$1/apps/cli/src/bin.ts"
 }
 
+# The fixed place: the app checkout inside a root, at <root>/apps/retroloop.
+fake_root_checkout() { # <root>
+  fake_checkout "$1/apps/retroloop"
+}
+
 fake_retroloop_on_path() {
   printf '#!/bin/sh\nprintf "0.0.0-fake\\n"\n' >"$SB/bin/retroloop"
   chmod +x "$SB/bin/retroloop"
-}
-
-write_pointer() { # <home dir> <content>
-  mkdir -p "$1"
-  printf '%s\n' "$2" >"$1/app-path"
 }
 
 cleanup() {
@@ -110,6 +119,12 @@ expect_contains() { # <what> <haystack> <needle>
   esac
 }
 
+expect_not_contains() { # <what> <haystack> <needle>
+  case "$2" in
+    *"$3"*) miss "$1: [$2] must not contain [$3]" ;;
+  esac
+}
+
 # ── probes ───────────────────────────────────────────────────────────────────
 HOOK_OUT=''
 HOOK_RC=0
@@ -123,7 +138,7 @@ run_hook() { # [VAR=VALUE ...]
   else
     HOOK_LINES="$(printf '%s\n' "$HOOK_OUT" | wc -l | tr -d ' ')"
   fi
-  # A13 is asserted on every hook invocation in the suite, not in a case of
+  # A11 is asserted on every hook invocation in the suite, not in a case of
   # its own: exactly one line on stdout, exit 0, always.
   if [ "$HOOK_RC" -ne 0 ] || [ "$HOOK_LINES" -ne 1 ]; then
     SHAPE_VIOLATIONS="$SHAPE_VIOLATIONS     $CASE: exit=$HOOK_RC lines=$HOOK_LINES"$'\n'
@@ -259,78 +274,68 @@ run_resolver WATCH_REVIEW_CLI='   '
 expect_resolver_miss
 end
 
-# ── A7 · pointer file under RETROLOOP_HOME ───────────────────────────────────
-begin A7 'pointer file under RETROLOOP_HOME'
+# ── A7 · the fixed place under the default root ──────────────────────────────
+begin A7 'the app at ~/.retroloop/apps/retroloop, no variable set'
 new_sandbox
-write_pointer "$SB/rlhome" "$SB/checkout"
+fake_root_checkout "$SB/home/.retroloop"
+run_hook
+expect_hook "$TRACKED"
+run_resolver
+expect_resolution 'default' "bun $SB/home/.retroloop/apps/retroloop/apps/cli/src/bin.ts"
+end
+
+# ── A8 · the root moves with RETROLOOP_HOME ──────────────────────────────────
+begin A8 'RETROLOOP_HOME names the root; the app is <root>/apps/retroloop'
+new_sandbox
+fake_root_checkout "$SB/rlhome"
 run_hook RETROLOOP_HOME="$SB/rlhome"
 expect_hook "$TRACKED"
 run_resolver RETROLOOP_HOME="$SB/rlhome"
-expect_resolution 'pointer' "bun $SB/checkout/apps/cli/src/bin.ts"
-end
-
-# ── A8 · pointer file under RETRO_HOME ───────────────────────────────────────
-begin A8 'pointer file under RETRO_HOME (RETROLOOP_HOME unset)'
+expect_resolution 'default' "bun $SB/rlhome/apps/retroloop/apps/cli/src/bin.ts"
+# The default root is not consulted once RETROLOOP_HOME is set.
 new_sandbox
-write_pointer "$SB/rthome" "$SB/checkout"
-run_hook RETRO_HOME="$SB/rthome"
-expect_hook "$TRACKED"
-run_resolver RETRO_HOME="$SB/rthome"
-expect_resolution 'pointer' "bun $SB/checkout/apps/cli/src/bin.ts"
-end
-
-# ── A9 · pointer file under the default home ─────────────────────────────────
-begin A9 'pointer file under $HOME/.ai-team/retro'
-new_sandbox
-write_pointer "$SB/home/.ai-team/retro" "$SB/checkout"
-run_hook
-expect_hook "$TRACKED"
-run_resolver
-expect_resolution 'pointer' "bun $SB/checkout/apps/cli/src/bin.ts"
-end
-
-# ── A10 · pointer unusable falls through ─────────────────────────────────────
-begin A10 'pointer file names a path that is not there'
-new_sandbox
-write_pointer "$SB/home/.ai-team/retro" '/nonexistent'
-run_hook
-expect_hook "$NOT_SET_UP"
-run_resolver
+fake_root_checkout "$SB/home/.retroloop"
+run_resolver RETROLOOP_HOME="$SB/empty-root"
 expect_resolver_miss
 end
 
-# ── A11 · the historical default ─────────────────────────────────────────────
-begin A11 'default checkout at $HOME/Developer/retroloop-app'
+# ── A9 · RETRO_HOME is retired ───────────────────────────────────────────────
+begin A9 'RETRO_HOME alone is ignored — it names no root any more'
 new_sandbox
-fake_checkout "$SB/home/Developer/retroloop-app"
-run_hook
-expect_hook "$TRACKED"
-run_resolver
-expect_resolution 'default' "bun $SB/home/Developer/retroloop-app/apps/cli/src/bin.ts"
+fake_root_checkout "$SB/rthome"
+run_hook RETRO_HOME="$SB/rthome"
+expect_hook "$NOT_SET_UP"
+run_resolver RETRO_HOME="$SB/rthome"
+expect_resolver_miss
+# And it cannot outvote the default root either.
+new_sandbox
+fake_root_checkout "$SB/home/.retroloop"
+fake_root_checkout "$SB/rthome"
+run_resolver RETRO_HOME="$SB/rthome"
+expect_resolution 'default' "bun $SB/home/.retroloop/apps/retroloop/apps/cli/src/bin.ts"
 end
 
-# ── A12 · first hit wins ─────────────────────────────────────────────────────
-begin A12 'first hit wins — PATH>env, env>pointer, pointer>default'
+# ── A10 · first hit wins ─────────────────────────────────────────────────────
+begin A10 'first hit wins — PATH>env, PATH>default, env>default'
 new_sandbox
 fake_retroloop_on_path
 run_resolver RETROLOOP_APP="$SB/checkout"
 expect_resolution 'path' "$SB/bin/retroloop"
 
 new_sandbox
-fake_checkout "$SB/pointed-at"
-write_pointer "$SB/rlhome" "$SB/pointed-at"
-run_resolver RETROLOOP_APP="$SB/checkout" RETROLOOP_HOME="$SB/rlhome"
-expect_resolution 'env' "bun $SB/checkout/apps/cli/src/bin.ts"
+fake_retroloop_on_path
+fake_root_checkout "$SB/home/.retroloop"
+run_resolver
+expect_resolution 'path' "$SB/bin/retroloop"
 
 new_sandbox
-fake_checkout "$SB/home/Developer/retroloop-app"
-write_pointer "$SB/rlhome" "$SB/checkout"
-run_resolver RETROLOOP_HOME="$SB/rlhome"
-expect_resolution 'pointer' "bun $SB/checkout/apps/cli/src/bin.ts"
+fake_root_checkout "$SB/home/.retroloop"
+run_resolver RETROLOOP_APP="$SB/checkout"
+expect_resolution 'env' "bun $SB/checkout/apps/cli/src/bin.ts"
 end
 
-# ── A13 · the hook's shape, across every case above ──────────────────────────
-begin A13 'the hook always prints exactly one line and exits 0'
+# ── A11 · the hook's shape, across every case above ──────────────────────────
+begin A11 'the hook always prints exactly one line and exits 0'
 if [ -n "$SHAPE_VIOLATIONS" ]; then
   CASE_FAILED=1
   DETAIL="$SHAPE_VIOLATIONS"
@@ -338,7 +343,7 @@ fi
 end
 
 # ── verdict ──────────────────────────────────────────────────────────────────
-total=13
+total=11
 n_failed=0
 for _ in $FAILED_IDS; do n_failed=$((n_failed + 1)); done
 n_passed=$((total - n_failed))
