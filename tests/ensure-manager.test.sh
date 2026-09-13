@@ -35,7 +35,10 @@ SETUP_LINE='setup has not run; no manager'
 # has to be made twice, on purpose, in two files.
 LAUNCH_ARGV='--bg|--name|retroloop-manager|--agent|retroloop:manager|--permission-mode|auto|--model|fable|--settings|{"crossSessionInbound":"accept"}|start the resolve lane'
 LAUNCH_ARGV_OPUS='--bg|--name|retroloop-manager|--agent|retroloop:manager|--permission-mode|auto|--model|opus|--settings|{"crossSessionInbound":"accept"}|start the resolve lane'
-RESUME_ARGV='--resume|old-1111-2222-3333|--bg|--permission-mode|auto|--model|fable|--settings|{"crossSessionInbound":"accept"}|resume the resolve lane'
+# A resume carries NO options besides the id and --bg: a background session
+# restores its own saved options on an in-place resume, and any option passed
+# starts a copy under a new id instead.
+RESUME_ARGV='--resume|old-1111-2222-3333|--bg|resume the resolve lane'
 
 MINTED='new-aaaa-bbbb-cccc'
 
@@ -298,6 +301,10 @@ run_ensure
 expect_eq 'resume argv' "$(launch_line)" "$RESUME_ARGV"
 expect_not_contains 'the resume' "$(launch_line)" '--name'
 expect_not_contains 'the resume' "$(launch_line)" '--agent'
+expect_not_contains 'the resume' "$(launch_line)" '--settings'
+expect_not_contains 'the resume' "$(launch_line)" '--model'
+expect_not_contains 'the resume' "$(launch_line)" '--permission-mode'
+expect_contains 'the resume environment' "$(cat "$SB/launch.env" 2>/dev/null)" 'CLAUDE_CODE_DISABLE_BG_SHELL_PRESSURE_REAP=1'
 expect_eq 'exit' "$RC" '0'
 end
 

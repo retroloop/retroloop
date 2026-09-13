@@ -229,15 +229,26 @@ launch_manager() { # <model> → the launch's own output; exits with its status
 
 # THE MANAGER'S RESUME LINE, for the same reason: one place, one spelling. A
 # resumed manager keeps everything it already knows about the lane, so a
-# stopped session is always preferred to a fresh one.
-resume_manager() { # <session id> <model>
+# stopped session is always preferred to a fresh one. No options besides the
+# id and `--bg`: a background session keeps the options it was started with
+# (name, permission mode, model, settings) and restores them on an in-place
+# resume, while passing any option starts a COPY under a new id — which is
+# exactly the second manager this script exists to prevent. The reap-disable
+# variable is environment, not an option, so it is set again here.
+resume_manager() { # <session id>
   CLAUDE_CODE_DISABLE_BG_SHELL_PRESSURE_REAP=1 claude \
     --resume "$1" \
     --bg \
-    --permission-mode auto \
-    --model "$2" \
-    --settings '{"crossSessionInbound":"accept"}' \
     'resume the resolve lane' 2>&1
+}
+
+# A stopped manager leaves the wait it was holding behind as an orphan — a
+# `review wait --any` process that answers to nobody. It is harmless, but it
+# is a leak per restart, and the manager re-arms its wait on every start
+# anyway. No manager is live at the moment this runs, so any such process is
+# an orphan by definition.
+reap_orphaned_waits() {
+  pkill -f 'review wait --any' 2>/dev/null || true
 }
 
 # ── the run ──────────────────────────────────────────────────────────────────
@@ -281,8 +292,10 @@ report_running && exit 0
 MODEL="$(read_model)"
 STOPPED="$(managers --all | tail -n1 | cut -d' ' -f2)"
 
+reap_orphaned_waits
+
 if [ -n "$STOPPED" ]; then
-  LAUNCH_OUT="$(cd "$PLUGIN_DIR" && resume_manager "$STOPPED" "$MODEL")"
+  LAUNCH_OUT="$(cd "$PLUGIN_DIR" && resume_manager "$STOPPED")"
 else
   LAUNCH_OUT="$(cd "$PLUGIN_DIR" && launch_manager "$MODEL")"
 fi

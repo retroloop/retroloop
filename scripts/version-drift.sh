@@ -27,10 +27,14 @@
 # exits 0. A monitor that fails is a monitor that gets removed.
 #
 # NO BRACE-WRAPPED VARIABLES ANYWHERE IN THIS FILE, and no relative paths. It
-# is started from a plugin monitor, whose command line is expanded before the
-# shell ever sees it — a brace form is consumed at that point and arrives
-# empty — and it runs with whatever working directory the monitor happened to
-# have. Both rules are enforced by tests/version-drift.test.sh.
+# is started from a plugin monitor, whose command line is template-filled
+# before the shell ever sees it: the plugin-root variable, written between
+# braces, becomes the plugin's directory, and every other brace form is
+# consumed there and arrives empty.
+# The script itself follows the same rule so that it reads the same whether a
+# loader has been over it or not, and it runs with whatever working directory
+# the monitor happened to have. Both rules are enforced by
+# tests/version-drift.test.sh.
 #
 # Tools: bash, awk, sed, tr, head, cut, sleep. Nothing installed, nothing that
 # a fresh macOS does not already have.

@@ -2,6 +2,6 @@
   {
     "name": "retroloop-version",
     "description": "Tells an open session when a plugin in the local marketplace has a newer version installed than the one this session loaded, so the human knows to type /reload-plugins.",
-    "command": "while :; do d=$CLAUDE_PLUGIN_ROOT; [ -n \"$d\" ] || d=$(ls -td \"$HOME\"/.claude/plugins/cache/retroloop/retroloop/*/ 2>/dev/null | head -n1); [ -n \"$d\" ] && bash \"$d/scripts/version-drift.sh\" --watch 60; sleep 60; done"
+    "command": "while :; do d=\"${CLAUDE_PLUGIN_ROOT}\"; [ -n \"$d\" ] || d=\"$HOME/.claude/plugins/cache/retroloop/retroloop/$(ls -t \"$HOME/.claude/plugins/cache/retroloop/retroloop\" 2>/dev/null | head -n1)\"; [ -f \"$d/scripts/version-drift.sh\" ] && bash \"$d/scripts/version-drift.sh\" --watch 60; sleep 60; done"
   }
 ]

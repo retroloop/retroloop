@@ -17,10 +17,11 @@
 # session that is not.
 #
 # It also pins the shape the monitor loader needs. A plugin monitor's command
-# is expanded before it runs, and a brace-wrapped variable is consumed at that
-# point — so the script and the command line that starts it must not contain
-# one anywhere (F6, F7). That is a rule a reader cannot guess from the code, so
-# it is a test.
+# is template-filled before it runs: `${CLAUDE_PLUGIN_ROOT}` becomes the
+# plugin's directory and every other brace-wrapped variable is consumed and
+# arrives empty — so the script contains none (F6) and the command line that
+# starts it uses exactly that one (F7). That is a rule a reader cannot guess
+# from the code, so it is a test.
 #
 # Every case runs under `env -i` in its own sandbox: a temp HOME, a temp
 # RETROLOOP_HOME holding a marketplace and its plugins, and a temp
@@ -325,7 +326,7 @@ fi
 end
 
 # ── F7 · the monitor entry ───────────────────────────────────────────────────
-begin F7 'monitors.json is one monitor that runs the script, brace-free'
+begin F7 'monitors.json is one monitor that runs the script; the only brace form is the plugin root'
 if ! PATH="$BASE_PATH" command -v python3 >/dev/null 2>&1; then
   skip 'no python3 to parse JSON with'
 else
@@ -348,8 +349,12 @@ else:
     command = entry.get("command", "")
     if "scripts/version-drift.sh" not in command:
         problems.append("the command does not run scripts/version-drift.sh")
-    if "${" in command:
-        problems.append("the command uses a brace form")
+    if "${CLAUDE_PLUGIN_ROOT}" not in command:
+        problems.append("the command does not use ${CLAUDE_PLUGIN_ROOT}, the one brace form the loader fills in")
+    if "${" in command.replace("${CLAUDE_PLUGIN_ROOT}", ""):
+        problems.append("the command uses a brace form other than ${CLAUDE_PLUGIN_ROOT}")
+    if "*" in command:
+        problems.append("the command globs; a shell that aborts on a missing match would abort the loop")
 for p in problems:
     print(p)
 PY
