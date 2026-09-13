@@ -31,7 +31,7 @@ missed. L1 is the right first envelope for most single-occurrence issues.
 instructions — *avoid robotic phrasing, keep it short, write like I talk.*
 
 ```
-my-plugin/
+my/
 └── instructions/
     └── global.md          [UPDATE]  2-3 style one-liners
 ```
@@ -48,7 +48,7 @@ as real guidelines: tone, length, sign-off, banned phrases — loaded whenever
 emails are drafted.
 
 ```
-my-plugin/
+my/
 └── skills/
     └── draft-email/
         └── SKILL.md       [CREATE]  the preferred writing style
@@ -67,7 +67,7 @@ skill first. The style stops being optional; a robotic draft cannot slip
 through, because the skill cannot be skipped.
 
 ```
-my-plugin/
+my/
 ├── skills/
 │   └── draft-email/
 │       └── SKILL.md       [CREATE]  the style, as the drafting guideline

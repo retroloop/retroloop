@@ -266,6 +266,12 @@ settle it before you file anything:
    it on disk** — a directory of transcript files cannot tell you which one is
    the conversation you are having, and a confident wrong id is worse than a
    minted one.
+
+   **In a Retroloop-tracked session it is already in front of you**: the
+   SessionStart line printed the notes path, and the id is the folder in it —
+   `~/.retroloop/sessions/<this is the id>/notes.md`. That is the same string to
+   register with, so the notes, the folder and the retrospective all answer to
+   one id.
 2. **If you do not, mint one and keep it.** `--claude-session` is checked for
    presence only — **not** for UUID syntax — precisely so a caller with a
    different stable identifier is not turned away. Any non-empty string is legal.
@@ -344,14 +350,16 @@ The rule against guessing paths is about **Retroloop's own storage**: its databa
 its data directory, its internals. It says nothing about the files you hand the
 CLI, and those are yours to name:
 
-- **`revision create --file <path>`** — the draft you author. Write it wherever
-  you can write (your scratch directory is the obvious place), name it something
-  you can find again, e.g. `revision-2.json`, and keep it after submitting: the
-  next revision starts as a copy of the last. Losing it is survivable — step 4
-  says how to rebuild it from what you already submitted.
-- **`export --out <path>`** — where the export lands. Pick the path, then tell
-  the human exactly where it went. Leave `--out` off and the document goes to
-  stdout instead.
+- **`revision create --file <path>`** — the draft you author. Write it in this
+  session's folder, `~/.retroloop/sessions/<session-id>/`, beside the notes it
+  came from, name it something you can find again, e.g. `revision-2.json`, and
+  keep it after submitting: the next revision starts as a copy of the last.
+  Losing it is survivable — step 4 says how to rebuild it from what you already
+  submitted.
+- **`export --out <path>`** — where the export lands, and it has one place:
+  `~/.retroloop/retros/<retroId>/retro.json`. Tell the human the path after you
+  write it. Leave `--out` off and the document goes to stdout instead, which
+  files nothing.
 
 Anything read *in* — the draft, a long note, a long comment — takes `--file -` to
 read stdin instead of a path. `--out` writes a file and has no such form.
@@ -464,6 +472,27 @@ comment on the review, which is what step 4 reads. Re-running `note list
 --with-human` between rounds tells you nothing new and is the thing the never-do
 list forbids outside this step.
 
+**Then read the session folder**, `~/.retroloop/sessions/<session-id>/`, which
+holds the evidence that never went through the CLI:
+
+```
+~/.retroloop/sessions/<session-id>/
+├── notes.md              the running friction notes (skill: notes)
+├── snapshots/            copies of notes.md taken before each compaction
+└── agents/<name>/        an agent's own notes.md and report.md, one per agent
+```
+
+`notes.md` is the first thing to read and usually the richest: it was written
+while the friction was still true, which is exactly what a retrospective at the
+end of a session no longer has. `agents/*/notes.md` are session evidence too —
+a worker's wasted turns cost the session whether or not the human saw them.
+Read `snapshots/` only when `notes.md` looks truncated or the session was
+compacted; otherwise it is the same material twice.
+
+Missing files here are an answer, not an error: a session with no friction
+leaves no folder, and the folder is created on the first write, never at
+session start.
+
 Two things in that shape: `author` is `"human"` or `"ai"`, the only two actors
 there are; and `kind` is `null` on every human note, because who-paid is a
 judgment you make about your own notes and he was never asked for one. `null`
@@ -487,7 +516,7 @@ nobody researched.
 
 **The deep dive includes a mandatory class check against the prior exports.**
 The complete history of every past friction sits machine-readable in
-`~/.ai-team/retro/exports/retro-*.json`, and it is an instruction surface the
+`~/.retroloop/retros/*/retro.json`, and it is an instruction surface the
 loop itself produced — so before drafting, search it for the CLASS, not just
 the instance (titles, slugs and problem text are all searchable). A record of
 a recurring class must carry three things: **its priors by name**, **why each
@@ -1042,7 +1071,7 @@ arrives the script is gone and that output is all you will have.
 An uncertified bridge has now cost four retros, and words test nothing:
 
 ```
-~/Developer/retroloop-app/scripts/watch-review.sh certify   # from the app checkout
+~/.retroloop/apps/retroloop/scripts/watch-review.sh certify   # from the app checkout
 ```
 
 It stands up a throwaway stage, files a retrospective, arms this exact shape,
@@ -1792,7 +1821,7 @@ retroloop review close --retro <retroId> --json
 Then take the receipt:
 
 ```
-retroloop export --retro <retroId> --out <path> --json
+retroloop export --retro <retroId> --out ~/.retroloop/retros/<retroId>/retro.json --json
 → {"path": "…", "records": 4, "bytes": 8123}
 ```
 
@@ -1801,10 +1830,13 @@ retroloop export --retro <retroId> --out <path> --json
 the document asserts `state: "finished"` and a verdict on every record, and
 neither is true yet. There is no preview form and no partial export: close first.
 
-`--out` takes any path you can write; give it a **`.json`** extension, because
-that is what it writes. With `--out` you get the receipt above and the document
-goes to the file; without `--out` the document itself goes to stdout and there is
-no receipt. `--state <state>` narrows it to one of the five record states —
+`--out` takes any path you can write, but write it where the next retro will
+look: `~/.retroloop/retros/<retroId>/retro.json`, one folder per retro, `.json`
+because that is what it writes. The class check in step 3 searches exactly that
+tree, so an export filed anywhere else is one the loop cannot read back. With
+`--out` you get the receipt above and the document goes to the file; without
+`--out` the document itself goes to stdout and there is no receipt.
+`--state <state>` narrows it to one of the five record states —
 `pending`, `approved`, `declined`, `revise`, `hold` — when what you want is the
 work list rather than the whole outcome.
 

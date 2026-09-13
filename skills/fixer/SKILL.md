@@ -18,10 +18,15 @@ Every fix ships through the discipline in
 unbuilt) → author → verify (the signature gone, not lessened) → re-run the
 original failure verbatim.
 
-All `retroloop` commands run from the app checkout — the path setup recorded in
-`~/.ai-team/retro/app-path`; default `~/Developer/retroloop-app` — as
-`cd <the app checkout> && bun run --silent retroloop <args>` (or plain
-`retroloop <args>` if the binary is on PATH).
+Two paths, and everything below is one or the other:
+
+- **the app** — `~/.retroloop/apps/retroloop`. Run `retroloop` commands as
+  `cd ~/.retroloop/apps/retroloop && bun run --silent retroloop <args>`, or as
+  plain `retroloop <args>` if the binary is on PATH. If neither works,
+  `bash "${CLAUDE_PLUGIN_ROOT}/scripts/watch-review.sh" where` prints what the
+  resolver actually found and what each source is worth.
+- **the plugin** — `~/.retroloop/plugins/my`, the user's own personalization
+  plugin and the place nearly every fix lands.
 
 ## 1 · Arm the finish watch
 
@@ -50,12 +55,17 @@ When the finish arrives:
 
 ```
 retroloop review close --retro <retroId> --json
-retroloop export --retro <retroId> --out ~/.ai-team/retro/exports/retro-<n>.json --json
+retroloop export --retro <retroId> --out ~/.retroloop/retros/<retroId>/retro.json --json
 ```
 
 `review close` refuses unless the human has finished with every record
 decided — if it refuses, read the message: pending or revise-marked records
 mean the review is still the human's, so go no further and tell the user.
+
+Every export lands under `~/.retroloop/retros/<retroId>/retro.json`, one folder
+per retro. That is not filing for its own sake: the review skill's class check
+searches those files for the prior instances of a recurring friction, and a
+retro written anywhere else is one the next retro cannot learn from.
 
 ## 3 · Implement each approved record
 
@@ -64,7 +74,7 @@ an involvement — both are binding:
 
 - **The selected solution is the one to build** — not the one you'd prefer.
   Its change footprint names the files, primarily in the personalization
-  plugin (`~/Developer/my-plugin` by default).
+  plugin (`~/.retroloop/plugins/my`).
 - **Involvement**:
   - `autonomous` — implement and commit directly to the plugin repo, one
     commit per record, message citing the record id.
@@ -77,16 +87,43 @@ Understand before touching: read the record's problem, root cause, and the
 words the human wrote. A fix that contradicts the record's agreed direction
 is wrong even if it works.
 
-## 4 · Deploy and mark resolved
+## 4 · Release the plugin
 
-After the autonomous commits (and any merged PRs):
+A fix that is committed but not deployed has changed nothing: Claude Code runs
+the **installed copy** of the plugin, and the version in `plugin.json` is the
+only signal that tells it to take a new one. So the release is four commands in
+one order, and none of them is a question for the human.
 
 ```
-claude plugin update my-plugin@my-plugin
+# 1 · bump the patch number in ~/.retroloop/plugins/my/.claude-plugin/plugin.json
+#     (0.1.4 → 0.1.5). Silently: it is bookkeeping, not news.
+cd ~/.retroloop/plugins/my && git add -A && git commit -m "<what shipped, citing the record ids>"
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/plugin-push.sh" ~/.retroloop/plugins/my
+claude plugin update my@my-marketplace --json -y
+```
+
+- **The bump is silent and it is not optional.** Without it `plugin update`
+  has nothing to update to and the fix stays on disk, unloaded.
+- **`plugin-push.sh` handles the remote question for you.** With a remote it
+  pushes and says so in one line; without one it does nothing and says nothing.
+  A remote is the user's opt-in, offered once at setup — never ask for one
+  here.
+- **Read the update's JSON and check `"outcome":"ok"`.** Anything else is a
+  failed release: say what it said, and do not report the fix as shipped.
+
+Then mark the records resolved, so the retro's ledger carries the receipt:
+
+```
 retroloop record resolve <recordId> --ref <commit-sha> --json
 ```
 
-The update makes the next session start on the newest version of the plugin;
-`record resolve` writes the receipt so the retro's ledger knows the fix
-shipped. Report to the user: what shipped, what waits on a PR, what was left
-interactive — with commit SHAs.
+## 5 · Report
+
+Tell the human what shipped, what waits on a PR, what was left interactive —
+with commit SHAs. Then, about the release itself, exactly this one line and
+nothing more about versions, caches or reloading:
+
+> Plugin released as <version>. In any Claude Code session that is already open, type /reload-plugins once. New sessions need nothing.
+
+It is one line because it holds the only two facts the human can act on: the
+open session needs one command, and the next one needs nothing.

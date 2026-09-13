@@ -13,6 +13,12 @@ does, then run it only on the user's yes. Walk the steps in order; at the end,
 report the checklist. If a step fails, tell the user exactly what failed and
 what to do — never improvise an alternative install path.
 
+Everything Retroloop keeps lives under one root, `~/.retroloop`: the app in
+`apps/`, the user's plugins in `plugins/`, and later the database, the session
+folders and the exports. One root means nothing has to record where anything
+went. `RETROLOOP_HOME` moves the root for a user who wants it elsewhere; use it
+verbatim wherever this file writes `~/.retroloop` if it is already set.
+
 If the user passed preferences as arguments (a different install directory, a
 different plugin name), honor them wherever this file names a default.
 
@@ -34,40 +40,35 @@ Do not install bun yourself.
 
 ## 2 · Install the Retroloop app
 
-Default home: `~/Developer/retroloop-app` (ask if the user prefers another
-path — their argument wins).
+The app goes in the root, at `~/.retroloop/apps/retroloop`:
 
 ```
-git clone https://github.com/retroloop/retroloop-app ~/Developer/retroloop-app
-cd ~/Developer/retroloop-app && bun install
+git clone https://github.com/retroloop/retroloop-app ~/.retroloop/apps/retroloop
+cd ~/.retroloop/apps/retroloop && bun install
 ```
 
 If the directory already exists with a checkout inside, skip the clone and run
-`cd ~/Developer/retroloop-app && git pull && bun install` instead.
+`cd ~/.retroloop/apps/retroloop && git pull && bun install` instead.
 
 Verify the CLI answers:
 
 ```
-cd ~/Developer/retroloop-app && bun run --silent retroloop --version
+cd ~/.retroloop/apps/retroloop && bun run --silent retroloop --version
 ```
 
 A bare version string on stdout means the app is installed.
 
-Now record where it went:
-
-```
-mkdir -p "${RETROLOOP_HOME:-$HOME/.ai-team/retro}" && printf '%s\n' "<the install dir>" > "${RETROLOOP_HOME:-$HOME/.ai-team/retro}/app-path"
-```
-
-This one line is how the SessionStart hook and the finish watch find the app
-when it is not at the default path — without it, a user who chose their own
-install directory is told "Retroloop is installed but not set up" at every
-session start. `RETROLOOP_APP` in the environment overrides the file.
+**If the user wants the app somewhere else**, clone it there and tell them the
+one thing that keeps it findable: `RETROLOOP_APP` in their environment, set to
+that directory, in their shell profile. That variable is the whole escape
+hatch — nothing is written to disk to remember the choice, and without it the
+SessionStart hook and the finish watch look only in `~/.retroloop/apps/retroloop`
+and report "not set up".
 
 ## 3 · Start the review server and verify it
 
 ```
-cd ~/Developer/retroloop-app && bun run --silent retroloop up --json
+cd ~/.retroloop/apps/retroloop && bun run --silent retroloop up --json
 ```
 
 `up` is idempotent — it starts the server or reports the one already running.
@@ -89,51 +90,95 @@ output to the user verbatim.
 
 ## 4 · Create the personalization plugin
 
-Default home: `~/Developer/my-plugin`; default name: `my-plugin` (the user may
-choose another — use it consistently in every command below).
+The plugin is `my`, and it lives at `~/.retroloop/plugins/my`. The name matters
+beyond the folder: its skills load as `/my:<skill>`, so short is worth keeping.
 
 ```
-git clone https://github.com/retroloop/personalization-template ~/Developer/my-plugin
-cd ~/Developer/my-plugin && rm -rf .git && git init -b main
+git clone https://github.com/retroloop/personalization-template ~/.retroloop/plugins/my
+cd ~/.retroloop/plugins/my && rm -rf .git && git init -b main
 git add -A && git commit -m "my personalization plugin — created by Retroloop setup"
 ```
 
 From this moment the plugin is the user's: the template is copied once, never
-tracked upstream. If the user chose a name other than `my-plugin`, set it in
-`.claude-plugin/plugin.json` (`name`) and `.claude-plugin/marketplace.json`
-(`name` and the plugin entry's `name`) before committing.
+tracked upstream. If the user chose a name other than `my`, set it in
+`.claude-plugin/plugin.json` (`name`) before committing, and use it in place of
+`my` everywhere below. If the template still ships its own
+`.claude-plugin/marketplace.json`, delete it — the marketplace is the parent
+folder now, and a second one inside the plugin is a stale copy waiting to
+confuse someone.
 
-**Optional remote** (offer, don't push): if the user wants the plugin backed up
-on GitHub it should be a **private** repository, and they run the command
-themselves:
+**The marketplace is `~/.retroloop/plugins` itself**, one local marketplace for
+every plugin the loop ever builds. Write it:
 
 ```
-gh repo create <their-user>/my-plugin --private --source ~/Developer/my-plugin --push
+mkdir -p ~/.retroloop/plugins/.claude-plugin
+cat > ~/.retroloop/plugins/.claude-plugin/marketplace.json <<'JSON'
+{
+  "name": "my-marketplace",
+  "owner": { "name": "me" },
+  "plugins": [
+    {
+      "name": "my",
+      "source": "./my",
+      "description": "My personalization plugin — evolved one retro at a time."
+    }
+  ]
+}
+JSON
 ```
+
+**Offer a shortcut to it, once.** The plugin is the thing the loop changes on
+the user's behalf, and a hidden folder is a poor place to go looking. Ask where
+they would like to browse it from — a folder they actually open, e.g.
+`~/Developer/my` — and link it there:
+
+```
+ln -s ~/.retroloop/plugins/my <the path they chose>
+```
+
+The link is for their eyes only; every command still names the real path. If
+they would rather not have one, drop it and move on.
+
+**Offer a remote, once, and never again.** A backup of the plugin is the user's
+call. If they want one it should be a **private** repository, named whatever
+they like — `my` keeps it obvious which plugin it backs — and they run the
+command themselves:
+
+```
+gh repo create <their-user>/my --private --source ~/.retroloop/plugins/my --push
+```
+
+If they decline, that is the answer for good: nothing in Retroloop asks again,
+and the fixer pushes only when a remote already exists.
 
 ## 5 · Register the plugin with Claude Code
 
 ```
-claude plugin marketplace add ~/Developer/my-plugin
-claude plugin install my-plugin@my-plugin
+claude plugin marketplace add ~/.retroloop/plugins
+claude plugin install my@my-marketplace -y --json
 ```
 
-(The template ships its own single-plugin marketplace file, so the plugin's
-directory is also its marketplace; after fixes ship, deploys are
-`claude plugin update my-plugin@my-plugin`.)
+The marketplace is the folder; the plugin is the entry inside it. Read the JSON
+back — it says whether the install landed. After fixes ship, deploys are
+`claude plugin update my@my-marketplace --json -y`, and that is the fixer's job,
+not the user's.
 
 ## 6 · The checklist — report it, honestly
 
 Walk these and report each with its evidence (the actual command output), then
 tell the user to restart their Claude Code session so the new plugin loads:
 
-- **CLI answers** — `retroloop --version` printed a version.
-- **App path recorded** — `cat ~/.ai-team/retro/app-path` prints the install
-  directory.
+- **CLI answers** — `retroloop --version` printed a version, from
+  `~/.retroloop/apps/retroloop`.
 - **Server up** — `retroloop up --json` reported a URL.
 - **Review page loads** — the URL answered 200.
+- **Plugin created** — `~/.retroloop/plugins/my` is a git repo with one commit.
+- **Marketplace registered** — the `marketplace.json` under
+  `~/.retroloop/plugins/.claude-plugin/` exists, and
+  `claude plugin marketplace list` shows `my-marketplace`.
 - **Personalization plugin installed** — `claude plugin list` (or the
-  `/plugin` menu) shows it.
+  `/plugin` menu) shows `my`.
 
-Anything unchecked: say so plainly, with what failed. An honest partial setup
-beats a claimed complete one.
+Name the paths in the report: the app, the plugin, and the shortcut if they
+took one. Anything unchecked: say so plainly, with what failed. An honest
+partial setup beats a claimed complete one.

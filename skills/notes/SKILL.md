@@ -5,10 +5,21 @@ description: Keep running friction notes during a Retroloop-tracked session. Use
 
 # notes — write friction down while it is still true
 
-Notes go in one file, `retroloop-notes.md`, in this session's scratchpad
-directory (the one named in your system prompt). If this harness names no
-scratchpad, ask the user once where session notes should live and use that
-path for the rest of the session.
+Notes go in one file, and the SessionStart hook already told you which:
+`~/.retroloop/sessions/<session-id>/notes.md`, named in full on the line that
+said this session is tracked. Use that path exactly as printed — it is the
+session folder the whole loop reads from, and `/retroloop:review` and the
+compaction snapshot both look for the file there.
+
+**Create it on the first write, not before.** A session with no friction leaves
+no folder behind; `mkdir -p` the session directory when you have the first
+entry to append, and never at session start.
+
+If no line named a path — an older session, or a harness that gave the hook no
+session id — ask the user once where session notes should live, and use that
+path for the rest of the session. Never the scratchpad: it is per-session
+temporary storage, and the retro that reads these notes may run after it is
+gone.
 
 Append an entry the moment friction happens — not at the end, when the details
 are gone. Each entry:
