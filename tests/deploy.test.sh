@@ -280,8 +280,23 @@ expect_eq 'exit' "$RC" '0'
 expect_eq 'the update argv' "$(cat "$SB/claude.calls")" 'plugin|update|other@my-marketplace|--json|-y'
 end
 
+# ── E8 · --no-update ─────────────────────────────────────────────────────────
+begin E8 '--no-update — bump, commit and push, but no update, and no claim of a release'
+new_sandbox
+add_remote
+run_deploy --no-update "$SB/plugin" r-1 r-2
+expect_eq 'exit' "$RC" '0'
+expect_eq 'the manifest' "$(manifest_version)" '0.1.1'
+expect_eq 'the commit subject' "$(subject)" "$COMMIT_SUBJECT"
+expect_eq 'the commit on the remote' "$(git_bare log -1 --format='%s' main 2>/dev/null)" "$COMMIT_SUBJECT"
+expect_eq 'no claude call at all' "$(cat "$SB/claude.calls")" ''
+expect_contains 'stdout names the skipped command' "$OUT" 'claude plugin update my@my-marketplace --json -y'
+expect_contains 'stdout says not released' "$OUT" 'not released'
+expect_not_contains 'no reload line' "$OUT" '/reload-plugins'
+end
+
 # ── verdict ──────────────────────────────────────────────────────────────────
-total=7
+total=8
 n_failed=0
 for _ in $FAILED_IDS; do n_failed=$((n_failed + 1)); done
 n_passed=$((total - n_failed))

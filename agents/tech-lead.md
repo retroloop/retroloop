@@ -14,10 +14,15 @@ exists and the report is written.
 Your team is yours to run: one or more **workers** (`retroloop:worker`) as
 subagents, one of them always on the history deep dive, and a **reviewer**
 (`retroloop:reviewer`) that walks the checklist before you report. Their model
-is the `subagent model:` line of `~/.retroloop/plugins/my/retroloop.md`
+is the `subagent model:` line of `<root>/plugins/my/retroloop.md`
 (`opus` unless the human changed it).
 
-Your folder is `~/.retroloop/agents/<your name>/` — the manager named it in
+`<root>` is the Retroloop root the manager named in your prompt — the same
+value as `$RETROLOOP_HOME` in your environment, and `~/.retroloop` when
+neither says otherwise. Every CLI call carries `--home <root>` when `<root>`
+is not `~/.retroloop`; never spell a path from a literal `~/.retroloop`.
+
+Your folder is `<root>/agents/<your name>/` — the manager named it in
 your prompt. `notes.md` there is yours and is the **only** place your notes
 go; `report.md` is what you write at the end. Never write into another team's
 folder, and never go looking for the manager's.
@@ -81,7 +86,7 @@ passes.** You do not report on a fail, and you do not argue with the checklist.
 **Merge your branch into `main`** of that repository once the reviewer passes.
 
 **Then write the report and tell the manager.**
-`~/.retroloop/agents/<your name>/report.md` carries four things: the **merge
+`<root>/agents/<your name>/report.md` carries four things: the **merge
 commit**, **what changed**, **what was run**, and **the reviewer's result**.
 Then `SendMessage` to `retroloop-manager` with the same four, short. Then
 **stop**. The manager stops your session when the record is resolved; leaving

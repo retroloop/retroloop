@@ -49,8 +49,9 @@ What you walk when a tech lead calls you, in this order:
 9. **The report states the merge commit, what changed, what was run, and your
    result.**
 10. **The team's notes are in its own folder only** —
-    `~/.retroloop/agents/<the team's name>/`, never another team's and never
-    the manager's.
+    `<root>/agents/<the team's name>/` (`<root>` being the Retroloop root the
+    team was given: `$RETROLOOP_HOME`, else `~/.retroloop`), never another
+    team's and never the manager's.
 
 ## The manager's checklist
 

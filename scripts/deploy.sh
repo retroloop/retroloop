@@ -3,7 +3,7 @@
 # Release a personalization plugin — the fixes are written, this is how they
 # reach the human's sessions.
 #
-#   deploy.sh <plugin dir> <record id>...
+#   deploy.sh [--no-update] <plugin dir> <record id>...
 #
 # One command, because a release that takes five is a release that ships at
 # four. It bumps the patch number, commits the working tree with the records it
@@ -39,7 +39,12 @@ usage() {
 deploy.sh — release a personalization plugin.
 
 Usage:
-  deploy.sh <plugin dir> <record id>...
+  deploy.sh [--no-update] <plugin dir> <record id>...
+
+`--no-update` does the bump, the commit and the backup push, but skips
+`claude plugin update` and prints the command it would have run. It is for a
+rehearsal against a scratch plugin, where a real update would move the pin of
+a plugin the rehearsal does not own; a release for real never passes it.
 
 The record ids are the retrospective records this release carries; they go in
 the commit subject, so the plugin's history reads as the history of the
@@ -50,6 +55,12 @@ it carries is a release nobody can audit later.
 USAGE
   exit 2
 }
+
+NO_UPDATE=0
+if [ "${1:-}" = '--no-update' ]; then
+  NO_UPDATE=1
+  shift
+fi
 
 [ $# -ge 2 ] || usage
 
@@ -110,6 +121,13 @@ git -C "$DIR" commit -qm "$MESSAGE" ||
 bash "$HERE/plugin-push.sh" "$DIR"
 
 # ── the deploy, and the proof it landed ──────────────────────────────────────
+# A rehearsal stops here and says so: the commit is real, the update is not,
+# and the line makes that impossible to mistake for a release.
+if [ "$NO_UPDATE" -eq 1 ]; then
+  printf 'Plugin committed as %s, not released: skipped `claude plugin update %s@%s --json -y` (--no-update).\n' "$NEW" "$NAME" "$MARKETPLACE"
+  exit 0
+fi
+
 out="$(claude plugin update "$NAME@$MARKETPLACE" --json -y 2>&1)" ||
   die "claude plugin update $NAME@$MARKETPLACE failed — the commit stands, the update did not land: $out"
 

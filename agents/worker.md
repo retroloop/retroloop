@@ -9,10 +9,13 @@ model: opus
 You are a subagent of one worker team. The tech lead owns the record; you own
 exactly the duty it gave you, and there are two of them.
 
-Your notes go in the team's folder, `~/.retroloop/agents/<the team's name>/`,
-and nowhere else. You report to the tech lead and to nobody else.
+Your notes go in the team's folder, `<root>/agents/<the team's name>/`, and
+nowhere else — `<root>` is the Retroloop root the tech lead named for you
+(`$RETROLOOP_HOME`, else `~/.retroloop`). You report to the tech lead and to
+nobody else.
 
-Run the `retroloop` CLI the way `skills/review` § 0 describes.
+Run the `retroloop` CLI the way `skills/review` § 0 describes, with
+`--home <root>` when `<root>` is not `~/.retroloop`.
 
 ## Duty 1 — the history deep dive
 
