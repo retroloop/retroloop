@@ -149,9 +149,71 @@ gh repo create <their-user>/my --private --source ~/.retroloop/plugins/my --push
 ```
 
 If they decline, that is the answer for good: nothing in Retroloop asks again,
-and the fixer pushes only when a remote already exists.
+and the resolve lane pushes only when a remote already exists.
 
-## 5 · Register the plugin with Claude Code
+## 5 · Two choices, recorded in your plugin
+
+Two questions, asked through the question tool, and both answers land in one
+file the rest of Retroloop reads back. Neither is a one-time chance: the file
+is plain text, so the user can edit it by hand or run setup again.
+
+**1 · Where do you track issues?**
+
+- **This tool only** *(default)* — the retrospective is the record, and
+  nothing leaves Retroloop.
+- **Elsewhere (GitHub, Asana, anything)** — after every finished review the
+  closing session runs the plugin's own `/my:file-issues` skill, which the
+  user adapts to their tracker, so the approved records also land where they
+  already work.
+
+**2 · Which model runs the manager and the tech leads?**
+
+Default **Fable** — the model of the standing manager session and of each
+worker team's tech lead. Their subagents run on **Opus** unless the user says
+otherwise.
+
+Write both answers into `~/.retroloop/plugins/my/retroloop.md`. The template
+ships that file with the defaults already in it: overwrite the values, and
+keep the shape exactly as it is — plain lines, one per choice.
+
+```
+# Retroloop
+
+Choices recorded by /retroloop:setup. Plain lines; edit them by hand or run setup again.
+
+tracking: this tool only
+model: fable
+subagent model: opus
+```
+
+`tracking:` is `this tool only` or `elsewhere`; `model:` and `subagent model:`
+take anything `claude --model` accepts. The scripts read `model:` and the
+review skill reads `tracking:`, so the spelling of those lines matters more
+than the prose around them. Commit the file in the plugin.
+
+Then make the folder the resolve lane keeps its working notes in — one per
+agent, flat, and nothing in it is ever cleaned up:
+
+```
+mkdir -p ~/.retroloop/agents
+```
+
+**Only if the user took a remote above**, one permission rule is worth adding:
+the resolve lane pushes the plugin through the plugin's own push script, and
+that script has to be allowed. Name the rule, ask for consent, and add it to
+`~/.claude/settings.json` only on their yes — a `permissions.allow` entry
+reading:
+
+```
+Bash(bash */scripts/plugin-push.sh */.retroloop/plugins/my)
+```
+
+Their own edit is just as good as yours. If they would rather do it
+themselves, or refuse the edit, print that one line, say it goes in
+`permissions.allow` in `~/.claude/settings.json`, and move on. With no remote
+there is nothing to push and nothing to allow.
+
+## 6 · Register the plugin with Claude Code
 
 ```
 claude plugin marketplace add ~/.retroloop/plugins
@@ -160,10 +222,10 @@ claude plugin install my@my-marketplace -y --json
 
 The marketplace is the folder; the plugin is the entry inside it. Read the JSON
 back — it says whether the install landed. After fixes ship, deploys are
-`claude plugin update my@my-marketplace --json -y`, and that is the fixer's job,
-not the user's.
+`claude plugin update my@my-marketplace --json -y`, and that is the manager's
+job, not the user's.
 
-## 6 · The checklist — report it, honestly
+## 7 · The checklist — report it, honestly
 
 Walk these and report each with its evidence (the actual command output), then
 tell the user to restart their Claude Code session so the new plugin loads:
@@ -173,6 +235,10 @@ tell the user to restart their Claude Code session so the new plugin loads:
 - **Server up** — `retroloop up --json` reported a URL.
 - **Review page loads** — the URL answered 200.
 - **Plugin created** — `~/.retroloop/plugins/my` is a git repo with one commit.
+- **Choices recorded** — `retroloop.md` in the plugin names the tracking
+  choice and the model.
+- **`agents/` exists** — `~/.retroloop/agents` is there for the resolve lane's
+  notes.
 - **Marketplace registered** — the `marketplace.json` under
   `~/.retroloop/plugins/.claude-plugin/` exists, and
   `claude plugin marketplace list` shows `my-marketplace`.
@@ -182,3 +248,9 @@ tell the user to restart their Claude Code session so the new plugin loads:
 Name the paths in the report: the app, the plugin, and the shortcut if they
 took one. Anything unchecked: say so plainly, with what failed. An honest
 partial setup beats a claimed complete one.
+
+And say once what happens after a review, because it is the half of Retroloop
+they have not seen yet: **after every finished review the manager — a
+background session you can watch in `claude agents` — applies the records you
+approved and releases your plugin; you will be told the one reload line to
+type in sessions that were already open.**

@@ -1008,6 +1008,13 @@ watcher you have not re-armed yet — the same message says the channel is
 channel that works. This costs one clause and it is the difference between him
 waiting and him waiting *in the dark*.
 
+**And make sure the manager is running.** Once the revision is filed, run
+`bash "${CLAUDE_PLUGIN_ROOT}/scripts/ensure-manager.sh"` once and report its one
+line in the same message — `running <id>`, or `setup has not run; no manager`,
+which means `/retroloop:setup` has not been run yet. That is the whole of it:
+no panel, no question, nothing to wait on. The script is idempotent, so running
+it when the manager is already up costs one line and changes nothing.
+
 **Then find out when he finishes.** One command answers that, in two forms.
 `--follow` subscribes to the running server's live events — the same channel
 that updates every open review page, at roughly 300 ms — so the press reaches
@@ -1840,6 +1847,19 @@ tree, so an export filed anywhere else is one the loop cannot read back. With
 `pending`, `approved`, `declined`, `revise`, `hold` — when what you want is the
 work list rather than the whole outcome.
 
+**Then two things after the export, in this order.** First, run
+`bash "${CLAUDE_PLUGIN_ROOT}/scripts/ensure-manager.sh"` again and report its
+line — the same idempotent one-liner as in step 3, and this is the moment the
+resolve lane has something to do: the records he approved are decided, closed
+and queued for it.
+
+Second, read `~/.retroloop/plugins/my/retroloop.md`, the note his setup wrote.
+If it carries the line `tracking: elsewhere`, invoke the skill
+`/my:file-issues` with the `retroId` — his own plugin files the approved
+records wherever he tracks issues, and how it does that is his to adapt. If it
+carries `tracking: this tool only`, or the line is not there, or the file is
+not there, **do nothing**: that is the answer, not a gap to fill in.
+
 **What the file contains.** One JSON object, `retro.export.v1`, with seven
 top-level keys — you never author it, but you may be asked what is in it:
 
@@ -1901,6 +1921,12 @@ records forever.
   proposing is still his to accept, and no comment saying "we should obviously do
   Solution 3" makes the choice for him. He may pick the one you did not
   recommend, and when he does, that is an answer and not a mistake to correct.
+- **Never apply a fix.** Not the easy one, not while you are already in the
+  file, not because he approved it in front of you. Drafting a record is not
+  building it: **the resolve lane's manager and its worker teams do that after
+  the close**, with the history behind the friction researched first and a
+  reviewer walking a checklist before anything merges. Your part ends at the
+  export.
 - **Never finish or reopen a review.** `ReviewFinished` comes from his
   **Finish review** button and nowhere else. Closing a review *is* yours
   (step 5) and is a different act: it files an outcome he has already given, it

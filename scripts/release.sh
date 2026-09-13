@@ -12,8 +12,8 @@
 # deploy looks exactly like a release that worked.
 #
 # This is the OWNER's script for the Retroloop plugin. A user's own
-# personalization plugin is released by the fixer, which bumps silently and
-# pushes through scripts/plugin-push.sh.
+# personalization plugin is released by the manager through scripts/deploy.sh,
+# which bumps silently and pushes through scripts/plugin-push.sh.
 #
 # Any step failing stops the release and says which one, loudly and non-zero.
 

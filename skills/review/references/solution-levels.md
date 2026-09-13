@@ -3,7 +3,7 @@
 Every issue proposes solutions at **levels**. A level is not a size estimate —
 it is the **approval envelope the human grants**: how much change to their
 setup they authorize in one word. The human selects exactly one solution, and
-the fixer may build *that solution at that level* and nothing bigger.
+the worker team may build *that solution at that level* and nothing bigger.
 
 ## What calibrates a level
 
