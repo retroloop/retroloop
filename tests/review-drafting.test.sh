@@ -169,6 +169,35 @@ lacksf 'history: the grep over the prior exports is gone' "$SKILL" \
 has 'history: the lesson of the instance-patch loop is kept' "$SKILL" \
   'r-instance-patch-loop'
 
+# ── the candidate search: up to three word choices ───────────────────────────
+# One query finds the known earlier record in 3 of 10 known recurrences; three
+# word choices find it in 9 of 10. A generic word finds everything, which is the
+# same as finding nothing — "lead" matched 85 records. So the fallback is part
+# of the instruction, in every place the instruction is given.
+for f in "$SKILL" "$DRAFTER" "$FIVE_WHYS"; do
+  b="$(basename "$f")"
+  has "search/$b: up to three word choices" "$f" \
+    '[Uu]p to three word choices'
+  has "search/$b: single distinctive words before a two-word phrase" "$f" \
+    'single distinctive words'
+  has "search/$b: the fallback ends in a two-word phrase" "$f" \
+    'two-word phrase'
+  hasf "search/$b: never generic words, by name" "$f" \
+    'lead, test, review, agent'
+  has "search/$b: at most the ten most plausible by title" "$f" \
+    'ten most plausible by title'
+  has "search/$b: say which query found them" "$f" \
+    'which query found'
+  has "search/$b: the queries and their counts go in the diagnostic data" "$f" \
+    '[Ee]very query.*row count'
+done
+hasf 'search: what the text actually matches, all four fields' "$SKILL" \
+  'case-insensitive substring over the title, the slug, the problem and the root cause'
+has 'search: the evidence for three tries rather than one' "$SKILL" \
+  '3 of 10|three of ten'
+hasf 'diagnostic-data: the heading holds the queries too' "$DIAGNOSTIC" \
+  'which query found'
+
 # ── the compaction statement ─────────────────────────────────────────────────
 hasf 'compaction: the plain line, verbatim' "$SKILL" \
   'This session compacted <N> times before drafting'

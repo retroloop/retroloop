@@ -52,7 +52,7 @@ fact you don't have, the record says so instead of inventing it.
 
 ## The drafter's rules
 
-These four hold for whoever writes the record — the main agent, or a fork
+These five hold for whoever writes the record — the main agent, or a fork
 drafting one group of frictions.
 
 **The guidance you ran under is evidence.** The skills that were loaded, every
@@ -76,6 +76,19 @@ broken — and the broken words are the record of what he actually said. The
 which means restored words and punctuation and nothing else. A cleaned quote
 that tightens his point, drops his aside, or makes him sound more measured is a
 paraphrase wearing a quote's clothes.
+
+**Candidate earlier records take up to three word choices, and no
+investigation.** Run one read query per friction —
+`retroloop record list --all --text "<a distinctive word of the class>" --json`
+— and when the first word returns nothing, try again: **single distinctive
+words** of the class first, one per query, then a **two-word phrase**, and stop
+at three. **Never generic words** — lead, test, review, agent and their like
+match nearly every record, and matching everything is the same as matching
+nothing. **List at most the ten most plausible by title**, **say which query
+found them**, and put every query and its row count in the diagnostic data
+beside them. Then leave them there: they are candidates for the resolving
+side's history deep dive, and a drafter that opens them is doing the deep dive
+it was told not to do.
 
 **Every solution's first bullet says "(derived from this session only)".** One
 session is one data point. It is not a disclaimer to be waived when a finding

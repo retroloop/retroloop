@@ -55,10 +55,13 @@ as one record in the revision-file shape the review skill defines, and nothing e
   file tree whose update targets you verified exist. Every solution's first bullet says
   "(derived from this session only)".
 - Candidate earlier records: run one read query per friction —
-  retroloop record list --all --text "<two or three words of the class>" --json — and list what
-  it returns under the diagnostic data heading "candidate earlier records (by text search, not
-  verified)". They live there and nowhere else. Do not investigate them and do not claim a
-  recurrence.
+  retroloop record list --all --text "<a distinctive word of the class>" --json — and try up to
+  three word choices before giving up: single distinctive words of the class first, one per
+  query, then a two-word phrase. Never generic words such as lead, test, review, agent, which
+  match nearly every record. List at most the ten most plausible by title under the diagnostic
+  data heading "candidate earlier records (by text search, not verified)", say which query found
+  them, and put every query you ran and its row count in the diagnostic data beside them. They
+  live there and nowhere else. Do not investigate them and do not claim a recurrence.
 - Diagnostic data: fill every heading of the skeleton, "none" where empty. Everything the
   resolver would otherwise have to rediscover: tools, arguments, outputs, errors, paths, versions,
   what was tried, the quotes you relied on. Say where evidence predates a compaction.
@@ -67,6 +70,15 @@ as one record in the revision-file shape the review skill defines, and nothing e
   revision, do not run any command that writes, do not touch the notes or the wiki, do not spawn
   agents, do not message anyone.
 ```
+
+**Why three tries and not one.** `--text` is a case-insensitive substring over
+the title, the slug, the problem and the root cause, so it matches words rather
+than meanings and the word decides everything. Against the ten known
+recurrences in the existing exports, a single first query found the earlier
+record 3 of 10 times and up to three word choices found it 9 of 10 — while a
+generic word found everything, which is the same as finding nothing: `lead`
+returned 85 records. Three is where the curve flattens, not a number somebody
+liked.
 
 ## What the fork writes
 

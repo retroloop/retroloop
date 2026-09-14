@@ -605,13 +605,32 @@ came from, and only then decide what could be done about it. A record whose root
 cause is "the AI did not know" and whose solutions are "tell it" is a record
 nobody researched.
 
-**Earlier records are candidates, and finding them is one query.** Run **one
-read query per friction** — two or three words of the class, not of the
-instance, because a slug and a title are what the search reads:
+**Earlier records are candidates, and finding them takes one read query per
+friction and at most three tries.** The words are of the class, never of the
+instance:
 
 ```
-retroloop record list --all --text "<two or three words of the class>" --json
+retroloop record list --all --text "<a distinctive word of the class>" --json
 ```
+
+**`--text` is a case-insensitive substring over the title, the slug, the
+problem and the root cause** — `whatHappened`, every why and the root included.
+It matches words rather than meanings, so the word you pick is the whole of the
+search.
+
+**Up to three word choices, and stop there.** One query is not enough and a
+fourth is not worth the turn: against the ten known recurrences in the existing
+exports, a single first query found the earlier record **3 of 10** times, and up
+to three choices found it **9 of 10**. Try **single distinctive words** of the
+class first, one per query, and fall back to a **two-word phrase** only when the
+single words return nothing. **Never generic words** — lead, test, review, agent
+and their like match nearly everything; a query for `lead` returned 85 records,
+which is the same as finding nothing.
+
+**List at most the ten most plausible by title, and say which query found
+them.** Every query you ran and the row count it returned goes in the diagnostic
+data beside them: a search that returned 85 rows and a search that returned two
+are different evidence, and the resolver has to know which one it is holding.
 
 **`--all` is what makes this a different command from the `record list` of
 step 4.** That one answers about one revision of one retrospective; this one
@@ -781,8 +800,9 @@ the headings are bold-lead bullets rather than `#` headings:
 - **environment** — model, permission mode, plugin versions.
 - **what was tried** — each attempt, and how it failed.
 - **quotes relied on** — the human's words this record rests on.
-- **candidate earlier records (by text search, not verified)** — what one
-  `record list --all --text` query returned, unexamined.
+- **candidate earlier records (by text search, not verified)** — every
+  `record list --all --text` query run and its row count, which query found them,
+  and at most the ten most plausible by title.
 - **limits of this evidence** — what is missing, what is inferred, what predates a compaction.
 ```
 
@@ -1098,7 +1118,7 @@ markdown field are carried in JSON:
         "root": "Locks are advisory with no liveness check, so an abandoned lock is indistinguishable from a held one."
       },
       "workaround": "- **Delete the lock file by hand** once you have confirmed no deploy is running — costs a human every time it fires.",
-      "diagnosticData": "- **commands and outputs** — `./scripts/deploy.sh staging` printed `waiting for lock…` and then nothing for 40 minutes. `ls -l /var/run/deploy.lock` showed it written at 02:14. `ps -p 4411` — the PID from that deploy's log — returned nothing.\n- **error text** — none. The failure is silence: nothing is printed after `waiting for lock…`, and the wait has no deadline to end it.\n- **paths and line references** — `scripts/deploy.sh:63` takes the lock; `lib/lock.ts:20-34` is `acquire()`, which writes an empty file; `lib/lock.ts:41` releases it, and runs only on a clean exit.\n- **commits and versions** — `lib/lock.ts` unchanged since `a3f21c9` (2025-11-04); `scripts/deploy.sh` last changed in `7d0e114`. Node 22.3.0.\n- **environment** — model: claude-opus-5; permission mode: acceptEdits; plugin versions: retroloop 0.2.2.\n- **what was tried** — waited 40 minutes; re-ran the deploy and waited again; deleted the lock file by hand, after which the deploy finished in 90 seconds.\n- **quotes relied on** — \"this thing has been sitting there for ages doing nothing\", said while watching the deploy log.\n- **candidate earlier records (by text search, not verified)** — `retroloop record list --all --text \"deploy lock\" --json` returned `r-slow-deploys` (retro 4, declined) and `r-lockfile-perms` (retro 9, resolved). Neither was opened.\n- **limits of this evidence** — that the 02:14 holder was killed is inferred from the file's mtime and the missing PID; nobody saw it die. This session compacted 1 time before drafting, and the first 20 minutes of the wait predate it, resting on the 09:12 notes entry rather than on the transcript.",
+      "diagnosticData": "- **commands and outputs** — `./scripts/deploy.sh staging` printed `waiting for lock…` and then nothing for 40 minutes. `ls -l /var/run/deploy.lock` showed it written at 02:14. `ps -p 4411` — the PID from that deploy's log — returned nothing.\n- **error text** — none. The failure is silence: nothing is printed after `waiting for lock…`, and the wait has no deadline to end it.\n- **paths and line references** — `scripts/deploy.sh:63` takes the lock; `lib/lock.ts:20-34` is `acquire()`, which writes an empty file; `lib/lock.ts:41` releases it, and runs only on a clean exit.\n- **commits and versions** — `lib/lock.ts` unchanged since `a3f21c9` (2025-11-04); `scripts/deploy.sh` last changed in `7d0e114`. Node 22.3.0.\n- **environment** — model: claude-opus-5; permission mode: acceptEdits; plugin versions: retroloop 0.2.2.\n- **what was tried** — waited 40 minutes; re-ran the deploy and waited again; deleted the lock file by hand, after which the deploy finished in 90 seconds.\n- **quotes relied on** — \"this thing has been sitting there for ages doing nothing\", said while watching the deploy log.\n- **candidate earlier records (by text search, not verified)** — `--text \"advisory\"` returned 0 rows; `--text \"lockfile\"` returned 2, and is the query that found these: `r-slow-deploys` (retro 4, declined) and `r-lockfile-perms` (retro 9, resolved). Neither was opened.\n- **limits of this evidence** — that the 02:14 holder was killed is inferred from the file's mtime and the missing PID; nobody saw it die. This session compacted 1 time before drafting, and the first 20 minutes of the wait predate it, resting on the 09:12 notes entry rather than on the transcript.",
       "solutions": [
         {
           "bullets": "- **Say in the runbook that the lock must be cleared by hand** after a killed deploy, and how to tell it is safe. (derived from this session only)\n- **Costs nothing and fixes nothing:** the next person still pays the 40 minutes before they think to look it up.\n- **Worth having anyway** as the stopgap until one of the two below lands.",

@@ -38,8 +38,9 @@ and `none` reads as checked and empty.
 - **environment** — model, permission mode, plugin versions.
 - **what was tried** — each attempt, and how it failed.
 - **quotes relied on** — the human's words this record rests on.
-- **candidate earlier records (by text search, not verified)** — what one
-  `record list --all --text` query returned, unexamined.
+- **candidate earlier records (by text search, not verified)** — every
+  `record list --all --text` query run and its row count, which query found them,
+  and at most the ten most plausible by title.
 - **limits of this evidence** — what is missing, what is inferred, what predates a compaction.
 ```
 
@@ -49,11 +50,16 @@ Three of them are easy to get wrong:
   mode, and the versions of every plugin that was loaded. It is how a resolver
   tells "this broke under `acceptEdits`" from "this broke".
 - **`candidate earlier records (by text search, not verified)` is a raw search
-  result and says so in its own heading.** What the query returned, not what it
-  means. Nothing here is investigated, no prior is confirmed, and a record that
-  says "this recurred" has made a claim its author did not check. **The
+  result and says so in its own heading.** What the queries returned, not what
+  they mean. Nothing here is investigated, no prior is confirmed, and a record
+  that says "this recurred" has made a claim its author did not check. **The
   recurrence judgment belongs to the resolver's history deep dive**, which has
-  the tools and the time for it.
+  the tools and the time for it. Record **every query and its row count**, not
+  just the one that worked, and **say which query found them** — the search is a
+  substring match over the title, slug, problem and root cause, so a hit on a
+  distinctive word and a hit on a common one are worth completely different
+  amounts, and only the counts tell them apart. Up to three word choices, at
+  most ten records listed, by title.
 - **`limits of this evidence` is where compaction lands.** Say which parts rest
   on the transcript and which rest on the notes because the transcript is gone.
   A resolver that knows an observation came from a notes entry rather than from
@@ -93,9 +99,11 @@ whole-record example:
   deleted the lock file by hand, after which the deploy finished in 90 seconds.
 - **quotes relied on** — "this thing has been sitting there for ages doing nothing",
   said while watching the deploy log.
-- **candidate earlier records (by text search, not verified)** —
-  `retroloop record list --all --text "deploy lock" --json` returned `r-slow-deploys`
-  (retro 4, declined) and `r-lockfile-perms` (retro 9, resolved). Neither was opened.
+- **candidate earlier records (by text search, not verified)** — three queries:
+  `--text "advisory"` returned 0 rows, `--text "lockfile"` returned 2, `--text "deploy lock"`
+  returned 1 already among them. `lockfile` is the query that found these two:
+  `r-slow-deploys` (retro 4, declined) and `r-lockfile-perms` (retro 9, resolved).
+  Neither was opened.
 - **limits of this evidence** — that the 02:14 holder was killed is inferred from the
   file's mtime and the missing PID; nobody saw it die. The first 20 minutes of the wait
   predate this session's one compaction and rest on the 09:12 notes entry rather than on
