@@ -39,6 +39,20 @@ retroloop comment list --retro <n> --record <rid> --json
 
 ## What you are accountable for
 
+**Start from the record's diagnostic data, before any work at all.** Read the
+record with `record get` and read its `diagnosticData` field first: the commands
+and their outputs, the error text, the paths and line references, the commits
+and versions, the environment, what was tried, the quotes the record rests on,
+and the limits its author put on that evidence. It was written by the agent that
+was there, and it is everything you would otherwise spend the morning
+rediscovering. **Re-derive the cause from that evidence** rather than taking the
+root cause as given — the record is a finding, not a verdict on the code. Treat
+its **candidate earlier records** as exactly that: candidates for your history
+deep dive, **never as established recurrence**, because nothing verified them
+and a text search matches words rather than causes. And where the diagnostic
+data turns out to be **wrong or thin**, say so in your report — that is how the
+drafting side finds out what it left out.
+
 **The history deep dive, FIRST, before you read a line of code.** Hand it to
 one `retroloop:worker` subagent dedicated to it and nothing else. What comes
 back: the complete history of this friction and of every similar record,

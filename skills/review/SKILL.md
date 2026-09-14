@@ -5,7 +5,7 @@ disable-model-invocation: true
 argument-hint: "<optional extra notes / focus>"
 ---
 
-Method references: [references/five-whys.md](references/five-whys.md) — the root-cause chain from felt friction to a fixable cause; [references/solution-levels.md](references/solution-levels.md) — the L1/L2/L3 approval envelope and how to propose within it.
+Method references: [references/five-whys.md](references/five-whys.md) — the root-cause chain from felt friction to a fixable cause, and the drafter's rules; [references/solution-levels.md](references/solution-levels.md) — the L1/L2/L3 approval envelope and how to propose within it; [references/drafter-contract.md](references/drafter-contract.md) — the brief and the contract every drafting fork is handed; [references/diagnostic-data.md](references/diagnostic-data.md) — the evidence skeleton every record carries.
 
 # Retroloop — the session retrospective loop
 
@@ -333,6 +333,14 @@ finished — to the most recent one. Every read command takes `--session` the sa
 way, so you can always trade a session for its retrospective. The trade does not
 run the other way: see the `retroId` bullet above.
 
+**If `state` comes back `reviewing`, you are coming in with a review still
+open — so arm the finish watch before anything else.** No watcher survives the
+session it was armed in, and nothing tells you the last one is gone; a review
+whose watch died with a previous session is a press nobody is listening for.
+Step 3's "The bridge" says how to arm it, and re-arming loses nothing: the wait
+reads from the store, so a press that landed while nothing was armed comes back
+at once.
+
 **Exit 3 here means one of two different things, and they are easy to tell
 apart.** If the session id is wrong, the message names the session
 (`session … not found`) — that is a lost id, and the bullets above are the
@@ -507,7 +515,86 @@ human may have written notes or annotated yours while you were working, and this
 is the only moment you are allowed to look. An empty list is an answer, and it
 costs one call to get it.
 
-### Before you write: do the deep dive
+### Before you write: nominate, group, fork
+
+**Drafting a retrospective is not one agent typing.** The root cause of a
+friction lives in the session that produced it — the commands, what they
+printed, the rules the agent was reading at the time — and holding all of that
+for six frictions at once is how a draft turns into six variations of "the AI
+did not know". So the work is split: you nominate and group, one agent per
+group does the root-cause work in parallel, and you assemble what comes back.
+
+**1 · Nominate the records.** Go through `notes.md`, the human's notes from
+`note list --with-human`, every `agents/*/notes.md`, and what you remember of
+the session; list every friction worth a record. Fold near-duplicates into one
+— two spellings of the same cost are one record — and **keep a one-line reason
+for anything you drop**, because he may ask, and "it did not seem worth it" is
+an answer you should be able to defend.
+
+**2 · Group them.** Two frictions belong together when they share a **suspected
+cause or the same surface** — the same skill, the same script, the same hop of
+a channel. **At most three frictions in a group**, and a friction with **no
+sibling is its own group**. The cap is not arithmetic: a drafter holding four
+unrelated frictions writes four thin records, and the whole value of grouping
+is one agent seeing that two frictions are the same thing.
+
+**3 · Write one brief per group.** The template is in
+[references/drafter-contract.md](references/drafter-contract.md) and is filled
+in as written. It carries pointers — which notes entries, what the session was
+doing, which files and commands, the notes' own suspect line — and the human's
+words copied exactly. **What it must not carry is a root cause of yours.** Hand
+a drafter your theory and what comes back is your theory with citations.
+
+**4 · Fork one agent per group, all at once.** In Claude Code that is the Agent
+tool with `subagent_type` `fork`, **one call per group in the same message, so
+they run in parallel**. The prompt is the fork contract from that same
+reference, followed by the brief.
+
+**These are forks of the main agent, not fresh agents** — copies of you, on
+your model, and each one inherits the whole conversation context. That is the
+whole reason for the shape: the evidence a root cause needs is what was
+actually run, what came back, and what you were reading when it happened, and
+none of that is written down anywhere a new agent could go and get it. **No
+tool exists yet that lets a fresh agent read the session's transcript**, so a
+fork is the only kind of agent that arrives already holding it. If one ever
+does exist, this step is worth revisiting.
+
+Each fork writes its drafts to
+`~/.retroloop/sessions/<id>/agents/draft-<group>/records.json` and reports one
+line: the path, and how many records are in it.
+
+**5 · Assemble, mint, file.** Wait for **every** fork's completion notification
+— you **never file with a fork missing**, because a record drafted and then
+dropped on the floor is worse than one never drafted. Then read every draft
+file, put the records into one revision file, and **mint the `rid` and `num`
+yourself** — the forks did not, because none of them could know which numbers
+the others were taking. **Order the records by severity**, most severe first,
+which is the order he reads them in; on a first revision that order is what the
+`num`s run in. On a later one the numbers are already spoken for and the rules
+in "Identity" below decide them. Then file with `revision create`.
+
+**`revision create` validates the whole file and refuses a bad one with nothing
+filed** — exit 2, naming the field. When it refuses, **fix the draft by hand and
+file again: there is no automatic re-fork.** A validation error is a fault in
+the assembly you did, and a second round of forks would not touch it.
+
+**Everything after this is yours.** The wait, the rounds and the close are the
+main agent's exactly as they are today. A fork drafts and stops; §4 and §5 of
+this file never involve one.
+
+**Say how many times this session compacted.** The number of files in
+`~/.retroloop/sessions/<id>/snapshots/` is the count — one snapshot is taken
+before each compaction — and it goes in one plain line, `This session compacted
+<N> times before drafting`, at the top of the report you hand the human and
+into the `diagnosticData` of every record whose evidence a compaction touched.
+Each drafter adds where its own evidence predates one and rests on the notes
+rather than on the transcript. It is one sentence, and it is what tells a
+reader how much of a record is memory.
+
+### The deep dive every record is made of
+
+This is what each drafter runs, and what you run for a record you draft
+yourself.
 
 **Every record is a piece of research before it is a piece of writing.** The
 human's words are the ask (*"the AI should do deep-dive and propose solutions (up
@@ -518,20 +605,64 @@ came from, and only then decide what could be done about it. A record whose root
 cause is "the AI did not know" and whose solutions are "tell it" is a record
 nobody researched.
 
-**The deep dive includes a mandatory class check against the prior exports.**
-The complete history of every past friction sits machine-readable in
-`~/.retroloop/retros/*/retro.json`, and it is an instruction surface the
-loop itself produced — so before drafting, search it for the CLASS, not just
-the instance (titles, slugs and problem text are all searchable). A record of
-a recurring class must carry three things: **its priors by name**, **why each
-prior fix did not hold**, and **a solution scoped to the class rather than
-the instance**. The loop's own history is the evidence (retro-12
-`r-instance-patch-loop`): the finish channel broke three times across retros
-7, 9 and 12 while each fix repaired only the hop that had just failed, and
+**Earlier records are candidates, and finding them takes one read query per
+friction and at most three tries.** The words are of the class, never of the
+instance:
+
+```
+retroloop record list --all --text "<a distinctive word of the class>" --json
+```
+
+**`--text` is a case-insensitive substring over the title, the slug, the
+problem and the root cause** — `whatHappened`, every why and the root included.
+It matches words rather than meanings, so the word you pick is the whole of the
+search.
+
+**Up to three word choices, and stop there.** One query is not enough and a
+fourth is not worth the turn: against the ten known recurrences in the existing
+exports, a single first query found the earlier record **3 of 10** times, and up
+to three choices found it **9 of 10**. Try **single distinctive words** of the
+class first, one per query, and fall back to a **two-word phrase** only when the
+single words return nothing. **Never generic words** — lead, test, review, agent
+and their like match nearly everything; a query for `lead` returned 85 records,
+which is the same as finding nothing.
+
+**List at most the ten most plausible by title, and say which query found
+them.** Every query you ran and the row count it returned goes in the diagnostic
+data beside them: a search that returned 85 rows and a search that returned two
+are different evidence, and the resolver has to know which one it is holding.
+
+**`--all` is what makes this a different command from the `record list` of
+step 4.** That one answers about one revision of one retrospective; this one
+reads every record of every retrospective, which is the whole of what `--all`
+means — and `--text` requires it, exit 2 otherwise. It refuses `--retro`,
+`--session` and `--revision` for the same reason rather than ignoring them.
+
+**What comes back is one wide row per match**, carrying the record's ledger
+number (`recordId` — the number `record get` takes), its `retroId` and `rid`,
+its `title`, `problem` and root cause, the human's own words on it, the
+solution in effect and where the record stands. A candidate line needs three of
+those — the number, the retrospective, and the title — and the rest is there so
+the **resolver** does not have to open each one. Do not paste whole rows into
+the record.
+
+Put what it returns under the diagnostic data heading **"candidate earlier
+records (by text search, not verified)"**, where they live **and nowhere
+else**. Do not open them, do not build on them, and **never say "this
+recurred"**: a text search matches words rather than causes, so a draft that
+turns a word match into a recurrence has made a claim nobody checked. **The
+recurrence judgment belongs to the resolver's history deep dive**, which gets
+the record, the tools and the time to do it properly.
+
+**The lesson that put a history step here has not changed** (retro 12
+`r-instance-patch-loop`): the finish channel broke three times across retros 7,
+9 and 12 while each fix repaired only the hop that had just failed, and
 rules-that-do-not-bind accumulated six instances across retros 8–12 after
-retroloop 8's root had already named the mechanism — new instances kept getting
-new sentences because nothing in the loop read its own output at drafting
-time.
+retro 8's root had already named the mechanism — new instances kept getting new
+sentences because nothing in the loop read its own output. What changed is who
+reads it. The drafting side hands over named candidates with the evidence
+attached; the solving side is where a class is established and fixed as a
+class.
 
 **Then propose one to three ways to solve it, and say which one you recommend.**
 Not three for the sake of three — *"In some places only 1-2 might make sense when
@@ -613,6 +744,7 @@ any of them again. That is the whole list: nothing else moved.
 | `humanWords` | array of `{verbatim, cleaned, context?}` | may be `[]` when the human said nothing quotable |
 | `rootCause` | `{whatHappened: string, whys: string[], root: string}` | `whys` is 1–5 entries; see form 2 below |
 | `workaround` | string | free text, or the literal `"none"` — never absent |
+| `diagnosticData` | string | the evidence this record travels with, as the nine-heading skeleton below; required, and never empty |
 | `solutions` | array of `{bullets, footprint, level, recommended}` | one to three, lowest level first, exactly one recommended; see below |
 | `requester` | `"human"` \| `"ai"` | who raised it |
 | `impacts` | `"human"` \| `"ai"` | whom it primarily costs |
@@ -630,7 +762,8 @@ any of them again. That is the whole list: nothing else moved.
   that came from somebody in particular; a solution you worked out yourself does
   not need `(AI-suggested)` on every line.
 - **Every string in the document is validated for presence.** `title`,
-  `problem`, `workaround`, both halves of every quote, `whatHappened`, each `why`,
+  `problem`, `workaround`, `diagnosticData`, both halves of every quote,
+  `whatHappened`, each `why`,
   `root`, and each solution's `bullets` and `footprint`: whitespace alone is exit
   2 as surely as an omitted key — `revision: records.0.problem — problem must not
   be empty`. **There is no string in this document that may be empty** —
@@ -645,6 +778,41 @@ any of them again. That is the whole list: nothing else moved.
   schema accepts `{"records": []}` at exit 0 and it files a revision that
   replaces the round with nothing to review. If you have nothing new to say,
   file no revision at all.
+
+### `diagnosticData` — the evidence the record carries
+
+**Required on every record, never empty**, and the one field written for
+somebody other than the human: it is what the resolving side reads months
+later, when the session that produced the record is gone. The owner's ask for
+it: *"Give the complete picture to the resolver side — the tools, the
+arguments, everything related — so that it stays grounded on facts and does not
+invent, while still doing its own deep dive from a strong start."*
+
+**Nine headings, all of them present, each carrying the literal `none` when it
+is empty.** Markdown, in the same safe subset as every other prose field, so
+the headings are bold-lead bullets rather than `#` headings:
+
+```
+- **commands and outputs** — every command run and what it printed, verbatim.
+- **error text** — the exact message, unabridged, or `none`.
+- **paths and line references** — `file:line` for everything the record names.
+- **commits and versions** — the commits in play, and the versions of what was running.
+- **environment** — model, permission mode, plugin versions.
+- **what was tried** — each attempt, and how it failed.
+- **quotes relied on** — the human's words this record rests on.
+- **candidate earlier records (by text search, not verified)** — every
+  `record list --all --text` query run and its row count, which query found them,
+  and at most the ten most plausible by title.
+- **limits of this evidence** — what is missing, what is inferred, what predates a compaction.
+```
+
+It is **not** a second root cause and not a summary of the record: the
+narrative fields say what happened and why, and this one says what was
+observed, in enough detail that someone who was not there can re-derive the
+same conclusion — or a different one. An omitted heading reads as forgotten;
+`none` reads as checked and empty. The skeleton, why it is there, and a worked
+example are in
+[references/diagnostic-data.md](references/diagnostic-data.md).
 
 ### Identity: `rid` and `num`
 
@@ -802,6 +970,13 @@ has to move, not how much work the fix is:
 | `4` | Change contracts: others must conform; consumers updated and old data shimmed in the same change |
 | `5` | Open-ended: emergent, autonomous, or not cleanly undoable |
 
+**Every solution's first bullet says `(derived from this session only)`.** One
+session is one data point, and the human is deciding how much of his setup to
+change on the strength of it. The line is not a disclaimer to be waived when a
+finding feels general: a friction that really is recurring proves it on the
+solving side, through the history deep dive, not through a drafter's
+confidence.
+
 **Write each solution so it can be read on its own.** The human reads one at a
 time — the page gives each its own tab — so a solution that says "same as above
 but cheaper" is a solution he cannot judge without holding two in his head.
@@ -943,21 +1118,22 @@ markdown field are carried in JSON:
         "root": "Locks are advisory with no liveness check, so an abandoned lock is indistinguishable from a held one."
       },
       "workaround": "- **Delete the lock file by hand** once you have confirmed no deploy is running — costs a human every time it fires.",
+      "diagnosticData": "- **commands and outputs** — `./scripts/deploy.sh staging` printed `waiting for lock…` and then nothing for 40 minutes. `ls -l /var/run/deploy.lock` showed it written at 02:14. `ps -p 4411` — the PID from that deploy's log — returned nothing.\n- **error text** — none. The failure is silence: nothing is printed after `waiting for lock…`, and the wait has no deadline to end it.\n- **paths and line references** — `scripts/deploy.sh:63` takes the lock; `lib/lock.ts:20-34` is `acquire()`, which writes an empty file; `lib/lock.ts:41` releases it, and runs only on a clean exit.\n- **commits and versions** — `lib/lock.ts` unchanged since `a3f21c9` (2025-11-04); `scripts/deploy.sh` last changed in `7d0e114`. Node 22.3.0.\n- **environment** — model: claude-opus-5; permission mode: acceptEdits; plugin versions: retroloop 0.2.2.\n- **what was tried** — waited 40 minutes; re-ran the deploy and waited again; deleted the lock file by hand, after which the deploy finished in 90 seconds.\n- **quotes relied on** — \"this thing has been sitting there for ages doing nothing\", said while watching the deploy log.\n- **candidate earlier records (by text search, not verified)** — `--text \"advisory\"` returned 0 rows; `--text \"lockfile\"` returned 2, and is the query that found these: `r-slow-deploys` (retro 4, declined) and `r-lockfile-perms` (retro 9, resolved). Neither was opened.\n- **limits of this evidence** — that the 02:14 holder was killed is inferred from the file's mtime and the missing PID; nobody saw it die. This session compacted 1 time before drafting, and the first 20 minutes of the wait predate it, resting on the 09:12 notes entry rather than on the transcript.",
       "solutions": [
         {
-          "bullets": "- **Say in the runbook that the lock must be cleared by hand** after a killed deploy, and how to tell it is safe.\n- **Costs nothing and fixes nothing:** the next person still pays the 40 minutes before they think to look it up.\n- **Worth having anyway** as the stopgap until one of the two below lands.",
+          "bullets": "- **Say in the runbook that the lock must be cleared by hand** after a killed deploy, and how to tell it is safe. (derived from this session only)\n- **Costs nothing and fixes nothing:** the next person still pays the 40 minutes before they think to look it up.\n- **Worth having anyway** as the stopgap until one of the two below lands.",
           "footprint": "/path/to/the/project/root\n└── docs\n    └── runbook.md                [UPDATE] how to tell an abandoned lock from a held one, and how to clear it",
           "level": 1,
           "recommended": false
         },
         {
-          "bullets": "- **Write the holder's PID into the lock** and treat a lock whose PID is not alive as free. (AI-suggested)\n- **Fail loudly after 60 seconds** rather than waiting forever — the silence is half the cost. (agreed)\n- **Nothing outside the deploy path changes:** the lock file gains a line, and every reader of it is in these two files.",
-          "footprint": "/path/to/the/project/root\n├── scripts\n│   └── deploy.sh              [UPDATE] fail after the wait budget instead of blocking\n└── lib\n    └── lock.ts                [UPDATE] write the holder PID; treat a dead holder's lock as free",
+          "bullets": "- **Write the holder's PID into the lock** and treat a lock whose PID is not alive as free. (AI-suggested) (derived from this session only)\n- **Fail loudly after 60 seconds** rather than waiting forever — the silence is half the cost. (agreed)\n- **Nothing outside the deploy path changes:** the lock file gains a line, and every reader of it is in these two files.",
+          "footprint": "/path/to/the/project/root\n├── scripts\n│   └── deploy.sh              [UPDATE] fail after the wait deadline instead of blocking\n└── lib\n    └── lock.ts                [UPDATE] write the holder PID; treat a dead holder's lock as free",
           "level": 2,
           "recommended": true
         },
         {
-          "bullets": "- **Replace the advisory lock with a lease** that expires on its own, so no abandoned lock can exist to be waited on.\n- **Every caller has to conform:** the three other scripts that take this lock renew it or lose it.\n- **The honest fix, and the expensive one** — it removes the class of failure rather than this instance of it.",
+          "bullets": "- **Replace the advisory lock with a lease** that expires on its own, so no abandoned lock can exist to be waited on. (derived from this session only)\n- **Every caller has to conform:** the three other scripts that take this lock renew it or lose it.\n- **The honest fix, and the expensive one** — it removes the class of failure rather than this instance of it.",
           "footprint": "/path/to/the/project/root\n├── lib\n│   ├── lease.ts               [CREATE] acquire, renew and expire; the lock file's replacement\n│   └── lock.ts                [DELETE] every caller moves to the lease\n└── scripts\n    ├── backup.sh              [UPDATE] renew the lease around the copy\n    ├── deploy.sh              [UPDATE] take a lease instead of a lock\n    └── migrate.sh             [UPDATE] renew the lease around the migration",
           "level": 4,
           "recommended": false
@@ -1048,31 +1224,81 @@ that bites you next is one nobody has looked at yet:
 | his press → the store | the review page's mutation | — |
 | the store → the wait | `review wait`, polling or `--follow` | retro 9 `r-monitor-not-realtime`: a 20s sleep between the press and the wait noticing |
 | the wait → the watcher | the process you armed | retro 7 `r-finish-event-unnoticed`: nothing was armed at all |
-| the watcher → YOU | **the watcher's process EXIT** | retro 12 `r-monitor-notify-gap`: the watcher saw the press, printed a line, and told nobody |
+| the watcher → YOU | **its printed LINE, and its process EXIT** | retro 12 `r-monitor-notify-gap`: the watcher saw the press, printed a line into a file, and told nobody |
 | the watcher staying alive | whatever runs you | retro 13 `r-fourth-finish-channel-failure`: two outside kills, read as a stop gesture, and the watch stood down mid-review |
 
-**Rank the rungs by DELIVERY CERTAINTY, never by capability.** The old ladder put
-a line-streaming monitor on top because streaming lines is richer than one exit,
-and that is how retro 12 happened: this harness re-invokes an agent when a
-background task **EXITS** and never when it prints a line, so during the entire
-window the monitor existed to cover it could not emit the one signal that
-travels. Task exit is the signal EVERY harness in use delivers. That makes the
-one-shot the default and the monitor the exception.
+**Two things wake a session, and they listen for different signals.** A
+**background task** wakes its session when the task **EXITS**. A **monitor
+watch** — the Monitor tool, or a plugin monitor — wakes it on **every line the
+command prints to stdout**. Retro 12's watcher used neither: it printed into a
+file and told nobody.
 
-**Rung 1 — one exit-on-event wait, whose EXIT is the notification.** Run exactly
-one `review wait --follow --timeout <n>` as a background task and end your turn.
+**The correction that record's lead then wrote down went one step too far**, and
+it is worth correcting because it is still in front of you: it said this harness
+re-invokes on a background task's **exit** and on nothing else, a printed line
+included. **The second half of that is false.** A plugin monitor event on a
+printed line was received in a live session on 2026-09-13, and the Monitor tool
+documents every stdout line as an event. The lesson survives and the conclusion
+does not: a watcher must emit a signal its **arming mechanism** actually listens
+for, and which signal that is depends on how you armed it.
+
+`watch-review.sh` emits **both** — one line, then exit — so the rung you pick is
+about what your harness can arm, not about what the watcher can say.
+
+**Rung 1 — one persistent monitor, and this is the default for a session the
+human is guiding.** Arm the Monitor tool with `persistent: true` (which is what
+"no deadline" is spelled as), a `description` of
+`"Retroloop finish watch, retro <id>"`, and the script as its command, with **no
+timeout**:
+
+```
+"${CLAUDE_PLUGIN_ROOT}/scripts/watch-review.sh" <retroId>
+```
+
+With no `--timeout` the wait blocks until he presses Finish, prints **exactly
+one line** — the event JSON — and exits. The line wakes you once and the exit
+ends the watch. Nothing is re-armed while he is still reading, and nothing dies
+quietly ten minutes in.
+
+**Stop it yourself when the review closes.** If you reach `review close` with
+the watch still armed — he finished and you closed in the same turn, or you
+closed on a round finished before you got here — call **`TaskStop`** on it. A
+monitor left armed on a closed retrospective waits forever for an event that is
+never coming.
+
+Two caveats, both about what a monitor does not survive:
+
+- **A monitor is never restored after a session restart.** Nothing re-arms it
+  for you and nothing tells you it is gone. So a session that comes in with a
+  review already open — a resume, a retrospective filed before you were spawned,
+  the recovery under "Recovering a `retroId` you have lost" above — **arms the
+  watch again before anything else**, whatever the last session had running.
+- **Whether a monitor survives a compaction is unproven** — it is an open
+  experiment from retro 50 and nobody has run it. Until somebody does, assume
+  it does not:
+  **re-arm after any compaction you can detect**, and the detector is the folder
+  the compaction count already comes from — a new file in
+  `~/.retroloop/sessions/<id>/snapshots/` since you armed. Re-arming costs one
+  call and loses nothing (below), so the cheap assumption is the right one.
+
+**Rung 2 — one exit-on-event wait as a background task: the fallback for a
+harness with no Monitor tool.** Run exactly one
+`review wait --follow --timeout <n>` as a background task and end your turn.
 There is no loop: when it exits you are re-invoked, and you read the exit code.
 
 ```
-"${CLAUDE_PLUGIN_ROOT}/scripts/watch-review.sh" <retroId> [--timeout <seconds>]
+"${CLAUDE_PLUGIN_ROOT}/scripts/watch-review.sh" <retroId> --timeout <seconds>
 retroloop review wait --follow --retro <retroId> --timeout 600 --json   # anywhere else
 ```
 
-The script is the same command with the reading already attached — it `exec`s
-the wait, so the process you are watching **is** the wait and no loop can be
-written after it, and it prints the hop map, the meaning of each exit and the
-exact relaunch line **before** blocking, because by the time the exit or the kill
-arrives the script is gone and that output is all you will have.
+**Here the `--timeout` is not optional**, and that is the one difference from
+rung 1: a background task is capped by whatever runs it, so the wait has to end
+before that cap does and be re-armed on its exit. The script is the same command
+with the reading already attached — it `exec`s the wait, so the process you are
+watching **is** the wait and no loop can be written after it, and it prints the
+hop map, the meaning of each exit and the exact relaunch line **before**
+blocking, because by the time the exit or the kill arrives the script is gone
+and that output is all you will have.
 
 - **exit 0** — he pressed Finish. The event JSON is on stdout.
 - **exit 7** — the seconds elapsed and *nothing else*. Re-arm.
@@ -1085,7 +1311,7 @@ An uncertified bridge has now cost four retros, and words test nothing:
 ~/.retroloop/apps/retroloop/scripts/watch-review.sh certify   # from the app checkout
 ```
 
-It stands up a throwaway stage, files a retrospective, arms this exact shape,
+It stands up a throwaway stage, files a retrospective, arms this same wait,
 presses Finish through the e2e stage-tool, and asserts the watcher **exited**
 with the event — red leg first, so a watcher that fabricates an exit fails
 rather than passes. Its third leg is the killed-watcher drill below.
@@ -1126,60 +1352,29 @@ so, and names the failure mode: *"the watch is interim: if it is killed I may no
 hear your press, so ping me if it goes quiet."* Silence must never be mistakable
 for a channel that works.
 
-**Rung 2 — a looping monitor, ONLY after you have proved lines reach you.** If
-your harness can run a watching script outside your turns **and hand you each
-line it prints as an event**, one monitor covers every round without a relaunch.
-That second half is load-bearing and is exactly the half retro 12's lead read
-past. Prove it before you rely on it: run a background task that prints a line
-and then keeps running, and check whether the line reached you as an event. It
-is a strict optimization over rung 1 — fewer relaunches, nothing else — so it is
-never worth an unproved assumption.
+**There is no looping-monitor rung any more.** The shell loop that used to be
+here existed because a wait always carried a deadline and something had to
+re-enter it. A wait with no deadline needs nothing around it, and a loop after
+the `exec` is impossible by construction — which was always the point of the
+`exec`. The looping shape still exists in the plugin, but it belongs to the
+other watch: `scripts/watch-finish.sh` is the resolve lane's manager waiting on
+**any** review on the stage, with no single retrospective to block on. Do not
+point that one at one review, and do not write a loop of your own around
+`review wait`. Every failure in the table above began with one.
 
-```sh
-last=0
-fails=0
-while :; do
-  event=$(retro review wait --follow --retro <retroId> --timeout 600 --json)
-  case $? in
-    0) fails=0
-       revision=$(printf '%s' "$event" | jq -r .revision)
-       if [ "$revision" = "$last" ]; then sleep 5; else
-         echo "review finished: revision $revision"; last=$revision
-       fi ;;
-    7) fails=0 ;;  # the wait's own timeout — nothing pressed yet, re-enter
-    *) fails=$((fails + 1))
-       [ "$fails" -lt 5 ] || { echo "monitor stopping: review wait failed $fails times"; exit 1; } ;;
-  esac
-  [ "$(retro review status --retro <retroId> --json | jq -r .state)" = finished ] &&
-    { echo "retrospective closed"; exit 0; }
-done
-```
+**Rung 3 — a foreground wait with a limit, when your harness has neither.**
+Block in the wait, spend the limit, and let the human relay the finish if it
+runs out before he does. This rung puts the notification burden back on him, so
+it is the rung you say out loud (the interim-bridge line above).
 
-`jq` there is only a JSON field reader — use whatever your shell has. Three
-things have to be right and none is a poll. **Track the last revision you
-emitted**, or the repeat between a finish and the next revision emits forever.
-**Sleep only in that repeat branch** — nothing can be pressed in that window,
-because the round is already finished and the review is waiting on your
-revision. **Let a persistent failure emit its own line and exit**, so silence
-never comes to mean "still reviewing". The `state` it reads is where the
-retrospective stands — `open`, `reviewing`, `submitted`, `finished` — and it
-turns `finished` only when you run `review close` at the very end; it is not the
-`finished` field beside it, which is this round's press and goes true every
-round, and exiting on that one would kill the monitor after round 1. `submitted`
-is the middle of the loop rather than the end of it: he has put this round down
-and you have not closed the retrospective, which is the moment to read the round,
-not to stop.
-
-**Rung 3 — a budgeted foreground wait, when your harness has neither.** Block in
-the wait, spend a budget, and let the human relay the finish when the budget runs
-out before he does. This rung puts the notification burden back on him, so it is
-the rung you say out loud (the interim-bridge line above).
-
-**Always pass `--timeout` when you are an agent, and set it below your own
-command limit.** Without it the wait blocks until he acts, however long that is —
-and the thing that ends it will not be Retroloop but whatever runs you, killing the
-command from outside. That is not exit 7 and not an error document: it is your
-turn ending mid-command, with no way to tell it from a crash.
+**On rungs 2 and 3, always pass `--timeout`, and set it below your own command
+limit.** Rung 1 is the exception, and the reason for the exception is the whole
+difference between them: a monitor is not your turn, so nothing outside cuts its
+wait short. On a rung that runs inside your turn, a wait with no timeout blocks
+until he acts, however long that is — and the thing that ends it will not be
+Retroloop but whatever runs you, killing the command from outside. That is not
+exit 7 and not an error document: it is your turn ending mid-command, with no
+way to tell it from a crash.
 
 The number is a **relation, not a constant**: your `--timeout` must sit
 comfortably below whatever cap the harness puts on a single command, so that
@@ -1395,7 +1590,7 @@ with no delay in it. Do this instead:
    is being read out of silence, because the gate is doing the deciding, not you.
    (`review status --retro` reads the same `counts.pending` without attempting
    anything, if you would rather look than knock.)
-4. **Give that a budget too**, and end your turn when it runs out — the same
+4. **Put a limit on that too**, and end your turn when it runs out — the same
    rule as the wait: report where it stands, hand back the URL and the record
    names, and stop. He may be asleep.
 
@@ -1436,6 +1631,9 @@ retroloop record list --retro <retroId> --state revise --json
 Without `--state` you get every record of the **latest** revision in the same
 shape; `--revision <n>` reads an earlier one instead, which is how you walk a
 retrospective's history looking for the highest `num` ever used (§3, identity).
+**`--all` is the other command wearing this word** — every record of every
+retrospective rather than one revision of one, which is the history search of
+§3 and refuses `--retro`, `--session` and `--revision`.
 `carriedOver` and `decidedOnRevision` are how you tell "the human decided *this*"
 from "the human decided an earlier version of this".
 
@@ -1843,8 +2041,8 @@ neither is true yet. There is no preview form and no partial export: close first
 
 `--out` takes any path you can write, but write it where the next retro will
 look: `~/.retroloop/retros/<retroId>/retro.json`, one folder per retro, `.json`
-because that is what it writes. The class check in step 3 searches exactly that
-tree, so an export filed anywhere else is one the loop cannot read back. With
+because that is what it writes. That tree is where every retrospective's
+outcome lives, so an export filed anywhere else is one nothing reads back. With
 `--out` you get the receipt above and the document goes to the file; without
 `--out` the document itself goes to stdout and there is no receipt.
 `--state <state>` narrows it to one of the five record states —

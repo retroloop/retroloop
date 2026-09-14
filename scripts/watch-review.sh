@@ -25,13 +25,27 @@
 #
 # This script is the shape that survived, CORRECT BY CONSTRUCTION: arming runs
 # EXACTLY ONE wait and then `exec`s it, so the process you are watching IS the
-# wait and its EXIT is the notification — the signal the background-task path
-# delivers. There is no loop here to get wrong: after the exec there is no
-# script left to loop. A session that watches through a Monitor instead wants
-# the other shape, a loop whose every printed line is a wake-up; that is
-# scripts/watch-finish.sh. The end-to-end certification of this chain (red leg,
-# full chain, killed-watcher drill) lives in the Retroloop app repository's
-# test suite, where a throwaway stage and the finish-pressing test tool exist.
+# wait. There is no loop here to get wrong — after the exec there is no script
+# left to loop — and one process covers BOTH ways of waking a session: its EXIT
+# is the notification a background task delivers, and the ONE LINE it prints is
+# the notification a monitor delivers. The end-to-end certification of this
+# chain (red leg, full chain, killed-watcher drill) lives in the Retroloop app
+# repository's test suite, where a throwaway stage and the finish-pressing test
+# tool exist.
+#
+# WITH NO --timeout THE WAIT BLOCKS UNTIL THE PRESS, and that is the default,
+# because a review takes as long as the human takes. It is the shape a
+# PERSISTENT MONITOR arms: a Monitor watch with `persistent: true` and no
+# deadline, running this script, which prints exactly one line when he presses
+# Finish and then exits — the line wakes the session once, and the exit ends the
+# watch. Pass `--timeout <seconds>` only for the background-task fallback, where
+# the harness caps how long a single task may run and the watch is re-armed on
+# every exit. A deadline nobody asked for is a watch that dies quietly ten
+# minutes in, which is how this channel broke before.
+#
+# scripts/watch-finish.sh is the OTHER watch — the resolve lane's manager,
+# waiting on any review on the stage rather than on one. Neither is the other's
+# fallback and neither replaces the other.
 #
 # NEVER STAND DOWN, RE-ARM ON KILL. While a review is open the watch is never
 # voluntarily abandoned. A kill is not a stop gesture — it is a notification,
@@ -42,16 +56,23 @@
 #
 # Usage:
 #
-#   watch-review.sh <retroId> [--timeout <seconds>]
-#       Arms one wait. Exit 0 = the human pressed Finish, and the event JSON is
-#       on stdout. Exit 7 = the timeout elapsed and nothing else; re-arm. Any
-#       other exit is an error; re-arm and read the message.
+#   watch-review.sh <retroId>
+#       Arms one wait with NO deadline: it blocks until the human presses
+#       Finish, prints the event JSON on one line, and exits 0. This is what a
+#       persistent monitor runs.
+#
+#   watch-review.sh <retroId> --timeout <seconds>
+#       The same wait with a deadline. Exit 0 = he pressed Finish, and the event
+#       JSON is on stdout. Exit 7 = the seconds elapsed and nothing else;
+#       re-arm. Any other exit is an error; re-arm and read the message.
+#
+#   watch-review.sh <retroId> --print
+#       The dry run — print the exact command arming would exec, and stop. It
+#       waits on nothing and needs no CLI.
 #
 #   watch-review.sh where | help
 
 set -uo pipefail
-
-DEFAULT_TIMEOUT=600
 
 say() { printf 'watch-review: %s\n' "$1" >&2; }
 refuse() {
@@ -64,14 +85,21 @@ usage() {
 watch-review.sh — the finish watch.
 
 Usage:
-  watch-review.sh <retroId> [--timeout <seconds>]   arm one wait
-  watch-review.sh where                             what this resolves to
-  watch-review.sh help                              this text
+  watch-review.sh <retroId>                      arm one wait, no deadline
+  watch-review.sh <retroId> --timeout <seconds>  arm one wait with a deadline
+  watch-review.sh <retroId> --print              print what arming would exec
+  watch-review.sh where                          what this resolves to
+  watch-review.sh help                           this text
 
 Arming runs exactly one `review wait --follow` and execs it: the process IS the
-wait, and its EXIT is the notification. Exit 0 with the event JSON on stdout ·
-exit 7 for the timeout, which means re-arm · anything else is an error, which
-also means re-arm.
+wait. Its one printed LINE is what wakes a monitor and its EXIT is what wakes a
+background task, so one process covers both. Exit 0 with the event JSON on
+stdout · exit 7 for the timeout, which means re-arm · anything else is an error,
+which also means re-arm.
+
+WITH NO --timeout THE WAIT BLOCKS UNTIL THE PRESS. That is the default and it is
+what a persistent monitor arms. A deadline is for the background-task fallback,
+where the harness caps a single task and the watch is re-armed on every exit.
 
 A killed or exited watcher is RE-ARMED, never abandoned, for as long as the
 review is open. A kill is a notification, not a stop gesture.
@@ -109,27 +137,61 @@ require_cli() {
     refuse "no retroloop CLI — nothing on PATH, no usable RETROLOOP_APP, no checkout at $(retroloop_root)/apps/retroloop. Run /retroloop:setup, or set RETROLOOP_APP to the app checkout."
 }
 
+# ── the wait's own arguments ──────────────────────────────────────────────────
+# An EMPTY timeout means no `--timeout` reaches the CLI at all, and the wait
+# then blocks until the press. That is the default on purpose: a deadline
+# nobody asked for is a watch that dies quietly while the review is still open.
+WAIT_ARGV=()
+build_wait_argv() {
+  local retro="$1" timeout="$2"
+  WAIT_ARGV=(review wait --follow --retro "$retro")
+  [[ -n "$timeout" ]] && WAIT_ARGV+=(--timeout "$timeout")
+  WAIT_ARGV+=(--json)
+}
+
 # ── arm ───────────────────────────────────────────────────────────────────────
 arm() {
   local retro="$1" timeout="$2"
 
   require_cli
+  build_wait_argv "$retro" "$timeout"
 
-  # Everything the reader of the exit notification needs is printed BEFORE the
-  # wait starts, because by the time the exit arrives this script is gone. The
-  # guidance has to already be in the output the notification carries.
-  say "armed on retro $retro — one wait, ${timeout}s, and its EXIT is the notification."
-  say 'hops: press → store → wait → watcher(this) → agent(the exit notification).'
+  # Everything the reader of the notification needs is printed BEFORE the wait
+  # starts, because by the time the line or the exit arrives this script is
+  # gone. The guidance has to already be in the output the notification carries.
+  if [[ -n "$timeout" ]]; then
+    say "armed on retro $retro — one wait, ${timeout}s; its LINE and its EXIT are both the notification."
+    say "exit 7 = the timeout elapsed and NOTHING else. Re-arm; do not read it as a decline."
+    say "relaunch:  watch-review.sh $retro --timeout $timeout"
+  else
+    say "armed on retro $retro — one wait, NO deadline; it blocks until he presses Finish."
+    say 'it prints exactly one line and exits: the line wakes a monitor, the exit wakes a background task.'
+    say "relaunch:  watch-review.sh $retro"
+  fi
+  say 'hops: press → store → wait → watcher(this) → agent(the line, and the exit).'
   say 'exit 0 = the human pressed Finish; the event JSON is on stdout.'
-  say "exit 7 = the timeout elapsed and NOTHING else. Re-arm; do not read it as a decline."
   say 'any other exit = an error. Re-arm, and read the message.'
   say 'RE-ARM ON KILL: a killed watcher is re-armed immediately, never stood down.'
-  say "relaunch:  watch-review.sh $retro --timeout $timeout"
 
   # `exec`, and that is the whole design. The record this fixes is a monitor that
   # looped forever printing lines into a file nobody read; there is no loop that
   # can be written after this line, because there is no shell after this line.
-  exec "${RETROLOOP_CLI[@]}" review wait --follow --retro "$retro" --timeout "$timeout" --json
+  exec "${RETROLOOP_CLI[@]}" "${WAIT_ARGV[@]}"
+}
+
+# ── print ─────────────────────────────────────────────────────────────────────
+# The dry run: exactly what arming would exec, on one line, waiting on nothing.
+# It resolves the CLI when it can and says so when it cannot, so the argv can be
+# read in an environment where no app is installed at all.
+print_argv() {
+  local retro="$1" timeout="$2"
+  build_wait_argv "$retro" "$timeout"
+  if retroloop_resolve_cli "$ROOT"; then
+    printf '%s %s\n' "${RETROLOOP_CLI[*]}" "${WAIT_ARGV[*]}"
+  else
+    printf '<no retroloop CLI> %s\n' "${WAIT_ARGV[*]}"
+  fi
+  exit 0
 }
 
 # ── where ─────────────────────────────────────────────────────────────────────
@@ -184,7 +246,9 @@ shift
 [[ "$RETRO_ID" =~ ^[0-9]+$ ]] ||
   refuse "$RETRO_ID is not a retro id. The id is the number the review session announced — not the retrospective's ordinal, and not the session's."
 
-TIMEOUT="$DEFAULT_TIMEOUT"
+# No deadline unless one is asked for.
+TIMEOUT=''
+PRINT_ONLY=0
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --timeout)
@@ -193,8 +257,14 @@ while [[ $# -gt 0 ]]; do
       [[ "$TIMEOUT" =~ ^[0-9]+$ ]] || refuse "--timeout takes whole seconds, not \"$TIMEOUT\"."
       shift 2
       ;;
+    --print)
+      PRINT_ONLY=1
+      shift
+      ;;
     *) usage ;;
   esac
 done
+
+[[ "$PRINT_ONLY" -eq 1 ]] && print_argv "$RETRO_ID" "$TIMEOUT"
 
 arm "$RETRO_ID" "$TIMEOUT"
