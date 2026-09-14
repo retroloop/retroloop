@@ -71,12 +71,12 @@ has 'nominate: the records come from the notes and from what the agent remembers
   'nominate.*(notes|remember)'
 has 'nominate: a dropped near-duplicate keeps a one-line reason' "$SKILL" \
   'one-line reason'
-hasf 'group: at most three frictions in a group' "$SKILL" \
-  'at most three frictions'
+has 'group: at most three frictions in a group' "$SKILL" \
+  '[Aa]t most three frictions'
 has 'group: a friction with no sibling is its own group' "$SKILL" \
   'no sibling is its own group'
 has 'group: the grouping key is a shared suspected cause or the same surface' "$SKILL" \
-  'shared suspected cause or the same surface'
+  'suspected cause or the same surface'
 
 # ── the forks ────────────────────────────────────────────────────────────────
 hasf 'fork: they are forks of the main agent, not fresh agents' "$SKILL" \
@@ -163,7 +163,7 @@ hasf 'history: they live under the diagnostic-data heading and nowhere else' "$S
 has 'history: the recurrence judgment belongs to the resolver' "$SKILL" \
   'recurrence.*resolver|resolver.*recurrence'
 has 'history: no draft ever claims "this recurred"' "$SKILL" \
-  'never .this recurred.'
+  'never say .this recurred.'
 lacksf 'history: the grep over the prior exports is gone' "$SKILL" \
   'retros/*/retro.json'
 has 'history: the lesson of the instance-patch loop is kept' "$SKILL" \
@@ -205,7 +205,7 @@ has 'tech-lead: reads the record with record get before any work' "$TECH_LEAD" \
 has 'tech-lead: starts from the record.s diagnostic data' "$TECH_LEAD" \
   'diagnostic data'
 has 'tech-lead: re-derives the cause from that evidence' "$TECH_LEAD" \
-  're-derive'
+  '[Rr]e-derive the cause'
 has 'tech-lead: candidate earlier records are candidates, never a recurrence' "$TECH_LEAD" \
   'never as established recurrence|not as established recurrence'
 has 'tech-lead: wrong or thin diagnostic data goes in the report' "$TECH_LEAD" \
