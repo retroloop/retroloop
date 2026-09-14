@@ -40,6 +40,11 @@ LAUNCH_ARGV_OPUS='--bg|--name|retroloop-manager|--agent|retroloop:manager|--perm
 # starts a copy under a new id instead.
 RESUME_ARGV='--resume|old-1111-2222-3333|--bg|resume the resolve lane'
 
+# The same two lines when the caller names the retrospective it just finished:
+# the prompt grows one clause and nothing else moves.
+LAUNCH_ARGV_FINISHED='--bg|--name|retroloop-manager|--agent|retroloop:manager|--permission-mode|auto|--model|fable|--settings|{"crossSessionInbound":"accept"}|start the resolve lane; retrospective 18 just finished and is yours'
+RESUME_ARGV_FINISHED='--resume|old-1111-2222-3333|--bg|resume the resolve lane; retrospective 18 just finished and is yours'
+
 MINTED='new-aaaa-bbbb-cccc'
 
 # ── sandboxes ────────────────────────────────────────────────────────────────
@@ -196,6 +201,13 @@ RC=0
 run_ensure() { # [VAR=VALUE ...]
   local errf="$SB/stderr.txt"
   OUT="$(env -i HOME="$SB/home" PATH="$SB_PATH" RETROLOOP_HOME="$SB/root" "$@" bash "$ENSURE" 2>"$errf" </dev/null)"
+  RC=$?
+  ERR="$(cat "$errf" 2>/dev/null)"
+}
+
+run_ensure_args() { # <script args...> — same sandbox, arguments to the script
+  local errf="$SB/stderr.txt"
+  OUT="$(env -i HOME="$SB/home" PATH="$SB_PATH" RETROLOOP_HOME="$SB/root" bash "$ENSURE" "$@" 2>"$errf" </dev/null)"
   RC=$?
   ERR="$(cat "$errf" 2>/dev/null)"
 }
@@ -368,6 +380,48 @@ expect_contains 'stderr' "$ERR" 'ensure-manager:'
 expect_contains 'stderr names the missing command' "$ERR" 'claude'
 expect_eq 'stdout' "$OUT" ''
 expect_no_lock
+end
+
+# ── C11 · --finished on a launch ─────────────────────────────────────────────
+begin C11 '--finished 18 on a fresh launch — the prompt names the retrospective'
+new_sandbox
+make_plugin
+run_ensure_args --finished 18
+expect_eq 'stdout' "$OUT" "running $MINTED"
+expect_eq 'exit' "$RC" '0'
+expect_eq 'launch argv' "$(launch_line)" "$LAUNCH_ARGV_FINISHED"
+end
+
+# ── C12 · --finished on a resume ─────────────────────────────────────────────
+begin C12 '--finished 18 on a resume — the prompt names it, the options stay off'
+new_sandbox
+make_plugin
+seed_row stopped retroloop-manager "$SB/root/plugins/my" 'old-1111-2222-3333' 1789295248826
+run_ensure_args --finished 18
+expect_eq 'resume argv' "$(launch_line)" "$RESUME_ARGV_FINISHED"
+expect_not_contains 'the resume' "$(launch_line)" '--name'
+expect_eq 'exit' "$RC" '0'
+end
+
+# ── C13 · --finished wants a number ──────────────────────────────────────────
+begin C13 '--finished with no number, or a word — usage, exit 2, nothing launched'
+new_sandbox
+make_plugin
+run_ensure_args --finished
+expect_eq 'exit (missing)' "$RC" '2'
+run_ensure_args --finished eighteen
+expect_eq 'exit (word)' "$RC" '2'
+expect_eq 'launches' "$(launch_count)" '0'
+end
+
+# ── C14 · --finished when a manager is already up ────────────────────────────
+begin C14 '--finished 18 with a live manager — reported, nothing launched'
+new_sandbox
+make_plugin
+seed_row live retroloop-manager "$SB/root/plugins/my" 'live-0000-0000-0000' 1789295248826
+run_ensure_args --finished 18
+expect_eq 'stdout' "$OUT" 'running live-0000-0000-0000'
+expect_eq 'launches' "$(launch_count)" '0'
 end
 
 # ── verdict ──────────────────────────────────────────────────────────────────

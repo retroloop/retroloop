@@ -198,11 +198,22 @@ agent, flat, and nothing in it is ever cleaned up:
 mkdir -p ~/.retroloop/agents
 ```
 
-**Only if the user took a remote above**, one permission rule is worth adding:
-the resolve lane pushes the plugin through the plugin's own push script, and
-that script has to be allowed. Name the rule, ask for consent, and add it to
-`~/.claude/settings.json` only on their yes — a `permissions.allow` entry
-reading:
+**The launch rule ships with the plugin — show it, and ask.** The template
+carries `.claude/settings.json` inside the plugin with one `permissions.allow`
+entry, `Bash(claude --bg:*)`: the manager runs from this folder, and that rule
+is what lets it launch worker teams as background sessions. It applies only to
+sessions whose working directory is the plugin, so nothing else on the machine
+is widened by it; worker teams run from the repository the change lands in and
+rely on auto mode there. Print the rule, say that much, and ask through the
+question tool whether to keep it or remove it. On remove, delete the file and
+commit; the manager then stops at its first launch and says so. Never write
+that rule anywhere else, and never into a local settings file.
+
+**Only if the user took a remote above**, one more permission rule is worth
+adding: the resolve lane pushes the plugin through the plugin's own push
+script, and that script has to be allowed. Name the rule, ask for consent, and
+add it to `~/.claude/settings.json` only on their yes — a `permissions.allow`
+entry reading:
 
 ```
 Bash(bash */scripts/plugin-push.sh */.retroloop/plugins/my)
@@ -239,6 +250,8 @@ tell the user to restart their Claude Code session so the new plugin loads:
   choice and the model.
 - **`agents/` exists** — `~/.retroloop/agents` is there for the resolve lane's
   notes.
+- **Launch rule kept or removed** — `~/.retroloop/plugins/my/.claude/settings.json`
+  is present with `Bash(claude --bg:*)`, or the user chose to remove it.
 - **Marketplace registered** — the `marketplace.json` under
   `~/.retroloop/plugins/.claude-plugin/` exists, and
   `claude plugin marketplace list` shows `my-marketplace`.

@@ -58,5 +58,26 @@ has 'reconcile: new work excludes what predates the manager' \
 has 'checklist: an unresolved record may belong to a retrospective that predates the manager' \
   '- \[ \] Every unresolved approved record[^[]*predates you'
 
+# ── the retrospective that started the manager is its own ────────────────────
+has 'start prompt: the retrospective named as just finished is the manager'"'"'s work' \
+  'just finished and is yours'
+has 'start prompt: everything finished before it predates the manager' \
+  'finished before it predates? (it|you)'
+has 'start prompt: the boundary is a retrospective number, not a time' \
+  'retrospective number, not (as )?a time'
+has 'resume: a resume prompt naming a finished retrospective is new work' \
+  'resume prompt.*just finished'
+
+# ── the wait is the CLI, not a plugin script ─────────────────────────────────
+has 'wait: the manager arms review wait --any through the CLI' \
+  'review wait --any --follow --json'
+has 'wait: no deadline, re-armed on every exit' \
+  'no deadline'
+if printf '%s' "$FLAT" | grep -qF -- 'watch-finish.sh --once'; then
+  ko 'wait: the persona no longer tells the manager to run watch-finish.sh --once' 'found: watch-finish.sh --once'
+else
+  ok 'wait: the persona no longer tells the manager to run watch-finish.sh --once'
+fi
+
 printf '\n%d passed, %d failed\n' "$pass" "$fail"
 [ "$fail" -eq 0 ]

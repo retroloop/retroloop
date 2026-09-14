@@ -12,6 +12,12 @@
 # stopped, or starts a fresh one, and two callers racing each other still leave
 # exactly one manager behind.
 #
+# One optional argument: `--finished <retroId>`, the retrospective that has
+# just been finished by the caller. A manager started or resumed with it is
+# told that retrospective is its work — without it, a manager that starts a
+# moment after a Finish would count that retrospective among the ones that
+# predate it and never pick it up.
+#
 # What it prints on stdout is always one line:
 #
 #   running <session id>              a manager is up — this is the one
@@ -48,10 +54,12 @@ usage() {
 ensure-manager.sh — make sure the resolve lane has a manager, and never two.
 
 Usage:
-  ensure-manager.sh        report the manager, or start one
-  ensure-manager.sh help   this text
+  ensure-manager.sh                        report the manager, or start one
+  ensure-manager.sh --finished <retroId>   same, naming the retrospective just finished
+  ensure-manager.sh help                   this text
 
-It takes no arguments and is safe to run repeatedly and concurrently. On stdout
+It is safe to run repeatedly and concurrently. `--finished <retroId>` tells a
+manager it starts or resumes that this retrospective is its work. On stdout
 it prints `running <session id>` when a manager is up — which includes the one
 it just started — or `setup has not run; no manager` when there is no
 personalization plugin to run one in.
@@ -62,11 +70,26 @@ USAGE
   exit 2
 }
 
+FINISHED=''
 case "${1:-}" in
   help | --help | -h) usage ;;
+  --finished)
+    case "${2:-}" in
+      '' | *[!0-9]*) usage ;;
+      *) FINISHED="$2" ;;
+    esac
+    [ $# -eq 2 ] || usage
+    ;;
   '') ;;
   *) usage ;;
 esac
+
+# The one sentence a launch or a resume carries about the moment it happened.
+# Empty when nothing just finished; the manager reconciles from the tool anyway.
+just_finished() {
+  [ -n "$FINISHED" ] || return 0
+  printf '; retrospective %s just finished and is yours' "$FINISHED"
+}
 
 # ── where everything is ──────────────────────────────────────────────────────
 # The root is decided in one place for the whole plugin, and this script asks
@@ -224,7 +247,7 @@ launch_manager() { # <model> → the launch's own output; exits with its status
     --permission-mode auto \
     --model "$1" \
     --settings '{"crossSessionInbound":"accept"}' \
-    'start the resolve lane' 2>&1
+    "start the resolve lane$(just_finished)" 2>&1
 }
 
 # THE MANAGER'S RESUME LINE, for the same reason: one place, one spelling. A
@@ -239,7 +262,7 @@ resume_manager() { # <session id>
   CLAUDE_CODE_DISABLE_BG_SHELL_PRESSURE_REAP=1 claude \
     --resume "$1" \
     --bg \
-    'resume the resolve lane' 2>&1
+    "resume the resolve lane$(just_finished)" 2>&1
 }
 
 # A stopped manager leaves the wait it was holding behind as an orphan — a

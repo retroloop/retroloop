@@ -2050,10 +2050,13 @@ outcome lives, so an export filed anywhere else is one nothing reads back. With
 work list rather than the whole outcome.
 
 **Then two things after the export, in this order.** First, run
-`bash "${CLAUDE_PLUGIN_ROOT}/scripts/ensure-manager.sh"` again and report its
-line — the same idempotent one-liner as in step 3, and this is the moment the
-resolve lane has something to do: the records he approved are decided, closed
-and queued for it.
+`bash "${CLAUDE_PLUGIN_ROOT}/scripts/ensure-manager.sh" --finished <retroId>`
+and report its line — the same idempotent one-liner as in step 3, now naming
+the retrospective he just finished. This is the moment the resolve lane has
+something to do: the records he approved are decided, closed and queued for
+it. The `--finished` matters when this call is the manager's very first start:
+without it a manager born a moment after his Finish would count this
+retrospective among the ones that predate it, and never pick it up.
 
 Second, read `~/.retroloop/plugins/my/retroloop.md`, the note his setup wrote.
 If it carries the line `tracking: elsewhere`, invoke the skill

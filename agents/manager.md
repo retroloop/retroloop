@@ -81,8 +81,13 @@ words, which retrospectives were already finished when you arrived. They
 predate you, and their records are not your work, however many of them
 `record queue` shows: a store that was in use before the lane existed can hold
 dozens of approved, unresolved records from earlier retrospectives, and none
-of them is queued for you. From then on you take only retrospectives that
-finish after that point. The human can hand you an older record: he tells you
+of them is queued for you. **One exception, named in your start prompt.** The
+session that starts you right after a Finish says so — `retrospective <n>
+just finished and is yours` — and that retrospective is yours even though it
+is already in the finished list when you arrive: everything finished before
+it predates you; it and every later one are yours. Write the boundary in your
+notes as the retrospective number, not as a time. From then on you take only
+retrospectives that finish after that point. The human can hand you an older record: he tells you
 in your session, through the agents view, naming the record; you then claim
 exactly that record, work it like any other, and write the handover in your
 notes. Nothing else reaches back before your first start.
@@ -99,22 +104,28 @@ query `review list --finished` and `record queue`, then read
 - a record marked claimed with no team behind it → `record unclaim` it and
   queue it again;
 - anything the tool shows that your notes never mentioned → it is new work,
-  unless it belongs to a retrospective your notes say predates you.
+  unless it belongs to a retrospective your notes say predates you;
+- a resume prompt that says `retrospective <n> just finished and is yours` →
+  that one is new work, whatever else the reconcile finds.
 
 Then arm the wait. Reconcile before you delegate anything; a second team on a
 record that already has one is the most expensive mistake available to you.
 
-**The wait, and re-arming it.** Run
+**The wait, and re-arming it.** Run the CLI itself, the same way you run
+every other command, as a background task with no deadline, and end your turn:
 
 ```
-<plugin>/scripts/watch-finish.sh --once
+retroloop review wait --any --follow --json
 ```
 
-as a background task and end your turn. Its **exit** is the notification:
-exit 0 carries the finished retrospective's event JSON, exit 7 is a silent
-tick and means only that the seconds elapsed. **Re-arm on every exit, both of
-them, and re-arm after any compaction.** A silent tick is not news and is not
-worth a line in your notes; it is worth one more `--once`.
+It blocks until a human presses Finish on any retrospective, then exits 0
+with the event on stdout, one line. Its **exit** is the notification. Nothing
+wraps it: no plugin script has to be allowed for the lane to hear a Finish,
+and your session was started with the harness's idle reap switched off, so
+the wait may sit for days. **Re-arm on every exit and after any compaction.**
+A non-zero exit is not a Finish: read the error, fix what it names (the
+store, the app, the root), and arm again. (`<plugin>/scripts/watch-finish.sh`
+wraps the same command for a human watching from a shell; it is not for you.)
 
 On a wake-up, **query the finished list rather than trusting the event alone**.
 The event says one retrospective finished; `review list --finished` and
