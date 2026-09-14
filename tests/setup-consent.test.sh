@@ -37,6 +37,12 @@ has 'workers rely on auto mode in the target repository' \
 has 'the launch rule is never written to a local settings file' \
   'never into a local settings file'
 has 'the checklist reports the choice' 'Launch rule kept or removed'
+has 'the plugin folder must be trusted for the rule to apply' \
+  'Ignoring 1 permissions.allow entry'
+has 'trust is the human'"'"'s one step, granted in a terminal' \
+  'cd ~/.retroloop/plugins/my && claude'
+has 'setup never writes the trust entry itself' \
+  'do not write the trust entry'
 has 'the push rule still needs a remote and consent' \
   'Only if the user took a remote above'
 

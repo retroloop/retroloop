@@ -209,6 +209,19 @@ question tool whether to keep it or remove it. On remove, delete the file and
 commit; the manager then stops at its first launch and says so. Never write
 that rule anywhere else, and never into a local settings file.
 
+**Then have the plugin folder trusted, or the rule is ignored.** Claude Code
+reads a project's `permissions.allow` only in a workspace the human has
+trusted; an untrusted one logs `Ignoring 1 permissions.allow entry` and runs
+on the classifier alone. Trust is granted once, by the human, in a terminal:
+
+```
+cd ~/.retroloop/plugins/my && claude
+```
+
+Accept the trust dialog, then leave the session. Say exactly that, and say it
+is the one step of setup only the human can take; do not write the trust entry
+into Claude Code's own configuration yourself.
+
 **Only if the user took a remote above**, one more permission rule is worth
 adding: the resolve lane pushes the plugin through the plugin's own push
 script, and that script has to be allowed. Name the rule, ask for consent, and
@@ -252,6 +265,9 @@ tell the user to restart their Claude Code session so the new plugin loads:
   notes.
 - **Launch rule kept or removed** — `~/.retroloop/plugins/my/.claude/settings.json`
   is present with `Bash(claude --bg:*)`, or the user chose to remove it.
+- **Plugin folder trusted** — the human opened Claude Code in
+  `~/.retroloop/plugins/my` once and accepted the trust dialog (report it as
+  told, not as verified: nothing here can check it).
 - **Marketplace registered** — the `marketplace.json` under
   `~/.retroloop/plugins/.claude-plugin/` exists, and
   `claude plugin marketplace list` shows `my-marketplace`.

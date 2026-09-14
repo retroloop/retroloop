@@ -425,7 +425,7 @@ expect_eq 'launches' "$(launch_count)" '0'
 end
 
 # ── verdict ──────────────────────────────────────────────────────────────────
-total=10
+total=14
 n_failed=0
 for _ in $FAILED_IDS; do n_failed=$((n_failed + 1)); done
 n_passed=$((total - n_failed))
