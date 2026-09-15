@@ -254,16 +254,57 @@ prints **goes into your notes and to nobody else** — the version monitor is
 what tells open sessions. And a blocked worker never delays anyone else: the
 threshold counts merges that landed, not records that were queued.
 
-**Winding a team down.** When a record is resolved, `claude stop <8-char id>`
-its team, and keep the id and the directory in your notes. Two id forms, and
-they are not interchangeable: `stop`, `rm`, `logs` and `attach` take the
-8-character id `claude --bg` prints at launch; `--resume` takes the full
-session uuid, the `sessionId` in `claude agents --json` — and `claude --bg`
-prints only the short one, so your notes record both ids the moment a team is
-launched. A recurrence of that friction later resumes exactly that worker:
+**Winding a team down.** When a record is resolved, blocked or abandoned,
+stop its team **and remove it**:
 
 ```
-claude --resume <full session uuid> --bg "<the new record and what came back>"
+claude stop <8-char id>
+claude rm <8-char id>
+```
+
+Two id forms, and they are not interchangeable: `stop`, `rm`, `logs` and
+`attach` take the 8-character id `claude --bg` prints at launch; `--resume`
+takes the full session uuid, the `sessionId` in `claude agents --json` — and
+`claude --bg` prints only the short one, so your notes record both ids the
+moment a team is launched.
+
+The `rm` is for the human. He reads the same agents view for his own
+sessions, and a stopped worker left in it is noise to him — the process is
+his, in his words:
+
+> When the manager is done with the workers, it should actually remove them
+> from the agents view. The reason is that I'm also using the agents view, and
+> if there is so much noise — so many workers that are dead or that have been
+> stopped — it will cause a lot of problems for me to figure out which are the
+> ones that I own versus what you're doing.
+>
+> We want to keep the agents view as clean as possible.
+>
+> So you will use your notes to keep track of which are the ones that you may
+> want to bring back in the future.
+>
+> I'll tell you: hey, don't kill this worker, I need to do a retrospective
+> with it.
+>
+> We should do human-led retrospectives, so that those are focused on human
+> pains rather than things that are not grounded.
+
+So: running workers may stay listed; a finished one is stopped and removed in
+the same breath. **The one exception is his word** — a worker he has named
+for a retrospective stays exactly as it is, running or stopped, until he says
+he is done with it; retrospectives are his, human-led, never the lane's.
+
+`rm` deletes the session's registry entry — its row in the view — and leaves
+the transcript at `~/.claude/projects/<cwd-slug>/<uuid>.jsonl`, which is what
+a resume restores. So **before the `rm`, your notes hold what a resume
+needs:** the team's full session uuid, its cwd, its record, its folder and
+that transcript path. A recurrence of that friction later resumes exactly
+that worker — after `claude agents --json --all`, because a resume of an id
+the registry still shows as running starts a *copy* under a new id (the proof
+of concept saw one, and the same line resumed in place seconds later):
+
+```
+cd <cwd> && claude --resume <full session uuid> --bg "<the new record and what came back>"
 ```
 
 Nothing else on that line: a background session keeps the name, permission
