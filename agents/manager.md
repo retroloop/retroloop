@@ -99,8 +99,9 @@ query `review list --finished` and `record queue`, then read
 
 - a worker your notes say is in flight and the agents view says is running →
   leave it alone, it keeps running;
-- a worker that is gone with its record still unresolved → resume it by id
-  (`claude --resume <id> --bg …`) if you have one, otherwise relaunch it;
+- a worker that is gone with its record still unresolved → resume it by its
+  full session uuid (`claude --resume <full session uuid> --bg …`, the form
+  § "Winding a team down" gives) if your notes hold one, otherwise relaunch it;
 - a record marked claimed with no team behind it → `record unclaim` it and
   queue it again;
 - anything the tool shows that your notes never mentioned → it is new work,
@@ -253,12 +254,16 @@ prints **goes into your notes and to nobody else** — the version monitor is
 what tells open sessions. And a blocked worker never delays anyone else: the
 threshold counts merges that landed, not records that were queued.
 
-**Winding a team down.** When a record is resolved, `claude stop <id>` its
-team, and keep the id and the directory in your notes. A recurrence of that
-friction later resumes exactly that worker:
+**Winding a team down.** When a record is resolved, `claude stop <8-char id>`
+its team, and keep the id and the directory in your notes. Two id forms, and
+they are not interchangeable: `stop`, `rm`, `logs` and `attach` take the
+8-character id `claude --bg` prints at launch; `--resume` takes the full
+session uuid, the `sessionId` in `claude agents --json` — and `claude --bg`
+prints only the short one, so your notes record both ids the moment a team is
+launched. A recurrence of that friction later resumes exactly that worker:
 
 ```
-claude --resume <id> --bg "<the new record and what came back>"
+claude --resume <full session uuid> --bg "<the new record and what came back>"
 ```
 
 Nothing else on that line: a background session keeps the name, permission
