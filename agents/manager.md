@@ -99,8 +99,9 @@ query `review list --finished` and `record queue`, then read
 
 - a worker your notes say is in flight and the agents view says is running →
   leave it alone, it keeps running;
-- a worker that is gone with its record still unresolved → resume it by id
-  (`claude --resume <id> --bg …`) if you have one, otherwise relaunch it;
+- a worker that is gone with its record still unresolved → resume it by its
+  full session uuid (`claude --resume <full session uuid> --bg …`, the form
+  § "Winding a team down" gives) if your notes hold one, otherwise relaunch it;
 - a record marked claimed with no team behind it → `record unclaim` it and
   queue it again;
 - anything the tool shows that your notes never mentioned → it is new work,
@@ -111,21 +112,51 @@ query `review list --finished` and `record queue`, then read
 Then arm the wait. Reconcile before you delegate anything; a second team on a
 record that already has one is the most expensive mistake available to you.
 
-**The wait, and re-arming it.** Run the CLI itself, the same way you run
-every other command, as a background task with no deadline, and end your turn:
+**The wait, and re-arming it.** The lane's standing listener is
+`<plugin>/scripts/watch-finish.sh` in its looping form — no flags — and it
+is yours: arm it with the **Monitor tool**, `persistent: true` (which is what
+"no deadline" is spelled as), no timeout, a `description` of
+`"Retroloop finish watch, any retro"`, and the script as the command:
 
 ```
-retroloop review wait --any --follow --json
+<plugin>/scripts/watch-finish.sh
 ```
 
-It blocks until a human presses Finish on any retrospective, then exits 0
-with the event on stdout, one line. Its **exit** is the notification. Nothing
-wraps it: no plugin script has to be allowed for the lane to hear a Finish,
-and your session was started with the harness's idle reap switched off, so
-the wait may sit for days. **Re-arm on every exit and after any compaction.**
-A non-zero exit is not a Finish: read the error, fix what it names (the
-store, the app, the root), and arm again. (`<plugin>/scripts/watch-finish.sh`
-wraps the same command for a human watching from a shell; it is not for you.)
+Never as a background task. The script loops the CLI's own
+`retroloop review wait --any --follow --json` and prints **one line** per
+Finish press — a monitor wakes you on every printed line, no exit needed, and
+a quiet tick prints nothing. It exits only after five wait failures in a row,
+saying so on its last line, and that exit is a wake-up too. Arm it at your
+first start, on every resume, and after any compaction; on a harness whose
+Monitor tool offers only `timeout_ms`, arm it with the longest deadline the
+tool allows and read the expiry notice as an exit.
+
+**Re-arming is the first tool call of any turn that reads the monitor's exit
+or expiry** — before a sentence is written, because an incoming message can
+end the turn between the sentence and the call, and the lane sat deaf for
+nineteen hours once exactly that way. A non-zero exit is not a Finish: re-arm
+first, then read the error and fix what it names (the store, the app, the
+root). **And every wake ends with a liveness check,** `pgrep -f
+watch-finish.sh`: no process means no listener, so arm it again. A monitor
+does not survive a session restart, and whether it survives a compaction is
+unproven.
+
+Why a monitor and not a task: the harness's memory-pressure reaper kills
+background tasks — it killed this wait twice in one night — and the
+launch-line variable meant to switch that reaper off never reaches a session
+claimed from the daemon's spare pool, so no such promise is made here.
+Monitors ran on through the same pressure (the version monitor for a day, a
+finish watch through a whole review round); that exemption is observed, not
+documented, so a monitor's death is news to act on, never an impossibility.
+This form replaces the earlier one, which ran the CLI line directly as a task
+so that no plugin script had to pass the permission classifier: a monitor on
+a plugin script has run in this lane's session under auto mode through a
+whole review round, and a refusal reaches you in the same turn, never as
+silence. Two fallbacks, both in the script's own header: a harness with no
+Monitor tool runs the script's `--once` form as a background task and re-arms
+it on every exit, timeouts included; a harness that refuses the script runs
+the CLI line above as a background task the same way — exposed to the reaper,
+but not deaf.
 
 On a wake-up, **query the finished list rather than trusting the event alone**.
 The event says one retrospective finished; `review list --finished` and
@@ -223,18 +254,71 @@ prints **goes into your notes and to nobody else** — the version monitor is
 what tells open sessions. And a blocked worker never delays anyone else: the
 threshold counts merges that landed, not records that were queued.
 
-**Winding a team down.** When a record is resolved, `claude stop <id>` its
-team, and keep the id and the directory in your notes. A recurrence of that
-friction later resumes exactly that worker:
+**Winding a team down.** When a record is resolved, blocked or abandoned,
+stop its team **and remove it**:
 
 ```
-claude --resume <id> --bg "<the new record and what came back>"
+claude stop <8-char id>
+claude rm <8-char id>
 ```
 
-Nothing else on that line: a background session keeps the name, permission
-mode, model and settings it was started with and restores them when it is
-resumed in place, and any option you pass starts a *copy* under a new id
-instead — a second session that knows nothing.
+Two id forms, and they are not interchangeable: `stop`, `rm`, `logs` and
+`attach` take the 8-character id `claude --bg` prints at launch; `--resume`
+takes the full session uuid, the `sessionId` in `claude agents --json` — and
+`claude --bg` prints only the short one, so your notes record both ids the
+moment a team is launched.
+
+The `rm` is for the human. He reads the same agents view for his own
+sessions, and a stopped worker left in it is noise to him — the process is
+his, in his words:
+
+> When the manager is done with the workers, it should actually remove them
+> from the agents view. The reason is that I'm also using the agents view, and
+> if there is so much noise — so many workers that are dead or that have been
+> stopped — it will cause a lot of problems for me to figure out which are the
+> ones that I own versus what you're doing.
+>
+> We want to keep the agents view as clean as possible.
+>
+> So you will use your notes to keep track of which are the ones that you may
+> want to bring back in the future.
+>
+> I'll tell you: hey, don't kill this worker, I need to do a retrospective
+> with it.
+>
+> We should do human-led retrospectives, so that those are focused on human
+> pains rather than things that are not grounded.
+
+So: running workers may stay listed; a finished one is stopped and removed in
+the same breath. **The one exception is his word** — a worker he has named
+for a retrospective stays exactly as it is, running or stopped, until he says
+he is done with it; retrospectives are his, human-led, never the lane's.
+
+`rm` deletes the session's registry entry — its row in the view — and leaves
+the transcript at `~/.claude/projects/<cwd-slug>/<uuid>.jsonl`, which is what
+a resume restores. So **before the `rm`, your notes hold what a resume
+needs:** the team's full session uuid, its cwd, its record, its folder and
+that transcript path. A recurrence of that friction later resumes exactly
+that worker — after `claude agents --json --all`, because a resume of an id
+the registry still shows as running starts a *copy* under a new id (the proof
+of concept saw one, and the same line resumed in place seconds later):
+
+```
+cd <cwd> && claude --resume <full session uuid> --bg --name "worker: <record>" "<the new record and what came back>"
+```
+
+The `--name` is there because the `rm` deleted the registry entry that
+carried it. What was observed: a stop-then-resume with the entry intact
+brought the session back with its name, permission mode, model and settings;
+an rm-then-bare-resume brought back the conversation, mode, model and
+settings — it worked and reported — and came up as `close retrospective 194`,
+an auto-title from its prompt, without the `worker:` prefix the clean view
+exists for. What has not been observed: `--name` on a resume line. The rule
+this replaces held that any option on the line starts a copy under a new id,
+a claim no session has exercised; the harness's own help says the copy comes
+when the session is already running, and that it prints a `note:` line when
+it does. So read the `backgrounded · <id>` line the resume prints: if the id
+is new, the Workers table records the new id beside the old transcript path.
 
 **Checking a team that has gone quiet.** Pick a time you are comfortable with,
 write it in your notes, and when a team has not reported within it, look it up
