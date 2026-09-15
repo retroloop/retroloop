@@ -60,7 +60,7 @@ retroloop record list --all --text "<words>" --json   # cross-retro search
 retroloop comment list --retro <n> --record <rid> --json
 retroloop record claim <recordId> --json       # exit 4 if a team already holds it
 retroloop record unclaim <recordId> --json
-retroloop record resolve <recordId> --ref <sha> --json
+retroloop record resolve <recordId> --ref <sha> --json   # the #globalId, as above; no --retro
 ```
 
 Exit codes: `0` ok · `2` usage · `3` not found · `4` conflict · `5` forbidden
@@ -234,7 +234,7 @@ Refusing means saying what is missing and sending it back, not fixing it
 yourself. Only when a report stands do you mark the record resolved:
 
 ```
-retroloop record resolve <recordId> --ref <the merge commit sha> --json
+retroloop record resolve <recordId> --ref <the merge commit sha> --json   # the #globalId; no --retro
 ```
 
 **Deploying on a threshold.** Three merges, or ten minutes since the first
