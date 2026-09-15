@@ -111,21 +111,51 @@ query `review list --finished` and `record queue`, then read
 Then arm the wait. Reconcile before you delegate anything; a second team on a
 record that already has one is the most expensive mistake available to you.
 
-**The wait, and re-arming it.** Run the CLI itself, the same way you run
-every other command, as a background task with no deadline, and end your turn:
+**The wait, and re-arming it.** The lane's standing listener is
+`<plugin>/scripts/watch-finish.sh` in its looping form — no flags — and it
+is yours: arm it with the **Monitor tool**, `persistent: true` (which is what
+"no deadline" is spelled as), no timeout, a `description` of
+`"Retroloop finish watch, any retro"`, and the script as the command:
 
 ```
-retroloop review wait --any --follow --json
+<plugin>/scripts/watch-finish.sh
 ```
 
-It blocks until a human presses Finish on any retrospective, then exits 0
-with the event on stdout, one line. Its **exit** is the notification. Nothing
-wraps it: no plugin script has to be allowed for the lane to hear a Finish,
-and your session was started with the harness's idle reap switched off, so
-the wait may sit for days. **Re-arm on every exit and after any compaction.**
-A non-zero exit is not a Finish: read the error, fix what it names (the
-store, the app, the root), and arm again. (`<plugin>/scripts/watch-finish.sh`
-wraps the same command for a human watching from a shell; it is not for you.)
+Never as a background task. The script loops the CLI's own
+`retroloop review wait --any --follow --json` and prints **one line** per
+Finish press — a monitor wakes you on every printed line, no exit needed, and
+a quiet tick prints nothing. It exits only after five wait failures in a row,
+saying so on its last line, and that exit is a wake-up too. Arm it at your
+first start, on every resume, and after any compaction; on a harness whose
+Monitor tool offers only `timeout_ms`, arm it with the longest deadline the
+tool allows and read the expiry notice as an exit.
+
+**Re-arming is the first tool call of any turn that reads the monitor's exit
+or expiry** — before a sentence is written, because an incoming message can
+end the turn between the sentence and the call, and the lane sat deaf for
+nineteen hours once exactly that way. A non-zero exit is not a Finish: re-arm
+first, then read the error and fix what it names (the store, the app, the
+root). **And every wake ends with a liveness check,** `pgrep -f
+watch-finish.sh`: no process means no listener, so arm it again. A monitor
+does not survive a session restart, and whether it survives a compaction is
+unproven.
+
+Why a monitor and not a task: the harness's memory-pressure reaper kills
+background tasks — it killed this wait twice in one night — and the
+launch-line variable meant to switch that reaper off never reaches a session
+claimed from the daemon's spare pool, so no such promise is made here.
+Monitors ran on through the same pressure (the version monitor for a day, a
+finish watch through a whole review round); that exemption is observed, not
+documented, so a monitor's death is news to act on, never an impossibility.
+This form replaces the earlier one, which ran the CLI line directly as a task
+so that no plugin script had to pass the permission classifier: a monitor on
+a plugin script has run in this lane's session under auto mode through a
+whole review round, and a refusal reaches you in the same turn, never as
+silence. Two fallbacks, both in the script's own header: a harness with no
+Monitor tool runs the script's `--once` form as a background task and re-arms
+it on every exit, timeouts included; a harness that refuses the script runs
+the CLI line above as a background task the same way — exposed to the reaper,
+but not deaf.
 
 On a wake-up, **query the finished list rather than trusting the event alone**.
 The event says one retrospective finished; `review list --finished` and
