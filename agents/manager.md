@@ -304,13 +304,21 @@ the registry still shows as running starts a *copy* under a new id (the proof
 of concept saw one, and the same line resumed in place seconds later):
 
 ```
-cd <cwd> && claude --resume <full session uuid> --bg "<the new record and what came back>"
+cd <cwd> && claude --resume <full session uuid> --bg --name "worker: <record>" "<the new record and what came back>"
 ```
 
-Nothing else on that line: a background session keeps the name, permission
-mode, model and settings it was started with and restores them when it is
-resumed in place, and any option you pass starts a *copy* under a new id
-instead — a second session that knows nothing.
+The `--name` is there because the `rm` deleted the registry entry that
+carried it. What was observed: a stop-then-resume with the entry intact
+brought the session back with its name, permission mode, model and settings;
+an rm-then-bare-resume brought back the conversation, mode, model and
+settings — it worked and reported — and came up as `close retrospective 194`,
+an auto-title from its prompt, without the `worker:` prefix the clean view
+exists for. What has not been observed: `--name` on a resume line. The rule
+this replaces held that any option on the line starts a copy under a new id,
+a claim no session has exercised; the harness's own help says the copy comes
+when the session is already running, and that it prints a `note:` line when
+it does. So read the `backgrounded · <id>` line the resume prints: if the id
+is new, the Workers table records the new id beside the old transcript path.
 
 **Checking a team that has gone quiet.** Pick a time you are comfortable with,
 write it in your notes, and when a team has not reported within it, look it up
