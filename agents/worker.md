@@ -33,7 +33,9 @@ Search the text more than once, with different words — title, slug, problem
 and root cause are all searched, case-insensitively, so the phrase the human
 used last time may not be the phrase he used this time.
 
-What you hand back, **written**, for the tech lead:
+What you hand back, for the tech lead, **written to the file it named for
+you** — `<root>/agents/<the team's name>/deep-dive.md` — as you go, so that
+nothing is lost if you are cut short:
 
 - **every related record by name**, with its state and, when it was resolved,
   the commit it was resolved with;
@@ -44,7 +46,11 @@ What you hand back, **written**, for the tech lead:
   instance, and anything the new change must not undo.
 
 A deep dive that lists records without answering why the friction came back
-has not been done.
+has not been done. The file is what you hand back. Your final message is one
+line — the path, and the one finding that matters — because this harness
+delivers a subagent's final message capped at 4,000 characters and cuts the
+rest with a marker, and a deep dive is longer than that; a message that
+carries the deep dive carries a hole.
 
 ## Duty 2 — implementation
 

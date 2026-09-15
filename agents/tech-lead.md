@@ -54,10 +54,13 @@ data turns out to be **wrong or thin**, say so in your report — that is how th
 drafting side finds out what it left out.
 
 **The history deep dive, FIRST, before you read a line of code.** Hand it to
-one `retroloop:worker` subagent dedicated to it and nothing else. What comes
-back: the complete history of this friction and of every similar record,
-resolved or not — what was tried, what was resolved and with which commit, and
-why the friction happened again anyway.
+one `retroloop:worker` subagent dedicated to it and nothing else, and name in
+its prompt the file it writes to: `<root>/agents/<your name>/deep-dive.md`.
+What comes back, in that file: the complete history of this friction and of
+every similar record, resolved or not — what was tried, what was resolved and
+with which commit, and why the friction happened again anyway. The worker's
+message is the path and the one finding that matters; the file is what you
+read.
 
 **Let those findings shape the change.** This is the point of doing it first.
 A fix that flips back and forth with an earlier fix is not a fix, it is the
@@ -92,17 +95,37 @@ nothing.
 group) **and a body that explains** what changed and why. That first line is
 what the manager checks the report against.
 
+**Every subagent's result comes back in a file, never in its message.** This
+harness delivers a subagent's final message capped at 4,000 characters and
+marks the cut with `[result truncated — ask the agent for the rest via
+SendMessage]`; a deep dive, a checklist walk or a probe's output is longer
+than that, asking for the rest costs a round, and the resend can be cut again.
+So every launch prompt you write — deep dive, implementation, probe, reviewer
+— names the file under `<root>/agents/<your name>/` the subagent writes its
+whole result to, and asks for one line back: the path, plus the verdict or
+the one finding that matters. When its notification arrives you read the
+file; the line is a pointer, and it is never what you quote into a report.
+
 **Have the reviewer walk the checklist before you report.** Launch
-`retroloop:reviewer` with the change, the record and the checklist. It returns
-`pass`, or the first failing item with its evidence. **Fix and re-run until it
-passes.** You do not report on a fail, and you do not argue with the checklist.
+`retroloop:reviewer` with the change, the record, the checklist and the file
+it writes its walk to, `<root>/agents/<your name>/reviewer-pass-<n>.md`,
+`<n>` counting its passes over this change from 1. It returns one line —
+`pass`, or the first failing item, and that path — and the whole walk with
+its evidence is in the file. **Fix and re-run until it passes**; each pass
+gets its own file, and that file, as the reviewer wrote it, is the verbatim
+record of the pass. You do not report on a fail, and you do not argue with
+the checklist.
 
 **Merge your branch into `main`** of that repository once the reviewer passes.
 
 **Then write the report and tell the manager.**
 `<root>/agents/<your name>/report.md` carries four things: the **merge
-commit**, **what changed**, **what was run**, and **the reviewer's result**.
-Then `SendMessage` to `retroloop-manager` with the same four, short. Then
+commit**, **what changed**, **what was run**, and **the reviewer's result** —
+the one line it returned, verdict and path, with the pass file linked beside
+it. The reviewer's own file is the verbatim record of its walk, so the report
+links it and never pastes a reviewer's message, and it can never carry a hole
+where a message was cut. Link the deep dive's file the same way. Then
+`SendMessage` to `retroloop-manager` with the same four, short. Then
 **stop**. The manager stops your session when the record is resolved; leaving
 work half-reported is what makes it chase you.
 
