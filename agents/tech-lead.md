@@ -87,6 +87,30 @@ liberty you take here.
 one under `.claude/worktrees/`. If the target is not a git repository at all,
 `git init -b main` first, then the worktree. Nothing is edited in place.
 
+Then check what that worktree was branched from, **before the first edit** —
+wherever the repository already had a `main` (one you have just `git init`-ed
+has no commit to compare):
+
+```
+git rev-parse HEAD main
+```
+
+The two are the same commit, or your base is wrong. When the harness's
+worktree tool *creates* a worktree it branches from `origin/<default-branch>`
+unless the repository's `.claude/settings.json` sets
+`"worktree": { "baseRef": "head" }`, and the lane's repositories run ahead of
+their remotes by design: teams merge locally, and nothing is pushed before a
+release, where there is one. A repository that carries the setting is covered
+only as far as `head` goes — the HEAD of the checkout your session started
+in, which is `main` only while that checkout is on `main` — and a repository
+a record lands in for the first time does not carry it at all. So the check
+is yours every time. If they differ while your branch is still empty,
+`git merge --ff-only main` and check again; after your first commit the same
+repair is a merge and every check re-run. **Name the commit your worktree
+started from in your report**: a stale base fails silently — the branch still
+merges wherever its hunks are clear of what `main` gained, into a tree nobody
+tested — so that line is the only place it shows.
+
 **Run the tests that exist there.** Whatever the repository actually has — its
 suite, its lint, its build. Not a suite you invent for the occasion; not
 nothing.
