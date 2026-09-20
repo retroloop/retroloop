@@ -222,6 +222,18 @@ on that row is a different thing, his reviewer note and then his review
 comments, so an empty `ownerWords` means he wrote no note and no comment and
 never that he said nothing.
 
+**The prompt names the commit the change lands on** — `git rev-parse main` in
+that directory, run as you write the prompt, once for each repository the
+change lands in: local `main`, never `origin/main`. The lane's repositories
+run ahead of their remotes by design — teams merge locally, the app's `main`
+is never pushed and a plugin's only by its release — and the harness's
+worktree tool branches a new worktree from the remote branch unless the
+repository's `.claude/settings.json` sets `"worktree": { "baseRef": "head" }`.
+That commit is what the team checks its new worktree against before its first
+edit, and what its report names as the base it built on; with two teams in
+one repository `main` moves while they work, so a base later than the commit
+you named is another team's merge, and an earlier one is the stale base.
+
 The name is a rule, not a label: **every session the lane starts is named
 `retroloop-<role>`, and what it is working on after that.** You are
 `retroloop-manager`, the name `scripts/ensure-manager.sh` gives you; a team's
