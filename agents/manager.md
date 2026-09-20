@@ -125,11 +125,20 @@ is yours: arm it with the **Monitor tool**, `persistent: true` (which is what
 Never as a background task. The script loops the CLI's own
 `retroloop review wait --any --follow --json` and prints **one line** per
 Finish press — a monitor wakes you on every printed line, no exit needed, and
-a quiet tick prints nothing. It exits only after five wait failures in a row,
-saying so on its last line, and that exit is a wake-up too. Arm it at your
-first start, on every resume, and after any compaction; on a harness whose
-Monitor tool offers only `timeout_ms`, arm it with the longest deadline the
-tool allows and read the expiry notice as an exit.
+a quiet tick prints nothing. **A wait that fails prints a line of its own** —
+`watch-finish: wait failed (rc=<code>) <why> — still listening, next wait in
+<n>s` — with the exit code and the wait's own last words, and the script backs
+off (15 seconds, doubling to five minutes) and waits again. That line wakes
+you, and it is **not a Finish and not an exit**: the monitor is still armed,
+so leave it armed, read the cause, and fix what it names if it is yours to fix
+(the store, the app, the root) — `rc=143` is a wait killed from outside, not a
+broken CLI. The script exits by itself in two cases only: it cannot run the
+CLI at all (`watch-finish: refusing — …`, exit 2), or it was armed with
+`--max-failures <n>` and that many waits in a row failed, which its last line
+says (exit 1). Either exit is a wake-up too. Arm it at your first start, on
+every resume, and after any compaction; on a harness whose Monitor tool offers
+only `timeout_ms`, arm it with the longest deadline the tool allows and read
+the expiry notice as an exit.
 
 **Re-arming is the first tool call of any turn that reads the monitor's exit
 or expiry** — before a sentence is written, because an incoming message can
