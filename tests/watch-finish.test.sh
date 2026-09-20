@@ -70,6 +70,13 @@ plan() { # <exit code>...
 # reads the next exit code off the plan, and prints the event body when that
 # code is 0. Past the end of the plan it fails, so a watch that has lost the
 # thread still stops rather than spinning this suite forever.
+#
+# It also photographs the watch's PID file WHILE the wait is running — the only
+# moment "the file exists while the watch runs" can be seen from — beside its
+# own pid and its parent's, which are what the file has to name. The watch
+# writes the wait's pid a moment after starting it, so the stub gives that line
+# two seconds to land. A plan line of `hang` is a wait that never returns: the
+# stub becomes a sleep, in the same pid, for a case that kills the watch.
 write_retroloop_stub() {
   {
     printf '#!/bin/sh\n'
@@ -84,8 +91,20 @@ n="$(cat "$SB/n" 2>/dev/null)"
 n=$((n + 1))
 printf '%s\n' "$n" >"$SB/n"
 
+pidfile="$SB/home/.retroloop/agents/manager/watch-finish.pid"
+tries=0
+while [ "$tries" -lt 20 ] && ! grep -q "^wait=$$\$" "$pidfile" 2>/dev/null; do
+  /bin/sleep 0.1
+  tries=$((tries + 1))
+done
+{
+  printf 'stub=%s\nstub_parent=%s\n' "$$" "$PPID"
+  cat "$pidfile" 2>/dev/null
+} >"$SB/pidfile.seen.$n"
+
 code="$(sed -n "${n}p" "$SB/plan")"
 [ -n "$code" ] || code=1
+[ "$code" = 'hang' ] && exec /bin/sleep 30
 [ "$code" = '0' ] && cat "$SB/event.json"
 exit "$code"
 STUB
@@ -93,8 +112,13 @@ STUB
   chmod +x "$SB/bin/retroloop"
 }
 
+# Processes a case started itself, by pid — the only things this suite ever
+# signals. Whatever a failing case left running is put down here.
+SPAWNED=''
+
 cleanup() {
-  local d
+  local d p
+  for p in $SPAWNED; do kill "$p" 2>/dev/null; done
   for d in $SANDBOXES; do
     case "$d" in
       */rl50f-*) rm -rf "$d" ;;
@@ -163,6 +187,31 @@ run_watch() { # <arg>...
 
 nth_call() { # <n>
   sed -n "$1p" "$SB/retroloop.calls" 2>/dev/null
+}
+
+# The watch's PID file, under the sandbox's own root — HOME is the sandbox's
+# and RETROLOOP_HOME is unset, so the root is <home>/.retroloop.
+pid_file() {
+  printf '%s' "$SB/home/.retroloop/agents/manager/watch-finish.pid"
+}
+
+seen() { # <n> <key> — what the stub's nth call saw: stub, stub_parent, watch, owners, wait
+  sed -n "s/^$2=//p" "$SB/pidfile.seen.$1" 2>/dev/null | head -n1
+}
+
+expect_number() { # <what> <value>
+  case "$2" in
+    '' | *[!0-9]*) miss "$1: got [$2], want a pid" ;;
+  esac
+}
+
+expect_no_pid_file() {
+  [ ! -e "$(pid_file)" ] || miss "the PID file at $(pid_file) outlived the watch: [$(tr '\n' ' ' <"$(pid_file)")]"
+}
+
+alive() { # <pid>
+  case "${1:-}" in '' | *[!0-9]*) return 1 ;; esac
+  kill -0 "$1" 2>/dev/null
 }
 
 # ── preflight ────────────────────────────────────────────────────────────────
@@ -235,8 +284,72 @@ expect_contains 'stderr' "$ERR" 'no retroloop CLI'
 expect_contains 'stderr points at setup' "$ERR" '/retroloop:setup'
 end
 
+# ── D6 · the PID file ────────────────────────────────────────────────────────
+# The watch says who it is, in its own root: `ensure-manager.sh` reaps an
+# orphaned watch by the pids in this file and by nothing else, so the file has
+# to name the watch and the wait it is holding for exactly as long as they live.
+begin D6 'the PID file names the watch and its wait while it runs, and is gone after — both forms'
+new_sandbox
+plan 7
+run_watch --once
+expect_eq '--once exit' "$RC" '7'
+expect_number '--once: watch= while the wait ran' "$(seen 1 watch)"
+expect_eq '--once: watch= is the watch itself' "$(seen 1 watch)" "$(seen 1 stub_parent)"
+expect_eq '--once: wait= is the wait it started' "$(seen 1 wait)" "$(seen 1 stub)"
+expect_number '--once: owners= names who armed it' "$(seen 1 owners | cut -d' ' -f1)"
+expect_no_pid_file
+new_sandbox
+plan 7 0 1 1 1 1 1
+run_watch
+expect_eq 'loop: one watch through every wait' "$(seen 2 watch)" "$(seen 1 watch)"
+expect_eq 'loop: watch= is the watch itself' "$(seen 2 watch)" "$(seen 2 stub_parent)"
+expect_eq 'loop: wait= follows each new wait' "$(seen 2 wait)" "$(seen 2 stub)"
+[ "$(seen 1 wait)" != "$(seen 2 wait)" ] || miss "loop: two waits shared one pid [$(seen 1 wait)]"
+expect_no_pid_file
+end
+
+# ── D7 · a killed watch ──────────────────────────────────────────────────────
+# The kill is this case's own: it signals, by pid, the watch it started.
+begin D7 'a killed watch takes the wait it was holding with it, and leaves no PID file'
+new_sandbox
+plan hang
+env -i HOME="$SB/home" PATH="$SB_PATH" bash "$WATCH" >"$SB/bg.out" 2>"$SB/bg.err" </dev/null &
+WATCH_PID=$!
+SPAWNED="$SPAWNED $WATCH_PID"
+tries=0
+while [ "$tries" -lt 50 ] && ! grep -q '^wait=[0-9]' "$(pid_file)" 2>/dev/null; do
+  /bin/sleep 0.1
+  tries=$((tries + 1))
+done
+HELD_WAIT="$(sed -n 's/^wait=//p' "$(pid_file)" 2>/dev/null | head -n1)"
+SPAWNED="$SPAWNED $HELD_WAIT"
+expect_eq 'watch= is the process this case started' "$(sed -n 's/^watch=//p' "$(pid_file)" 2>/dev/null | head -n1)" "$WATCH_PID"
+alive "$HELD_WAIT" || miss "the wait [$HELD_WAIT] was not running before the kill"
+kill "$WATCH_PID" 2>/dev/null
+wait "$WATCH_PID" 2>/dev/null
+expect_eq 'exit' "$?" '143'
+tries=0
+while [ "$tries" -lt 20 ] && alive "$HELD_WAIT"; do
+  /bin/sleep 0.1
+  tries=$((tries + 1))
+done
+alive "$HELD_WAIT" && miss "the wait [$HELD_WAIT] outlived its watch"
+expect_no_pid_file
+end
+
+# ── D8 · nowhere to write the PID file ───────────────────────────────────────
+begin D8 'a root it cannot write a PID file under — the watch still waits, and still prints the press'
+new_sandbox
+mkdir -p "$SB/home/.retroloop"
+: >"$SB/home/.retroloop/agents"
+plan 0
+run_watch --once
+expect_eq 'stdout' "$OUT" "$EVENT_ONE_LINE"
+expect_eq 'exit' "$RC" '0'
+end
+
 # ── verdict ──────────────────────────────────────────────────────────────────
-total=5
+total=8
 n_failed=0
 for _ in $FAILED_IDS; do n_failed=$((n_failed + 1)); done
 n_passed=$((total - n_failed))

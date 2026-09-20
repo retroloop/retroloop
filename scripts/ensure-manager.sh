@@ -265,13 +265,79 @@ resume_manager() { # <session id>
     "resume the resolve lane$(just_finished)" 2>&1
 }
 
-# A stopped manager leaves the wait it was holding behind as an orphan — a
-# `review wait --any` process that answers to nobody. It is harmless, but it
-# is a leak per restart, and the manager re-arms its wait on every start
-# anyway. No manager is live at the moment this runs, so any such process is
-# an orphan by definition.
+# A stopped manager can leave the watch it armed behind as an orphan — a
+# `watch-finish.sh` loop, and the `review wait --any` it was holding, that
+# answer to nobody. It is harmless, but it is a leak per restart, and the
+# manager re-arms its wait on every start anyway.
+#
+# THE ORPHAN IS KNOWN BY ITS PID, NEVER BY WHAT A COMMAND LINE LOOKS LIKE. The
+# watch writes its own pid, the wait it is holding and the two processes it
+# answers to into <root>/agents/manager/watch-finish.pid, and that file — this
+# root's, nobody else's — is all that is read here. This used to be
+# `pkill -f 'review wait --any'`, on the reasoning that no manager is live when
+# it runs, so any such process is an orphan: true of THIS root, and false of
+# the machine. Run from a test sandbox, or under a second root, it killed the
+# live lane's listener on every run (#205). A sandbox or a second root now
+# finds its own PID file or none, and touches nothing else.
+#
+# And a recorded watch is an orphan only once it has lost the processes that
+# armed it. A watch that still has the parent and grandparent it started with
+# is somebody's live listener, whatever the session list said a moment ago, and
+# it is left alone: a leaked process is a leak, a killed listener is a deaf
+# lane. Pids are reused, so a pid is only signalled while it is still running
+# what the file says it was. A wait from an older plugin, which wrote no PID
+# file, is not reaped at all — a leak, where the old form was a kill.
+WATCH_PID_FILE="$MANAGER_HOME/watch-finish.pid"
+
+watch_field() { # <watch|owners|wait>
+  sed -n "s/^$1=//p" "$WATCH_PID_FILE" 2>/dev/null | head -n1
+}
+
+still_runs() { # <pid> <words> — alive, and still the command the file says it was
+  case "${1:-}" in
+    '' | *[!0-9]*) return 1 ;;
+  esac
+  [ "$1" -gt 1 ] || return 1
+  case "$(ps -o command= -p "$1" 2>/dev/null)" in
+    *"$2"*) return 0 ;;
+  esac
+  return 1
+}
+
+owners_of() { # <pid> → "<parent> <grandparent>", as watch-finish.sh writes them
+  local parent grand=''
+  parent="$(ps -o ppid= -p "$1" 2>/dev/null | tr -d ' ')"
+  [ -n "$parent" ] && grand="$(ps -o ppid= -p "$parent" 2>/dev/null | tr -d ' ')"
+  printf '%s %s' "$parent" "$grand"
+}
+
 reap_orphaned_waits() {
-  pkill -f 'review wait --any' 2>/dev/null || true
+  [ -f "$WATCH_PID_FILE" ] || return 0
+  local watch owners held now holder
+  watch="$(watch_field watch)"
+  owners="$(watch_field owners)"
+  held="$(watch_field wait)"
+
+  if still_runs "$watch" 'watch-finish.sh'; then
+    now="$(owners_of "$watch")"
+    # Still held by whoever armed it — or nothing on record to say otherwise.
+    if [ -z "${owners// /}" ] || { [ "$now" = "$owners" ] && [ "${now%% *}" != '1' ]; }; then
+      return 0
+    fi
+    kill "$watch" 2>/dev/null || true
+  fi
+
+  # The wait outlives a watch that died hard. It is this root's only while it
+  # is nobody else's: not the child of some other, living watch.
+  if still_runs "$held" 'review wait'; then
+    holder="$(ps -o ppid= -p "$held" 2>/dev/null | tr -d ' ')"
+    if [ "$holder" = "$watch" ] || ! still_runs "$holder" 'watch-finish.sh'; then
+      kill "$held" 2>/dev/null || true
+    fi
+  fi
+
+  rm -f "$WATCH_PID_FILE"
+  return 0
 }
 
 # ── the run ──────────────────────────────────────────────────────────────────

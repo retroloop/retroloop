@@ -92,15 +92,83 @@ require_cli() {
 # over six lines is six wake-ups carrying a fragment each.
 EVENT=''
 
+# The wait runs as a background job the watch then waits on, rather than inside
+# a `$(…)`, for two reasons. The watch learns the wait's pid, which is what the
+# PID file has to name. And a signal to the watch is acted on at once — bash
+# sits on a trapped signal until a foreground command returns, and this one
+# returns in ten minutes.
+WAIT_PID=''
+WAIT_OUT=''
+
 one_wait() { # <timeout> → 0 pressed (EVENT set) · 7 timed out · other: failed
-  local timeout="$1" out rc
-  out="$("${RETROLOOP_CLI[@]}" review wait --any --follow --timeout "$timeout" --json 2>/dev/null)"
+  local timeout="$1" rc
+  "${RETROLOOP_CLI[@]}" review wait --any --follow --timeout "$timeout" --json >"$WAIT_OUT" 2>/dev/null &
+  WAIT_PID=$!
+  write_pid_file
+  wait "$WAIT_PID"
   rc=$?
+  WAIT_PID=''
+  write_pid_file
   EVENT=''
   if [ "$rc" -eq 0 ]; then
-    EVENT="$(printf '%s' "$out" | tr '\n' ' ' | sed 's/[[:space:]][[:space:]]*/ /g; s/^ //; s/ *$//')"
+    EVENT="$(tr '\n' ' ' <"$WAIT_OUT" | sed 's/[[:space:]][[:space:]]*/ /g; s/^ //; s/ *$//')"
   fi
   return "$rc"
+}
+
+# ── the PID file ─────────────────────────────────────────────────────────────
+# THE WATCH SAYS WHO IT IS, IN ITS OWN ROOT. `ensure-manager.sh` clears away the
+# watch a stopped manager left behind, and it used to find it by looking for
+# the words `review wait --any` on any command line on the machine — which is
+# also what the live lane's listener looks like, and a test sandbox's run of
+# that script killed it on every run (#205). So the watch writes down its own
+# pid, the wait it is holding, and the two processes it answers to — the shell
+# that armed it and that shell's parent, which under a Monitor is the session —
+# in <root>/agents/manager/watch-finish.pid, and the reap reads that file and
+# nothing else. A watch under another root writes another file.
+#
+# The file is written whole and moved into place, so it is never read half
+# written; it is removed on every exit, signals included, and only by the watch
+# it names — a later watch under the same root owns it from then on. A root the
+# file cannot be written under is not a reason to refuse: an unreapable watch
+# is a leak, and a watch that will not start is a deaf lane.
+PID_FILE=''
+OWNERS=''
+
+owners_of() { # <pid> → "<parent> <grandparent>"
+  local parent grand=''
+  parent="$(ps -o ppid= -p "$1" 2>/dev/null | tr -d ' ')"
+  [ -n "$parent" ] && grand="$(ps -o ppid= -p "$parent" 2>/dev/null | tr -d ' ')"
+  printf '%s %s' "$parent" "$grand"
+}
+
+write_pid_file() {
+  [ -n "$PID_FILE" ] || return 0
+  printf 'watch=%s\nowners=%s\nwait=%s\n' "$$" "$OWNERS" "$WAIT_PID" >"$PID_FILE.$$" 2>/dev/null &&
+    mv -f "$PID_FILE.$$" "$PID_FILE" 2>/dev/null
+  return 0
+}
+
+start_pid_file() {
+  local dir
+  dir="$(retroloop_root)/agents/manager"
+  mkdir -p "$dir" 2>/dev/null || return 0
+  PID_FILE="$dir/watch-finish.pid"
+  OWNERS="$(owners_of "$$")"
+  write_pid_file
+}
+
+# Every way out comes through here: the wait is not left behind to be somebody
+# else's orphan, and the file stops naming a watch that is gone.
+on_exit() {
+  [ -n "$WAIT_PID" ] && kill "$WAIT_PID" 2>/dev/null
+  [ -n "$WAIT_OUT" ] && rm -f "$WAIT_OUT"
+  [ -n "$PID_FILE" ] || return 0
+  rm -f "$PID_FILE.$$"
+  if [ "$(sed -n 's/^watch=//p' "$PID_FILE" 2>/dev/null | head -n1)" = "$$" ]; then
+    rm -f "$PID_FILE"
+  fi
+  return 0
 }
 
 # ── where ────────────────────────────────────────────────────────────────────
@@ -142,6 +210,15 @@ while [ $# -gt 0 ]; do
 done
 
 require_cli
+
+WAIT_OUT="$(mktemp "${TMPDIR:-/tmp}/watch-finish-XXXXXX" 2>/dev/null)" ||
+  refuse "could not make a temporary file under ${TMPDIR:-/tmp} to read the wait's answer from."
+
+trap on_exit EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
+start_pid_file
 
 # ── one wait, for a harness that wakes on an exit ────────────────────────────
 if [ "$ONCE" -eq 1 ]; then
