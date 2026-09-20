@@ -264,17 +264,51 @@ retroloop record resolve <recordId> --ref <the merge commit sha> --json   # the 
 
 **Deploying on a threshold.** Three merges, or ten minutes since the first
 unreleased merge, whichever comes first. Both numbers are overridable by the
-human simply telling you. Then, once per threshold:
+human simply telling you. Then, once per threshold, release — and **which
+script releases is decided by the repository the merge landed in**, the
+directory you started that team in. Releasing is yours in both cases: a merge
+you report as "unreleased" and hand to the human as a command to type is the
+thing he asked about — "Are you not supposed to do the release thing as the
+plugins are updated?"
 
-```
-<plugin>/scripts/deploy.sh <root>/plugins/my <record ids>
-```
+- **A merge that landed in `<root>/plugins/my`** — the human's own
+  personalization plugin — releases through `deploy.sh`:
 
-The script bumps the patch silently, commits, pushes if a remote exists,
+  ```
+  <plugin>/scripts/deploy.sh <root>/plugins/my <record ids>
+  ```
+
+- **A merge that landed in the Retroloop plugin's own source repository** —
+  the repository this brief and its scripts are written in — releases through
+  **that repository's** `scripts/release.sh`, on the same threshold, once that
+  repository's team worktrees are gone (§ "Winding a team down"):
+
+  ```
+  <that repository>/scripts/release.sh "<what changed, in words> (#<record ids>)"
+  ```
+
+  Run it from that checkout and never from `<plugin>`, the installed copy:
+  the script releases whatever directory it sits in. And the worktrees first,
+  because its commit is `git add -A` — a team worktree left under that
+  repository's untracked `.claude/` would be committed into the release. A
+  worktree there that is not yours to remove — a team still working in that
+  repository, a branch not merged — means the release waits: never run it
+  over one, and write in your notes what it is waiting for.
+
+- **A merge that landed anywhere else has no release step.** The app's `main`
+  runs live from source, and the human keeps it; only the two plugins are
+  released. Write in your notes that there was nothing to release, rather
+  than leaving it unsaid.
+
+`deploy.sh` bumps the patch silently, commits, pushes if a remote exists,
 updates the installed plugin and asserts the outcome. (`--no-update`, before
 the directory, does everything but the update and says which command it
 skipped; it exists for a rehearsal against a scratch plugin and is used only
-when the human says so.) The reload line it
+when the human says so.) `release.sh` does the same for the Retroloop plugin
+— bumps the patch, commits, pushes, updates, and verifies the update landed
+on the version it just wrote. The bump and the commit are the script's own
+and are what a release is; "never edit a repository" is about the teams'
+work, and running either script is not that. The reload line either script
 prints **goes into your notes and to nobody else** — the version monitor is
 what tells open sessions. And a blocked worker never delays anyone else: the
 threshold counts merges that landed, not records that were queued.
@@ -414,7 +448,11 @@ it: you are the thing that released the version.
   woken; you do not block.
 - **Never decide anything the human owns** — which solution, which level,
   whether a record is worth doing.
-- **Never push.** `deploy.sh` handles the remote question and only it does.
+- **Never a bare `git push`.** `deploy.sh` and `release.sh` are the two
+  scripts that may push, and a push leaves this lane through one of them or
+  not at all: a bare `git push` is hard-denied in auto mode, and a wrapper
+  script is what runs through (`scripts/plugin-push.sh` says so, in its
+  header). They handle the remote question; you never do.
 - **Never `record reopen`.** A recurrence is a *new* record, filed through a
   retrospective by the human. Reopening a resolved record erases the history
   your own deep dive depends on.
