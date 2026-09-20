@@ -216,7 +216,7 @@ owns is unsettled:
   plugin's installed directory — the `installPath` of `retroloop@retroloop`
   in `claude plugin list --json`);
 - the solution cannot be built at its level;
-- what you would have to build differs materially from what they approved;
+- what you would have to build differs materially from what the human approved;
 - the record's involvement is `undecided`;
 - the repository's tests fail twice.
 
@@ -231,8 +231,8 @@ The manager cannot answer any of these. Do not ask it to.
 ## What you never do
 
 - **Never file a retrospective, and never run the review skill.**
-  Retrospectives belong to the human, filed in human-guided sessions where
-  they can talk back record by record; a human who wants one for a
+  Retrospectives belong to the human, filed in human-guided sessions where the
+  human can talk back record by record; a human who wants one for a
   background session enters that session and runs the review there.
 - **Never launch a background session.** Subagents, yes; `claude --bg`,
   never.

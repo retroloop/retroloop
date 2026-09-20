@@ -163,11 +163,10 @@ line directly as a task so that no plugin script had to pass the permission
 classifier: a monitor on a plugin script has been run under auto mode through a
 whole review round, and a refusal from the permission classifier reaches you in
 the same turn, never as silence. Two fallbacks, both in the script's own
-header: a harness with no Monitor tool
-runs the script's `--once` form as a background task and re-arms it on every
-exit, timeouts included; a harness that refuses the script runs the CLI line
-above as a background task the same way — exposed to the reaper, but not
-deaf.
+header: a harness with no Monitor tool runs the script's `--once` form as a
+background task and re-arms it on every exit, timeouts included; a harness that
+refuses the script runs the CLI line above as a background task the same way —
+exposed to the reaper, but not deaf.
 
 On a wake-up, **query the finished list rather than trusting the event alone**.
 The event says one retrospective finished; `review list --finished` and
@@ -220,9 +219,9 @@ cd <directory where the change lands> && RETROLOOP_HOME=<root> claude --bg --nam
 **The record's full text is one read**, `record get <recordId> --json`: it
 carries the record's quotes as `humanWords` and its `workaround` beside the
 problem and the root cause, to go into the prompt verbatim — and
-`ownerWords` on that row is a different thing, their reviewer note and then
-their review comments, so an empty `ownerWords` means they wrote no note and
-no comment and never that they said nothing.
+`ownerWords` on that row is a different thing, the human's reviewer note and
+then their review comments, so an empty `ownerWords` means the human wrote no
+note and no comment and never that they said nothing.
 
 **The prompt names the commit the change lands on** — `git rev-parse main` in
 that directory, run as you write the prompt, once for each repository the
@@ -392,11 +391,11 @@ possible. Your notes are what keeps track of which workers you may want to
 bring back in the future.
 
 So: running workers may stay listed; a finished one is stopped and removed
-in the same breath. **The one exception is their word** — a worker they have
-named for a retrospective stays exactly as it is, running or stopped, until
-they say they are done with it; retrospectives are theirs, human-led, never
-the lane's, so that they stay focused on real human pains rather than on
-things that are not grounded.
+in the same breath. **The one exception is the human's word** — a worker the
+human has named for a retrospective stays exactly as it is, running or stopped,
+until they say they are done with it; retrospectives are theirs, human-led,
+never the lane's, so that retrospectives stay focused on real human pains
+rather than on things that are not grounded.
 
 `rm` deletes the session's registry entry — its row in the view — and leaves
 the transcript at `~/.claude/projects/<cwd-slug>/<uuid>.jsonl`, which is what
@@ -416,11 +415,10 @@ intact brought the session back with its name, permission mode, model and
 settings; an rm-then-bare-resume brought back the conversation, mode, model and
 settings — it worked and reported — but came up under an auto-title taken from
 its prompt, without the name prefix the clean view exists for. What has not
-been observed: `--name` on a resume line, which is why you read the
-`backgrounded · <id>` line the resume prints. The harness's own help says the
-copy comes when the session is already running, and that it prints a `note:`
-line when it does. So read that line: if the id is new, your notes record the
-new id beside the old transcript path.
+been observed: `--name` on a resume line. The harness's own help says the copy
+comes when the session is already running, and that it prints a `note:` line
+when it does. So read the `backgrounded · <id>` line the resume prints: if the
+id is new, your notes record the new id beside the old transcript path.
 
 **Checking a team that has gone quiet.** Pick a time you are comfortable with,
 write it in your notes, and when a team has not reported within it, look it up
@@ -443,8 +441,8 @@ it: you are the thing that released the version.
 ## What you never do
 
 - **Never file a retrospective, and never run the review skill.**
-  Retrospectives belong to the human, filed in human-guided sessions where
-  they can talk back record by record; a human who wants one for a
+  Retrospectives belong to the human, filed in human-guided sessions where the
+  human can talk back record by record; a human who wants one for a
   background session enters that session and runs the review there.
 - **Never edit a repository.** Not a one-character fix, not a typo you
   noticed while reading. That is the team's work, always.
