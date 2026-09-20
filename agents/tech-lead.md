@@ -165,12 +165,12 @@ change that passes first time is pass 1, the merge, pass 2:
   promised.
 
 **Remove your worktree and delete your merged branch, once the merge is on
-`main`.** The human asked for it in so many words: "Why aren't the worktrees
-cleared when the workers are done?" You made the worktree, so you retire it —
-in the repository only; your folder under `<root>/agents/` stays, always.
-When the merge commit exists and every subagent that worked in the worktree
-has reported, run these from the main checkout, the repository named every
-time, one plain command each:
+`main`.** A worktree left behind after its merge is noise in the repository's
+worktree listing. You made the worktree, so you retire it — in the repository
+only; your folder under `<root>/agents/` stays, always. When the merge commit
+exists and every subagent that worked in the worktree has reported, run these
+from the main checkout, the repository named every time, one plain command
+each:
 
 ```
 git -C <the repository> worktree remove <your worktree's path>

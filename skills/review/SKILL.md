@@ -590,9 +590,9 @@ reader how much of a record is memory.
 This is what each drafter runs, and what you run for a record you draft
 yourself.
 
-**Every record is a piece of research before it is a piece of writing.** The
-human's words are the ask (*"the AI should do deep-dive and propose solutions (up
-to 3)"*), and they are an ask about the work you do before drafting, not about
+**Every record is a piece of research before it is a piece of writing.** A
+record is asked for as a deep dive that proposes up to three solutions, and
+that is an ask about the work you do before drafting, not about
 how much you type. For each friction, go and look: read the code, the docs and
 the instruction surfaces the friction actually ran through, find where the cost
 came from, and only then decide what could be done about it. A record whose root
@@ -1428,12 +1428,12 @@ no count and no flag will ever surface. The branch list below turns on all three
 so skipping the last one means deciding the round without having read part of it.
 
 **`finishMessage` is his last word on the round**, written in the box the Finish
-button opens and delivered deliberately apart from the comments — his own ask:
-*"this message is going to be delivered separately from the comments."* It is
-about the round rather than about any record, it is `null` when he left none, and
-**nothing else surfaces it**: it is not a thread, it has no `threadId`, and it
-will never appear in `comment list`. Read it before you decide anything below,
-because it is the one place he speaks about the round as a whole.
+button opens and delivered deliberately apart from the comments, so that it is
+read as a statement about the round and not as a note on any record. It is
+`null` when he left none, and **nothing else surfaces it**: it is not a thread,
+it has no `threadId`, and it will never appear in `comment list`. Read it before
+you decide anything below, because it is the one place he speaks about the round
+as a whole.
 
 **A revision lands only as the first of a retrospective or as the answer to a
 finished round.** `revision create` returns `CONFLICT` (exit `4`) while the
