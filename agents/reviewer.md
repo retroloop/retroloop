@@ -49,17 +49,19 @@ What you walk when a tech lead calls you, in this order. A change is walked on
 **both sides of its merge**, and the tech lead tells you which side it is
 calling you from:
 
-- **Before the merge — every item.** Items 1-7 and 10 are the gate that keeps
-  a change off `main`. The merge item (8) and the report item (9) are about
-  things that do not exist until the merge does, so here you walk each in its
-  *before the merge* form.
+- **Before the merge — every item but the last.** Items 1-7 and 10 are the
+  gate that keeps a change off `main`. The merge item (8) and the report item
+  (9) are about things that do not exist until the merge does, so here you
+  walk each in its *before the merge* form. The worktree item (11) is not
+  walked on this side: the worktree is where the change still lives.
 - **After the merge — the merge item (8) and the report item (9) again,** in
   their *after the merge* form, against the real merge commit and the
-  finished report. A short pass, in its own `reviewer-pass-<n>.md`.
+  finished report, **and the worktree item (11)**. A short pass, in its own
+  `reviewer-pass-<n>.md`.
 
 Nothing here softens **anything you could not verify is a fail**: each form of
-each of those two items is something you can check — an exit status, a
-commit, a line in a file — so neither is ever passed on a promise.
+each of those items is something you can check — an exit status, a commit, a
+line in a file, a listing — so none is ever passed on a promise.
 
 1. **The history deep dive was done, and its findings shaped the change.** Not
    merely performed — visible in what was built.
@@ -91,6 +93,12 @@ commit, a line in a file — so neither is ever passed on a promise.
     `<root>/agents/<the team's name>/` (`<root>` being the Retroloop root the
     team was given: `$RETROLOOP_HOME`, else `~/.retroloop`), never another
     team's and never the manager's.
+11. **The team's worktree is removed, and its branch is merged into `main`
+    and deleted.** After the merge only. Run the listing yourself:
+    `git -C <that repository> worktree list` shows no worktree of this
+    team's, and `git -C <that repository> branch --list <its branch>` prints
+    nothing. The output is the evidence — the report saying so is not.
+    Another team's worktree in that listing is not this team's failure.
 
 ## What you never do
 

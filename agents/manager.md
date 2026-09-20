@@ -277,6 +277,42 @@ takes the full session uuid, the `sessionId` in `claude agents --json` — and
 `claude --bg` prints only the short one, so your notes record both ids the
 moment a team is launched.
 
+Then the repository, because `claude rm` removes a session and not a worktree
+the session has already left:
+
+```
+git -C <the directory the change landed in> worktree list
+```
+
+A team removes its own worktree and deletes its merged branch before it
+reports, and its reviewer checks the listing; this look is the catch for what
+slipped. **Whose a worktree is, you know from the team's report**, which names
+its worktree's path and its branch in the line that says they are gone. If
+that path is still listed, establish first that the branch is merged:
+
+```
+git -C <that directory> branch --merged main
+```
+
+Only if its branch is in that list, remove the worktree and then the branch —
+one plain command each, no `--force`, no loop, the directory named every time:
+
+```
+git -C <that directory> worktree remove <the worktree's path>
+git -C <that directory> branch -d <its branch>
+```
+
+That is housekeeping, and the "never edit a repository" rule does not cover
+it: nothing on `main` changes, and the branch was shown to be merged before
+anything was removed. (`branch -d` refuses an unmerged branch too, but it runs
+second — git will not delete a branch a worktree has checked out — so by then
+the worktree is gone; hence the check first.) It matters beyond tidiness — a
+leftover worktree sits in an untracked `.claude/` that the next release's
+`git add -A` would commit. A worktree whose branch is *not* merged, that no
+report of your teams names, or that is another team's, is not yours to touch:
+note it and leave it. The team's folder under `<root>/agents/` is a different
+thing and is never cleaned up.
+
 The `rm` is for the human. He reads the same agents view for his own
 sessions, and a stopped worker left in it is noise to him — the process is
 his, in his words:
