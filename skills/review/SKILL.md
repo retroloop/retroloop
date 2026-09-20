@@ -943,18 +943,16 @@ each refusal names itself so you can tell which one you broke:
   their pick is stored as a position, so a draft that arrives out of order
   would rename the thing they chose. The recommended one goes wherever its level
   puts it, which is often the middle. Two solutions may share a level; ties keep
-  the order you gave. `revision: records.0.solutions.1.level — solutions run
-  from the lowest level to the highest; L2 follows L4`
+  the order you gave.
+  `revision: records.0.solutions.1.level — solutions run from the lowest level to the highest; L2 follows L4`
 - **Exactly one `"recommended": true`.** None leaves them without a starting
   point; two is you declining to make the call the record is asking you for.
-  `revision: records.0.solutions — exactly one solution is the recommended one;
-  0 are marked`
+  `revision: records.0.solutions — exactly one solution is the recommended one; 0 are marked`
 - **Every `level` is `1`–`5`.** Nothing else is accepted from you, ever. You may
   still *read back* `none`, `upstream` or `undecided` as the decided level of an
   old record — they were choosable once, human data is never rewritten, and
   every read path still admits them. Seeing one is not permission to write one.
-  `revision: records.0.solutions.0.level — Invalid option: expected one of
-  1|2|3|4|5`
+  `revision: records.0.solutions.0.level — Invalid option: expected one of 1|2|3|4|5`
 
 **`level` — a ceiling, not a target.** It is how much the *world outside the fix*
 has to move, not how much work the fix is:
@@ -1385,7 +1383,7 @@ not, so if you are burning turns with nothing else to do — say six re-arms, or
 fifteen minutes — **stop re-arming in the foreground and end your turn** with
 the watcher armed in the background: give them the URL again, say in as many
 words that you are waiting on their **Finish review** press and that nothing
-reaches you until they presses it. Sitting in a re-entry loop for an hour costs
+reaches you until they press it. Sitting in a re-entry loop for an hour costs
 tokens, produces nothing, and looks from the outside exactly like a hung agent.
 Note what this is not: it is not standing the watch down. The background watcher
 stays armed, and it is re-armed on every exit and every kill until the review
@@ -1394,12 +1392,12 @@ closes.
 **Re-arming is always safe, and it is how you recover.** The wait does not
 listen from "now", and it does not listen from anything you remember: it listens
 from **the retrospective's latest revision as the store has it**. So a finish
-that happened while you were not waiting — between `revision create` and `review
-wait`, during a timeout, after a lost turn, after a kill, or in a session before
+that happened while you were not waiting — between `revision create` and
+`review wait`, during a timeout, after a lost turn, after a kill, or in a session before
 yours — is already there and comes back at once. That is why an agent who has
 just recovered a `retroId` and nothing else can still trust `--timeout 0`: the
-answer comes out of the store, not out of your context. That makes `review wait
---timeout 0` the one sanctioned way to ask "has they finished this round yet?":
+answer comes out of the store, not out of your context. That makes
+`review wait --timeout 0` the one sanctioned way to ask "have they finished this round yet?":
 exit 0 says they have, and hands you the event with the `revision` it belongs
 to. Do not try to infer it from record counts; a fully-decided round they have
 not put down is not a finished one.
@@ -1464,10 +1462,10 @@ flag you reach for.
   thread: it is their free channel, it is not a verdict, and nothing mechanical
   will ever surface it. Read every one. A note is **not** a thread and has no
   `threadId`, so to answer one you open a thread on the record yourself:
-  `retroloop comment add --retro <retroId> --record <rid> --section <the section
-  their note is about> --text "…" --json`. When the note is about the record as
-  a whole — priority, sequencing, "do this one first" — use `--section
-  defaults`, which is where severity, involvement and their verdict live and
+  `retroloop comment add --retro <retroId> --record <rid> --section <the section their note is about> --text "…" --json`.
+  When the note is about the record as a whole — priority, sequencing, "do this
+  one first" — use `--section defaults`, which is where severity, involvement
+  and their verdict live and
   what such a note is really about. A note about *which solution* goes on
   `--section solutions`, which is where the proposals are. When you genuinely
   cannot place it, `--section title` hangs it off the record's headline. The
@@ -1525,8 +1523,8 @@ and that you are ready to close when they are happy, and stop there. Do not
 wait, do not poll: they have already pressed Finish review for this round, so
 nothing is coming that you could detect, and a reply from them arrives as a new
 message to you — not as an event. When they come back and says go ahead, close
-it (step 5). If they reply in the thread instead, you will see it in `comment
-list` the next time they bring you back to this retrospective.
+it (step 5). If they reply in the thread instead, you will see it in
+`comment list` the next time they bring you back to this retrospective.
 
 **The two fields here do not say the same thing.** `state` is where the
 retrospective stands: `open` before the first revision, `reviewing` while the
@@ -1703,8 +1701,8 @@ decided. That is your doing, not theirs, so change a decided record only when
 the round asked you to.
 
 **And everything on it reverts to your proposals, not only the verdict.** A
-content-changed record reads exactly like a record they never touched: `state:
-"pending"`, `decidedOnRevision: null`, `reviewerNote: null`, and `severity`,
+content-changed record reads exactly like a record they never touched:
+`state: "pending"`, `decidedOnRevision: null`, `reviewerNote: null`, and `severity`,
 `involvement`, `selectedSolution` and `solutionLevel` all back to what your new
 draft proposes. Their answers are not gone — the decision they made is in the
 record's history and nothing rewrites it — but they are **not on this
@@ -1864,8 +1862,8 @@ is theirs, it is surface-independent, and it holds here exactly as it holds in
 chat: on a record thread, on a review-level thread, and on the thread you open
 to answer a `reviewerNote`. Before you answer anything, say back what they said:
 
-1. **Open with the literal line** `**This is what I heard you say written in
-   your own voice:**`
+1. **Open with the literal line**
+   `**This is what I heard you say written in your own voice:**`
 2. **Then a blockquote of bullets** — `> - ` lines — carrying everything they
    said, written in **their** first person ("I want the tabs sorted…", never
    "you want"), each bullet opening with a few **bold thesis words** the way
@@ -2046,8 +2044,8 @@ outcome lives, so an export filed anywhere else is one nothing reads back. With
 `pending`, `approved`, `declined`, `revise`, `hold` — when what you want is the
 work list rather than the whole outcome.
 
-**Then two things after the export, in this order.** First, run `bash
-"${CLAUDE_PLUGIN_ROOT}/scripts/ensure-manager.sh" --finished <retroId>` and
+**Then two things after the export, in this order.** First, run
+`bash "${CLAUDE_PLUGIN_ROOT}/scripts/ensure-manager.sh" --finished <retroId>` and
 report its line — the same idempotent one-liner as in step 3, now naming the
 retrospective they just finished. This is the moment the resolve lane has
 something to do: the records they approved are decided, closed and queued for
@@ -2058,9 +2056,9 @@ retrospective among the ones that predate it, and never pick it up.
 Second, read `~/.retroloop/plugins/my/retroloop.md`, the note their setup wrote.
 If it carries the line `tracking: elsewhere`, invoke the skill `/my:file-issues`
 with the `retroId` — their own plugin files the approved records wherever they
-tracks issues, and how it does that is their to adapt. If it carries `tracking:
-this tool only`, or the line is not there, or the file is not there, **do
-nothing**: that is the answer, not a gap to fill in.
+track issues, and how it does that is theirs to adapt. If it carries
+`tracking: this tool only`, or the line is not there, or the file is not there,
+**do nothing**: that is the answer, not a gap to fill in.
 
 **What the file contains.** One JSON object, `retro.export.v1`, with seven
 top-level keys — you never author it, but you may be asked what is in it:

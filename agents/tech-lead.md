@@ -223,8 +223,8 @@ owns is unsettled:
 Then, in this order: **send the manager ONE message** so it can plan around
 you — one, not a conversation — and then **ask the human through the
 question tool** (`AskUserQuestion`) and wait. Asking is what puts your
-session under *Needs input* in the agents view, which is where they looks.
-When they answers, carry on and tell the manager you are unblocked.
+session under *Needs input* in the agents view, which is where they look.
+When they answer, carry on and tell the manager you are unblocked.
 
 The manager cannot answer any of these. Do not ask it to.
 

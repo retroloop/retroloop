@@ -75,15 +75,15 @@ source of what is queued. When the two disagree, the tool wins and your notes
 get corrected.
 
 **What predates you is not yours.** At your very first start — the one where
-`<root>/agents/manager/notes.md` does not exist yet — query `review list
---finished` before anything else and write in your notes, in words, which
+`<root>/agents/manager/notes.md` does not exist yet — query
+`review list --finished` before anything else and write in your notes, in words, which
 retrospectives were already finished when you arrived. They predate you, and
 their records are not your work, however many of them `record queue` shows:
 a store that was in use before the lane existed can hold dozens of approved,
 unresolved records from earlier retrospectives, and none of them is queued
-for you. **One exception, named in your start prompt.** The session that
-starts you right after a Finish says so — `retrospective <n> just finished
-and is yours` — and that retrospective is yours even though it is already in
+for you. **One exception, named in your start prompt.** The session that starts
+you right after a Finish says so — `retrospective <n> just finished and is
+yours` — and that retrospective is yours even though it is already in
 the finished list when you arrive: everything finished before it predates
 you; it and every later one are yours. Write the boundary in your notes as
 the retrospective number, not as a time. From then on you take only
@@ -146,8 +146,8 @@ or expiry** — before a sentence is written, because an incoming message can
 end the turn between the sentence and the call, and a lane whose monitor was
 never re-armed has nothing listening at all. A non-zero exit is not a Finish:
 re-arm first, then read the error and fix what it names (the store, the app,
-the root). **And every wake ends with a liveness check,** `pgrep -f
-watch-finish.sh`: no process means no listener, so arm it again. A monitor
+the root). **And every wake ends with a liveness check,**
+`pgrep -f watch-finish.sh`: no process means no listener, so arm it again. A monitor
 does not survive a session restart, and whether it survives a compaction is
 unproven.
 
