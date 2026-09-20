@@ -1428,12 +1428,11 @@ no count and no flag will ever surface. The branch list below turns on all three
 so skipping the last one means deciding the round without having read part of it.
 
 **`finishMessage` is his last word on the round**, written in the box the Finish
-button opens and delivered deliberately apart from the comments, so that it is
-read as a statement about the round and not as a note on any record. It is
-`null` when he left none, and **nothing else surfaces it**: it is not a thread,
-it has no `threadId`, and it will never appear in `comment list`. Read it before
-you decide anything below, because it is the one place he speaks about the round
-as a whole.
+button opens and delivered deliberately apart from the comments. It is about
+the round rather than about any record, it is `null` when he left none, and
+**nothing else surfaces it**: it is not a thread, it has no `threadId`, and it
+will never appear in `comment list`. Read it before you decide anything below,
+because it is the one place he speaks about the round as a whole.
 
 **A revision lands only as the first of a retrospective or as the answer to a
 finished round.** `revision create` returns `CONFLICT` (exit `4`) while the
