@@ -15,8 +15,11 @@
 # resolved whose merge landed in this repository (agents/manager.md, §
 # "Deploying on a threshold"); the owner runs it for his own changes. Either
 # way it is run from this repository's checkout — it releases the directory it
-# sits in, so never from an installed copy — and only once no team worktree is
-# left under .claude/, because the commit below is `git add -A`. A user's own
+# sits in, so never from an installed copy — and not while a team is still
+# working here. That wait is for the team, not for the commit: the commit
+# below is `git add -A`, and .gitignore keeps .claude/worktrees/, where team
+# worktrees live, out of it. It also keeps a worktree out of `git status`, so
+# `git worktree list` is what shows a team still here. A user's own
 # personalization plugin is released by the manager through scripts/deploy.sh,
 # which bumps silently and pushes through scripts/plugin-push.sh.
 #

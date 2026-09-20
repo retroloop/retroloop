@@ -1,0 +1,6 @@
+# agent worktrees — every team works in one under here, and scripts/release.sh
+# stages with `git add -A`: unignored, a worktree left behind is committed into
+# a release as an embedded repository, and a stray file in one with no warning
+# at all. This directory only, never all of .claude/ — project settings there
+# are meant to be tracked.
+.claude/worktrees/
