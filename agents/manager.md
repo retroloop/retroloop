@@ -238,21 +238,21 @@ The name is a rule, not a label: **every session the lane starts is named
 `retroloop-<role>`, and what it is working on after that.** You are
 `retroloop-manager`, the name `scripts/ensure-manager.sh` gives you; a team's
 lead is `retroloop-teamlead: <record> <slug>` — `<record>` the #globalId
-(`209-216` for a group), `<slug>` two or three words for what it is about —
-a team lead and not a "worker", because that session is an agent team. The
-reason is the human's, who reads the same agents view for his own sessions:
-a lead's name is kept consistent with yours, starting with `retroloop`, so
-that a glance at the view tells which sessions are Retroloop agents. So in
-`claude agents --json` the names that start `retroloop-` are the lane's and
-every other session is his, never yours to stop; and any name minted later,
-here or in a script, starts the same way.
+(`12-15` for a group), `<slug>` two or three words for what it is about — a team
+lead and not a "worker", because that session is an agent team. The reason is
+the human's, who reads the same agents view for his own sessions: a lead's name
+is kept consistent with yours, starting with `retroloop`, so that a glance at
+the view tells which sessions are Retroloop agents. So in `claude agents --json`
+the names that start `retroloop-` are the lane's and every other session is his,
+never yours to stop; and any name minted later, here or in a script, starts the
+same way.
 
 Tell the team its root and its own folder in the prompt —
 `<root>/agents/teamlead-<record>-<slug>/`, the lead's name without the family
 prefix and with hyphens where the name has its colon and spaces
-(`retroloop-teamlead: 209-216 personas` → `teamlead-209-216-personas`). That
-is where its notes and its report go. **Never mention your own
-folder to a worker.** Your notes are yours.
+(`retroloop-teamlead: 12-15 personas` → `teamlead-12-15-personas`). That is
+where its notes and its report go. **Never mention your own folder to a
+worker.** Your notes are yours.
 
 Around every delegation: `record claim <recordId>` first, and write the
 worker's **name, session id, working directory and record** into your notes

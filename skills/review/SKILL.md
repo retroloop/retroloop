@@ -592,12 +592,12 @@ yourself.
 
 **Every record is a piece of research before it is a piece of writing.** A
 record is asked for as a deep dive that proposes up to three solutions, and
-that is an ask about the work you do before drafting, not about
-how much you type. For each friction, go and look: read the code, the docs and
-the instruction surfaces the friction actually ran through, find where the cost
-came from, and only then decide what could be done about it. A record whose root
-cause is "the AI did not know" and whose solutions are "tell it" is a record
-nobody researched.
+that is an ask about the work you do before drafting, not about how much you
+type. For each friction, go and look: read the code, the docs and the
+instruction surfaces the friction actually ran through, find where the cost
+came from, and only then decide what could be done about it. A record whose
+root cause is "the AI did not know" and whose solutions are "tell it" is a
+record nobody researched.
 
 **Earlier records are candidates, and finding them takes one read query per
 friction and at most three tries.** The words are of the class, never of the
@@ -658,9 +658,9 @@ attached; the solving side is where a class is established and fixed as a
 class.
 
 **Then propose one to three ways to solve it, and say which one you recommend.**
-Not three for the sake of three — *"In some places only 1-2 might make sense when
-it is a quick fix"*. Propose more than one when the fix has a real choice in it:
-a cheap patch and a proper repair, a local workaround and a contract change. Each
+Not three for the sake of three — where the fix is quick, only one or two may
+make sense. Propose more than one when the fix has a real choice in it: a cheap
+patch and a proper repair, a local workaround and a contract change. Each
 solution is a whole answer on its own — its own bullets, its own footprint, its
 own level — because the human picks exactly one and that is the one the solving
 side will build.
@@ -935,12 +935,12 @@ each refusal names itself so you can tell which one you broke:
   `revision: records.0.solutions — a record proposes at least one solution` ·
   `revision: records.0.solutions — a record proposes at most three solutions`
 - **Sorted from the lowest level to the highest — by `level`, never by which one
-  you recommend.** The human's words: *"It should always be sorted from lower
-  level solution to high level solution."* The order is not presentation — the
-  review page titles them **Solution 1**, **Solution 2** by position and his pick
-  is stored as a position, so a draft that arrives out of order would rename the
-  thing he chose. The recommended one goes wherever its level puts it, which is
-  often the middle. Two solutions may share a level; ties keep the order you gave.
+  you recommend.** Always, without exception. The order is not presentation —
+  the review page titles them **Solution 1**, **Solution 2** by position and his
+  pick is stored as a position, so a draft that arrives out of order would
+  rename the thing he chose. The recommended one goes wherever its level puts
+  it, which is often the middle. Two solutions may share a level; ties keep the
+  order you gave.
   `revision: records.0.solutions.1.level — solutions run from the lowest level to the highest; L2 follows L4`
 - **Exactly one `"recommended": true`.** None leaves him without a starting point;
   two is you declining to make the call the record is asking you for.
@@ -1227,10 +1227,10 @@ used neither: it printed into a file and told nobody.
 worth correcting because it is still in front of you: it said this harness
 re-invokes on a background task's **exit** and on nothing else, a printed line
 included. **The second half of that is false.** A plugin monitor event on a
-printed line has been received in a live session, and the Monitor tool
-documents every stdout line as an event. The lesson survives and the conclusion
-does not: a watcher must emit a signal its **arming mechanism** actually listens
-for, and which signal that is depends on how you armed it.
+printed line has been received in a live session, and the Monitor tool documents
+every stdout line as an event. The lesson survives and the conclusion does not:
+a watcher must emit a signal its **arming mechanism** actually listens for, and
+which signal that is depends on how you armed it.
 
 `watch-review.sh` emits **both** — one line, then exit — so the rung you pick is
 about what your harness can arm, not about what the watcher can say.
@@ -1405,9 +1405,9 @@ is not a finished one.
 There is one button on that page — it reads **Finish review** — and one event
 here. `ReviewFinished` means **the human is done with this round** — not that the
 retrospective is over.
-What happens next is yours to work out from what they actually wrote, which is
-what they asked for: *"you look at what I requested and, based on it, send a new
-revision — or say OK, there are no new requests."*
+What happens next is yours to work out from what they actually wrote: you look
+at what they requested and, based on it, send a new revision — or say that
+there are no new requests.
 
 **The check, every time, before anything else:**
 
@@ -1444,13 +1444,13 @@ reaches you — filing is not the answer. Ask him to mark the record `revise` an
 press **Finish review**, and file the rewrite as the next round; that is the
 loop's own rhythm, and the refusal message names it so you relay the right ask
 instead of retrying. This was convention before it was contract, and the
-convention lost twice in one retrospective: a round replaced while he is
-mid-read can rewrite records he has already decided, flipping them back to
-pending and spending his review time on content that silently stopped existing
-— *"we don't want the human spending time on a review while the AI sneaks in and
-sends a new revision."* **The price is stated, not hidden:** a draft correction
-seconds after your own filing also waits for a finish. That is what buys the
-guarantee, and loosening it is his call, not a flag you reach for.
+convention lost twice: a round replaced while he is mid-read can rewrite
+records he has already decided, flipping them back to pending and spending his
+review time on content that silently stopped existing — the human is not to
+spend review time on a round while the AI slips a new revision in underneath
+it. **The price is stated, not hidden:** a draft correction seconds after your
+own filing also waits for a finish. That is what buys the guarantee, and
+loosening it is his call, not a flag you reach for.
 
 - **Any `revise` records** → he asked for a rewrite by name. File revision n+1;
   `review close` refuses while one stands.

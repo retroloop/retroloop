@@ -13,8 +13,8 @@
 # session start, forever. One resolver, one answer, every caller.
 #
 # Then there was a pointer file — a line on disk naming the install — to cover
-# the user who chose their own directory. It is gone: Retroloop now has
-# ONE root, `~/.retroloop`, and the app has one place inside it,
+# the user who chose their own directory. It is gone: Retroloop now has ONE
+# root, `~/.retroloop`, and the app has one place inside it,
 # `<root>/apps/retroloop`. A fixed place needs no record of where it is. The
 # user who still wants the app elsewhere sets `RETROLOOP_APP`, which is a
 # statement about this shell and needs no file to stay true.

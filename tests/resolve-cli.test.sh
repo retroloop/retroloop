@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
-# Acceptance suite — the shared CLI resolver (`scripts/resolve-cli.sh`),
-# the SessionStart hook, and `watch-review.sh where`.
+# Acceptance suite — the shared CLI resolver (`scripts/resolve-cli.sh`), the
+# SessionStart hook, and `watch-review.sh where`.
 #
 #   bash tests/resolve-cli.test.sh
 #

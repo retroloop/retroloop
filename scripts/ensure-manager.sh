@@ -285,8 +285,8 @@ resume_manager() { # <session id>
 # `pkill -f 'review wait --any'`, on the reasoning that no manager is live when
 # it runs, so any such process is an orphan: true of THIS root, and false of
 # the machine. Run from a test sandbox, or under a second root, it killed the
-# live lane's listener on every run. A sandbox or a second root now
-# finds its own PID file or none, and touches nothing else.
+# live lane's listener on every run. A sandbox or a second root now finds its
+# own PID file or none, and touches nothing else.
 #
 # And a recorded watch is an orphan only once it has lost the processes that
 # armed it. A watch that still has the parent and grandparent it started with

@@ -37,8 +37,8 @@
 # loses nothing; and this watch used to count five anonymous failures and exit
 # with a sentence naming the count, which on the night it mattered was an
 # outside SIGTERM every few minutes, a lane that lost its listener twice, and
-# nothing to diagnose it by. Every failure is heard now, from the first
-# one, and the channel is still there afterwards.
+# nothing to diagnose it by. Every failure is heard now, from the first one,
+# and the channel is still there afterwards.
 #
 # It stops by itself in two cases only: there is no CLI to run at all (exit 2,
 # said on stderr), or it was armed with `--max-failures <n>` and that many
@@ -194,10 +194,10 @@ why_it_failed() { # <rc>
 # watch a stopped manager left behind, and it used to find it by looking for
 # the words `review wait --any` on any command line on the machine — which is
 # also what the live lane's listener looks like, and a test sandbox's run of
-# that script killed it on every run. So the watch writes down its own
-# pid, the wait it is holding, and the two processes it answers to — the shell
-# that armed it and that shell's parent, which under a Monitor is the session —
-# in <root>/agents/manager/watch-finish.pid, and the reap reads that file and
+# that script killed it on every run. So the watch writes down its own pid,
+# the wait it is holding, and the two processes it answers to — the shell that
+# armed it and that shell's parent, which under a Monitor is the session — in
+# <root>/agents/manager/watch-finish.pid, and the reap reads that file and
 # nothing else. A watch under another root writes another file.
 #
 # The file is written whole and moved into place, so it is never read half
