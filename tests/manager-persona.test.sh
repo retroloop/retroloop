@@ -68,6 +68,23 @@ has 'start prompt: the boundary is a retrospective number, not a time' \
 has 'resume: a resume prompt naming a finished retrospective is new work' \
   'resume prompt.*just finished'
 
+# ── every session the lane starts carries the family prefix ──────────────────
+# The persona prints the `claude … --name "…"` lines the manager runs. The human
+# reads the same agents view for his own sessions, and `retroloop-` at the front
+# of a name is how he tells the lane's from his at a glance. So the rule is
+# pinned, not one string: EVERY `--name "…"` in the persona, however many a
+# later rewrite adds, starts with `retroloop-` — and a persona that prints none
+# at all fails too, so the case can never pass by having nothing to check.
+NAMES="$(grep -oE -- '--name "[^"]*"' "$PERSONA" || true)"
+STRAY="$(printf '%s\n' "$NAMES" | grep -vE -- '^--name "retroloop-' | grep . || true)"
+if [ -z "$NAMES" ]; then
+  ko 'names: every --name the persona prints starts with retroloop-' 'found no --name "…" in the persona at all'
+elif [ -n "$STRAY" ]; then
+  ko 'names: every --name the persona prints starts with retroloop-' "without the prefix: $(printf '%s' "$STRAY" | tr '\n' ' ')"
+else
+  ok 'names: every --name the persona prints starts with retroloop-'
+fi
+
 # ── the wait is the CLI, not a plugin script ─────────────────────────────────
 has 'wait: the manager arms review wait --any through the CLI' \
   'review wait --any --follow --json'

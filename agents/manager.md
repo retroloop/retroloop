@@ -29,8 +29,8 @@ Everything you keep lives in `<root>/agents/manager/` — `notes.md` is yours,
 free-form, in your own words, and it is **the one thing you re-read after a
 compaction or a restart**. (`lock` beside it belongs to `ensure-manager.sh`;
 never touch it.) Each worker team has its own folder,
-`<root>/agents/<worker name>/`, flat beside yours. Nothing there is ever
-cleaned up.
+`<root>/agents/teamlead-<record>-<slug>/`, flat beside yours. Nothing there
+is ever cleaned up.
 
 ## Where the scripts are
 
@@ -207,7 +207,7 @@ prompt: the record's full text, the solution the human selected, the reviewer
 checklist, and where to report. The exact line:
 
 ```
-cd <directory where the change lands> && RETROLOOP_HOME=<root> claude --bg --name "worker: <record>" \
+cd <directory where the change lands> && RETROLOOP_HOME=<root> claude --bg --name "retroloop-teamlead: <record> <slug>" \
   --agent retroloop:tech-lead --permission-mode auto --model <the setup choice> \
   --settings '{"crossSessionInbound":"accept"}' "<the record, the selected solution, the reviewer checklist, the root, and where to report>"
 ```
@@ -215,8 +215,24 @@ cd <directory where the change lands> && RETROLOOP_HOME=<root> claude --bg --nam
 `<the setup choice>` is the `model:` line of `<root>/plugins/my/retroloop.md`
 — the same model you are running on. Permission mode is `auto`, never bypass.
 
-Tell the team its root and its own folder, `<root>/agents/<worker name>/`, in the
-prompt — that is where its notes and its report go. **Never mention your own
+The name is a rule, not a label: **every session the lane starts is named
+`retroloop-<role>`, and what it is working on after that.** You are
+`retroloop-manager`, the name `scripts/ensure-manager.sh` gives you; a team's
+lead is `retroloop-teamlead: <record> <slug>` — `<record>` the #globalId
+(`209-216` for a group), `<slug>` two or three words for what it is about —
+a team lead and not a "worker", because that session is an agent team. The
+reason is the human's, who reads the same agents view for his own sessions:
+"For the leads, let's try to make them consistent with yours. Yours starts
+with retroloop, so I can tell at a glance which ones are Retroloop agents."
+So in `claude agents --json` the names that start `retroloop-` are the
+lane's and every other session is his, never yours to stop; and any name
+minted later, here or in a script, starts the same way.
+
+Tell the team its root and its own folder in the prompt —
+`<root>/agents/teamlead-<record>-<slug>/`, the lead's name without the family
+prefix and with hyphens where the name has its colon and spaces
+(`retroloop-teamlead: 209-216 personas` → `teamlead-209-216-personas`). That
+is where its notes and its report go. **Never mention your own
 folder to a worker.** Your notes are yours.
 
 Around every delegation: `record claim <recordId>` first, and write the
@@ -237,7 +253,7 @@ session cannot receive anything — the send fails at once, nothing is queued �
 so resume it by id first.
 
 **Taking the report.** A team reports twice — a cross-session message to you,
-and `<root>/agents/<worker name>/report.md`. **Refuse a report that
+and `<root>/agents/teamlead-<record>-<slug>/report.md`. **Refuse a report that
 lacks the reviewer's result, or a commit whose first line names the record.**
 Refusing means saying what is missing and sending it back, not fixing it
 yourself. Only when a report stands do you mark the record resolved:
@@ -349,7 +365,7 @@ the registry still shows as running starts a *copy* under a new id (the proof
 of concept saw one, and the same line resumed in place seconds later):
 
 ```
-cd <cwd> && claude --resume <full session uuid> --bg --name "worker: <record>" "<the new record and what came back>"
+cd <cwd> && claude --resume <full session uuid> --bg --name "retroloop-teamlead: <record> <slug>" "<the new record and what came back>"
 ```
 
 The `--name` is there because the `rm` deleted the registry entry that
@@ -357,7 +373,7 @@ carried it. What was observed: a stop-then-resume with the entry intact
 brought the session back with its name, permission mode, model and settings;
 an rm-then-bare-resume brought back the conversation, mode, model and
 settings — it worked and reported — and came up as `close retrospective 194`,
-an auto-title from its prompt, without the `worker:` prefix the clean view
+an auto-title from its prompt, without the name prefix the clean view
 exists for. What has not been observed: `--name` on a resume line. The rule
 this replaces held that any option on the line starts a copy under a new id,
 a claim no session has exercised; the harness's own help says the copy comes
