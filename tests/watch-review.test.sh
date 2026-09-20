@@ -8,8 +8,8 @@
 # FAIL line with the mismatch under it.
 #
 # THE DEFAULT IS NOW A WAIT WITH NO DEADLINE. A review takes as long as the
-# human takes, and the watch that carries his press is a persistent monitor:
-# the wait blocks until he presses Finish, prints one line, and exits. A
+# human takes, and the watch that carries their press is a persistent monitor:
+# the wait blocks until they press Finish, prints one line, and exits. A
 # `--timeout` slipped back into the armed command turns that into a watch that
 # dies quietly after ten minutes — which is the exact failure the channel has
 # already had four times. So the case this suite pins hardest is the argv the

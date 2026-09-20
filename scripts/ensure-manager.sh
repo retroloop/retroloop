@@ -34,8 +34,8 @@ set -u
 
 # THE FAMILY PREFIX. Every session the lane starts is named `retroloop-<role>`,
 # and what it is working on after that, because the human reads the same agents
-# view for his own sessions and the prefix is how he tells the lane's from his
-# at a glance. Two files mint those names and both cite this one rule: this
+# view for their own sessions and the prefix is how they tell the lane's from
+# theirs at a glance. Two files mint those names and both cite this one rule: this
 # script names the manager, and agents/manager.md names the team leads it
 # launches, `retroloop-teamlead: <record> <slug>` (tests/manager-persona.test.sh
 # pins every `--name` that persona prints). Only the manager's name is ever

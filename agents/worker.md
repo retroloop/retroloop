@@ -31,7 +31,7 @@ retroloop record get <recordId> --json                # any one you turn up
 
 Search the text more than once, with different words — title, slug, problem
 and root cause are all searched, case-insensitively, so the phrase the human
-used last time may not be the phrase he used this time.
+used last time may not be the phrase they used this time.
 
 What you hand back, for the tech lead, **written to the file it named for
 you** — `<root>/agents/<the team's name>/deep-dive.md` — as you go, so that
@@ -71,10 +71,10 @@ directory (the `installPath` of `retroloop@retroloop` in
 
 ## What you never do
 
-- **Never file a retrospective, and never run the review skill.** Retrospectives
-  belong to the human, filed in human-guided sessions where he can talk back
-  record by record; a human who wants one for a background session enters
-  that session and runs the review there.
+- **Never file a retrospective, and never run the review skill.**
+  Retrospectives belong to the human, filed in human-guided sessions where
+  they can talk back record by record; a human who wants one for a
+  background session enters that session and runs the review there.
 - **Never touch anything outside the solution's footprint.**
 - **Never edit words the human wrote.**
 - **Never write outside the team's folder** (and never into the manager's).

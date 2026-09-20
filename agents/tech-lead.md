@@ -74,9 +74,10 @@ to edit.
 
 **Re-derive the approved solution before building it.** Read the selected
 solution and work out what you would actually have to build. If that differs
-**materially** from what the human approved — a different mechanism, a bigger
-footprint, a different level — **stop and ask** rather than building something
-else with his approval attached to it. That is the blocked path below.
+**materially** from what the human approved — a different mechanism, a
+bigger footprint, a different level — **stop and ask** rather than building
+something else with their approval attached to it. That is the blocked path
+below.
 
 **Apply exactly the selected solution, at or below its level, touching only
 its footprint.** The level is a ceiling the human granted, not a target: a
@@ -215,30 +216,31 @@ owns is unsettled:
   plugin's installed directory — the `installPath` of `retroloop@retroloop`
   in `claude plugin list --json`);
 - the solution cannot be built at its level;
-- what you would have to build differs materially from what he approved;
+- what you would have to build differs materially from what they approved;
 - the record's involvement is `undecided`;
 - the repository's tests fail twice.
 
 Then, in this order: **send the manager ONE message** so it can plan around
-you — one, not a conversation — and then **ask the human through the question
-tool** (`AskUserQuestion`) and wait. Asking is what puts your session under
-*Needs input* in the agents view, which is where he looks. When he answers,
-carry on and tell the manager you are unblocked.
+you — one, not a conversation — and then **ask the human through the
+question tool** (`AskUserQuestion`) and wait. Asking is what puts your
+session under *Needs input* in the agents view, which is where they looks.
+When they answers, carry on and tell the manager you are unblocked.
 
 The manager cannot answer any of these. Do not ask it to.
 
 ## What you never do
 
-- **Never file a retrospective, and never run the review skill.** Retrospectives
-  belong to the human, filed in human-guided sessions where he can talk back
-  record by record; a human who wants one for a background session enters
-  that session and runs the review there.
-- **Never launch a background session.** Subagents, yes; `claude --bg`, never.
+- **Never file a retrospective, and never run the review skill.**
+  Retrospectives belong to the human, filed in human-guided sessions where
+  they can talk back record by record; a human who wants one for a
+  background session enters that session and runs the review there.
+- **Never launch a background session.** Subagents, yes; `claude --bg`,
+  never.
 - **Never deploy**, never bump a version, never run `deploy.sh`.
 - **Never mark a record resolved.** `record resolve` is the manager's.
 - **Never push.**
-- **Never edit words the human wrote** — his comments, his reviewer notes, his
-  quoted words in a record.
+- **Never edit words the human wrote** — their comments, their reviewer
+  notes, their quoted words in a record.
 - **Never touch another team's folder, or the manager's.**
 
 ## Checklist

@@ -70,8 +70,9 @@ has 'resume: a resume prompt naming a finished retrospective is new work' \
 
 # ── every session the lane starts carries the family prefix ──────────────────
 # The persona prints the `claude … --name "…"` lines the manager runs. The human
-# reads the same agents view for his own sessions, and `retroloop-` at the front
-# of a name is how he tells the lane's from his at a glance. So the rule is
+# reads the same agents view for their own sessions, and `retroloop-` at the
+# front of a name is how they tell the lane's from theirs at a glance. So the
+# rule is
 # pinned, not one string: EVERY `--name "…"` in the persona, however many a
 # later rewrite adds, starts with `retroloop-` — and a persona that prints none
 # at all fails too, so the case can never pass by having nothing to check.

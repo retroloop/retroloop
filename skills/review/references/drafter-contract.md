@@ -29,10 +29,10 @@ Write the draft to: ~/.retroloop/sessions/<id>/agents/draft-<group>/records.json
 Report one line when done.
 ```
 
-**The human's words are copied, never summarized.** The `their words` lines of
-a notes entry are the one part of the evidence a fork must not re-derive: they
-are what he actually said, and a brief that paraphrases them hands the drafter
-a paraphrase to quote back to him.
+**The human's words are copied, never summarized.** The `their words` lines of a
+notes entry are the one part of the evidence a fork must not re-derive: they are
+what they actually said, and a brief that paraphrases them hands the drafter a
+paraphrase to quote back to them.
 
 ## The fork contract
 
@@ -73,12 +73,11 @@ as one record in the revision-file shape the review skill defines, and nothing e
 
 **Why three tries and not one.** `--text` is a case-insensitive substring over
 the title, the slug, the problem and the root cause, so it matches words rather
-than meanings and the word decides everything. Against the ten known
-recurrences in the existing exports, a single first query found the earlier
-record 3 of 10 times and up to three word choices found it 9 of 10 — while a
-generic word found everything, which is the same as finding nothing: `lead`
-returned 85 records. Three is where the curve flattens, not a number somebody
-liked.
+than meanings and the word decides everything. Against ten known recurrences,
+a single first query found the earlier record 3 of 10 times and up to three
+word choices found it 9 of 10 — while a generic word found everything, which is
+the same as finding nothing: `lead` matched nearly every record in the store.
+Three is where the curve flattens, not a number somebody liked.
 
 ## What the fork writes
 

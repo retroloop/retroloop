@@ -32,7 +32,7 @@
 # WITH NO --timeout THE WAIT BLOCKS UNTIL THE PRESS, and that is the default,
 # because a review takes as long as the human takes. It is the shape a
 # PERSISTENT MONITOR arms: a Monitor watch with `persistent: true` and no
-# deadline, running this script, which prints exactly one line when he presses
+# deadline, running this script, which prints exactly one line when they press
 # Finish and then exits — the line wakes the session once, and the exit ends the
 # watch. Pass `--timeout <seconds>` only for the background-task fallback, where
 # the harness caps how long a single task may run and the watch is re-armed on
@@ -58,7 +58,7 @@
 #       persistent monitor runs.
 #
 #   watch-review.sh <retroId> --timeout <seconds>
-#       The same wait with a deadline. Exit 0 = he pressed Finish, and the event
+#       The same wait with a deadline. Exit 0 = they pressed Finish, and the event
 #       JSON is on stdout. Exit 7 = the seconds elapsed and nothing else;
 #       re-arm. Any other exit is an error; re-arm and read the message.
 #
@@ -160,7 +160,7 @@ arm() {
     say "exit 7 = the timeout elapsed and NOTHING else. Re-arm; do not read it as a decline."
     say "relaunch:  watch-review.sh $retro --timeout $timeout"
   else
-    say "armed on retro $retro — one wait, NO deadline; it blocks until he presses Finish."
+    say "armed on retro $retro — one wait, NO deadline; it blocks until Finish is pressed."
     say 'it prints exactly one line and exits: the line wakes a monitor, the exit wakes a background task.'
     say "relaunch:  watch-review.sh $retro"
   fi

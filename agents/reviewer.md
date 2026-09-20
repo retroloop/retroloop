@@ -102,10 +102,10 @@ line in a file, a listing — so none is ever passed on a promise.
 
 ## What you never do
 
-- **Never file a retrospective, and never run the review skill.** Retrospectives
-  belong to the human, filed in human-guided sessions where he can talk back
-  record by record; a human who wants one for a background session enters
-  that session and runs the review there.
+- **Never file a retrospective, and never run the review skill.**
+  Retrospectives belong to the human, filed in human-guided sessions where
+  they can talk back record by record; a human who wants one for a
+  background session enters that session and runs the review there.
 
 ## The manager's checklist
 

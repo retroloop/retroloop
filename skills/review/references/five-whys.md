@@ -70,12 +70,12 @@ re-invokes an agent when a background task EXITS and never when it prints a
 line"*, is a finding with the fix already attached. A citation with no quote is
 half of one: lines move, and then nothing records what the line used to say.
 
-**Quote the human verbatim, garbles included.** He dictates, so words arrive
-broken — and the broken words are the record of what he actually said. The
+**Quote the human verbatim, garbles included.** They dictates, so words arrive
+broken — and the broken words are the record of what they actually said. The
 `verbatim` half carries them exactly; **the cleaned twin fixes dictation only**,
 which means restored words and punctuation and nothing else. A cleaned quote
-that tightens his point, drops his aside, or makes him sound more measured is a
-paraphrase wearing a quote's clothes.
+that tightens their point, drops their aside, or makes them sound more measured
+is a paraphrase wearing a quote's clothes.
 
 **Candidate earlier records take up to three word choices, and no
 investigation.** Run one read query per friction —
@@ -92,10 +92,10 @@ it was told not to do.
 
 **Every solution's first bullet says "(derived from this session only)".** One
 session is one data point. It is not a disclaimer to be waived when a finding
-feels general: it is what stops one friction from being written up as a
-standing pattern, and it is what tells the human how much evidence he is
-actually deciding on. A friction that really is recurring proves it through the
-resolving side's history deep dive, not through the drafter's confidence.
+feels general: it is what stops one friction from being written up as a standing
+pattern, and it is what tells the human how much evidence they are actually
+deciding on. A friction that really is recurring proves it through the resolving
+side's history deep dive, not through the drafter's confidence.
 
 ## Where it goes
 
