@@ -127,7 +127,7 @@ hasf 'revision file: the whole-record example carries diagnosticData' "$SKILL" \
   '"diagnosticData":'
 has 'diagnostic-data: it has a skeleton heading' "$DIAGNOSTIC" \
   '## The skeleton'
-has 'diagnostic-data: it says what it is for, in the owner.s words' "$DIAGNOSTIC" \
+has 'diagnostic-data: it says what it is for, in neutral words' "$DIAGNOSTIC" \
   '## Why it is there'
 has 'diagnostic-data: it carries a worked example' "$DIAGNOSTIC" \
   '## A worked example'
@@ -166,8 +166,8 @@ has 'history: no draft ever claims "this recurred"' "$SKILL" \
   'never say .this recurred.'
 lacksf 'history: the grep over the prior exports is gone' "$SKILL" \
   'retros/*/retro.json'
-has 'history: the lesson of the instance-patch loop is kept' "$SKILL" \
-  'r-instance-patch-loop'
+has 'history: the lesson of patching instance after instance is kept' "$SKILL" \
+  'lesson that put a history step here has not changed'
 
 # ── the candidate search: up to three word choices ───────────────────────────
 # One query finds the known earlier record in 3 of 10 known recurrences; three

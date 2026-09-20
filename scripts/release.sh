@@ -13,7 +13,7 @@
 #
 # Two callers. The resolve lane's manager runs it for records the lane
 # resolved whose merge landed in this repository (agents/manager.md, §
-# "Deploying on a threshold"); the owner runs it for his own changes. Either
+# "Deploying on a threshold"); a maintainer runs it for their own changes. Either
 # way it is run from this repository's checkout — it releases the directory it
 # sits in, so never from an installed copy — and not while a team is still
 # working here. That wait is for the team, not for the commit: the commit

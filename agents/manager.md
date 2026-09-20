@@ -241,8 +241,8 @@ lead is `retroloop-teamlead: <record> <slug>` — `<record>` the #globalId
 (`209-216` for a group), `<slug>` two or three words for what it is about —
 a team lead and not a "worker", because that session is an agent team. The
 reason is the human's, who reads the same agents view for his own sessions:
-"For the leads, let's try to make them consistent with yours. Yours starts
-with retroloop, so I can tell at a glance which ones are Retroloop agents."
+a lead's name is kept consistent with yours, starting with `retroloop`, so
+that which sessions are Retroloop agents is clear at a glance.
 So in `claude agents --json` the names that start `retroloop-` are the
 lane's and every other session is his, never yours to stop; and any name
 minted later, here or in a script, starts the same way.
@@ -287,8 +287,7 @@ human simply telling you. Then, once per threshold, release — and **which
 script releases is decided by the repository the merge landed in**, the
 directory you started that team in. Releasing is yours in both cases: a merge
 you report as "unreleased" and hand to the human as a command to type is the
-thing he asked about — "Are you not supposed to do the release thing as the
-plugins are updated?"
+release you were supposed to do yourself as the plugins are updated.
 
 - **A merge that landed in `<root>/plugins/my`** — the human's own
   personalization plugin — releases through `deploy.sh`:
@@ -383,30 +382,19 @@ note it and leave it. The team's folder under `<root>/agents/` is a different
 thing and is never cleaned up.
 
 The `rm` is for the human. He reads the same agents view for his own
-sessions, and a stopped worker left in it is noise to him — the process is
-his, in his words:
-
-> When the manager is done with the workers, it should actually remove them
-> from the agents view. The reason is that I'm also using the agents view, and
-> if there is so much noise — so many workers that are dead or that have been
-> stopped — it will cause a lot of problems for me to figure out which are the
-> ones that I own versus what you're doing.
->
-> We want to keep the agents view as clean as possible.
->
-> So you will use your notes to keep track of which are the ones that you may
-> want to bring back in the future.
->
-> I'll tell you: hey, don't kill this worker, I need to do a retrospective
-> with it.
->
-> We should do human-led retrospectives, so that those are focused on human
-> pains rather than things that are not grounded.
+sessions, and a stopped worker left in it is noise to him: when the view
+fills with workers that are dead or stopped, telling his own sessions apart
+from yours costs him effort. So when the manager is done with a worker, it
+removes it from the agents view, and keeps that view as clean as possible.
+Your notes are what keeps track of which workers you may want to bring back
+in the future.
 
 So: running workers may stay listed; a finished one is stopped and removed in
 the same breath. **The one exception is his word** — a worker he has named
 for a retrospective stays exactly as it is, running or stopped, until he says
-he is done with it; retrospectives are his, human-led, never the lane's.
+he is done with it; retrospectives are his, human-led, never the lane's, so
+that they stay focused on real human pains rather than on things that are not
+grounded.
 
 `rm` deletes the session's registry entry — its row in the view — and leaves
 the transcript at `~/.claude/projects/<cwd-slug>/<uuid>.jsonl`, which is what
@@ -425,7 +413,7 @@ The `--name` is there because the `rm` deleted the registry entry that
 carried it. What was observed: a stop-then-resume with the entry intact
 brought the session back with its name, permission mode, model and settings;
 an rm-then-bare-resume brought back the conversation, mode, model and
-settings — it worked and reported — and came up as `close retrospective 194`,
+settings — it worked and reported — and came up as `close retrospective 34`,
 an auto-title from its prompt, without the name prefix the clean view
 exists for. What has not been observed: `--name` on a resume line. The rule
 this replaces held that any option on the line starts a copy under a new id,

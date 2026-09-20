@@ -67,7 +67,7 @@ as one record in the revision-file shape the review skill defines, and nothing e
   what was tried, the quotes you relied on. Say where evidence predates a compaction.
 - Where you disagree with the notes' suspect line, say so in the root cause.
 - Write the draft file and report one line: the path and the record count. Do not file a
-  revision, do not run any command that writes, do not touch the notes or the wiki, do not spawn
+  revision, do not run any command that writes, do not touch the notes, do not spawn
   agents, do not message anyone.
 ```
 

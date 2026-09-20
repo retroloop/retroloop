@@ -26,7 +26,7 @@
 # which is where the real `pkill`, `pgrep` and `killall` live — so an `env -i`
 # sandbox isolates HOME, the root and `claude`, and not one signal. This suite
 # once ran the script's real `pkill -f` on every run and killed the live lane's
-# listener each time (#205). Those three are stubbed in the sandbox bin beside
+# listener each time. Those three are stubbed in the sandbox bin beside
 # `claude`: a call is recorded in `signals.calls` and nothing is sent. The only
 # real signals left are by PID, at processes a case started itself — `kill` is
 # a shell builtin, and the script's lock needs `kill -0` to be the real one.

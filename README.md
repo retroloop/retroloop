@@ -8,7 +8,7 @@ In each AI session, you focus on your goal. The AI keeps running notes on everyt
 
 ```
 /plugin marketplace add retroloop/plugins
-/plugin install retroloop
+/plugin install retroloop@retroloop
 /retroloop:setup
 ```
 

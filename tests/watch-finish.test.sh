@@ -16,8 +16,8 @@
 # code and the wait's own words — and then keeps listening. It used to pin the
 # opposite: five failures and the watch stood down with a sentence naming the
 # count. On the night that mattered the failures were an outside SIGTERM every
-# few minutes, the lane lost its listener twice, and the sentence said "5"
-# (#206). Standing down is now something the caller asks for, by number.
+# few minutes, the lane lost its listener twice, and the sentence said "5".
+# Standing down is now something the caller asks for, by number.
 #
 # Every case runs under `env -i` in its own sandbox — a temp HOME, a temp PATH
 # whose interesting entries are a stub `retroloop` and a stub `sleep`. The CLI

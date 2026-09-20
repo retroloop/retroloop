@@ -7,11 +7,9 @@ is the only part of a record that survives the session it came from.
 
 ## Why it is there
 
-The owner's ask, in his own terms:
-
-> *"Give the complete picture to the resolver side — the tools, the arguments,
-> everything related — so that it stays grounded on facts and does not invent,
-> while still doing its own deep dive from a strong start."*
+The field exists to give the complete picture to the resolver side — the tools,
+the arguments, everything related — so that it stays grounded on facts and does
+not invent, while still doing its own deep dive from a strong start.
 
 Both halves are load-bearing. A resolver with no evidence **invents**: it reads
 a root cause, cannot check it, and builds against a story. A resolver handed a

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# RL-02 acceptance suite — the shared CLI resolver (`scripts/resolve-cli.sh`),
+# Acceptance suite — the shared CLI resolver (`scripts/resolve-cli.sh`),
 # the SessionStart hook, and `watch-review.sh where`.
 #
 #   bash tests/resolve-cli.test.sh
@@ -14,7 +14,7 @@
 # them (the child is started under `env -i`, so nothing leaks in from here).
 # `bun` is never needed: the resolver decides a command, it never runs one.
 #
-# RL-49 moved the app to one fixed place under one root: the root is
+# The app lives in one fixed place under one root: the root is
 # `$RETROLOOP_HOME`, else `~/.retroloop`, and the app is `<root>/apps/retroloop`.
 # There is no pointer file of any kind, and `RETRO_HOME` is retired — a set
 # `RETRO_HOME` must not move the answer by one character (A9).

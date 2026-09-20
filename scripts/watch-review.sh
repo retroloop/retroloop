@@ -1,27 +1,23 @@
 #!/usr/bin/env bash
 #
-# The finish watch — one exit-on-event wait (retro-12 `r-monitor-notify-gap`;
-# retro-13 `r-fourth-finish-channel-failure`). Provenance citations of the form
-# `retro N r-…` resolve only in the authoring repository; the rules they mark
-# are stated in full here.
+# The finish watch — one exit-on-event wait.
 #
 # THE CHANNEL FAILED FOUR TIMES IN DEVELOPMENT, ONE HOP FURTHER ALONG EACH TIME:
 #
-#   retro 7  `r-finish-event-unnoticed`  — the press went unnoticed; the watcher
-#            was built. The hop fixed: nothing was watching.
-#   retro 9  `r-monitor-not-realtime`    — the watcher polled and slept 20s, so
-#            a press sat in the database for the length of the sleep. `review
-#            wait --follow` made it live. The hop fixed: store → wait latency.
-#   retro 12 `r-monitor-notify-gap`      — the watcher SAW the press, printed
-#            `review finished: revision 1` to a file, and told nobody. There
-#            are two ways to wake a session and they listen for different
-#            things: a BACKGROUND TASK wakes its session when the task EXITS,
-#            and a MONITOR WATCH (the Monitor tool, or a plugin monitor) wakes
-#            it on every LINE the command prints to stdout. That watcher wrote
-#            into a file, so it used neither. The hop fixed: watcher → agent.
-#   retro 13 `r-fourth-finish-channel-failure` — the harness killed the watcher
-#            twice from outside and the watch was stood down by hand. The hop
-#            that broke: watcher survival.
+#   1 · the press went unnoticed; the watcher was built. The hop fixed: nothing
+#       was watching.
+#   2 · the watcher polled and slept 20s, so a press sat in the database for the
+#       length of the sleep. `review wait --follow` made it live. The hop fixed:
+#       store → wait latency.
+#   3 · the watcher SAW the press, printed `review finished: revision 1` to a
+#       file, and told nobody. There are two ways to wake a session and they
+#       listen for different things: a BACKGROUND TASK wakes its session when
+#       the task EXITS, and a MONITOR WATCH (the Monitor tool, or a plugin
+#       monitor) wakes it on every LINE the command prints to stdout. That
+#       watcher wrote into a file, so it used neither. The hop fixed: watcher →
+#       agent.
+#   4 · the harness killed the watcher twice from outside and the watch was
+#       stood down by hand. The hop that broke: watcher survival.
 #
 # This script is the shape that survived, CORRECT BY CONSTRUCTION: arming runs
 # EXACTLY ONE wait and then `exec`s it, so the process you are watching IS the

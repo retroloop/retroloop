@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# RL-49 acceptance suite — the session folder under one root.
+# Acceptance suite — the session folder under one root.
 #
 #   bash tests/session-dir.test.sh
 #

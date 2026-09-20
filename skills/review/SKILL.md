@@ -27,11 +27,6 @@ get back. You should not have to read Retroloop's source to file a retrospective
 you should never guess at a field name. When something you need is genuinely not
 here, ask the human rather than inventing it.
 
-**A note on the citations below:** a rule citation of the form `retroloop N r-...`
-is the authoring repository's own provenance — the retrospective record the rule
-came from — and it resolves only there; every rule is stated in full beside its
-citation, so anywhere else the reference is safe to ignore.
-
 ## 0 · Running the CLI
 
 Every command is `retroloop <something> --json`: one JSON object on stdout, errors as
@@ -181,22 +176,20 @@ apart by name: it means records are undecided, and step 4 says what to do.
 ## Labels and attributes
 
 Two vocabularies a human keeps on the settings page, and the only part of Retroloop's
-configuration you can touch. They exist because the owner asked for both and
-ruled each of them pure:
-
-> *"Usually labels are just labels. A user can create their own conventions if we
-> support labels as well as attributes — they can have a convention that whenever
-> we add the migrated label, we should also have an attribute that requires a
-> GitHub issue id, or something like that. However, to keep it flexible we will
-> not hardcode any labels or attributes."*
+configuration you can touch. Both exist, and each is kept pure, so that a user
+can build conventions of their own on top of them: usually labels are just
+labels, but with labels and attributes side by side a user can hold a
+convention such as "whenever the `migrated` label is added, an attribute
+carrying a GitHub issue id is added with it". To keep that flexible, Retroloop
+hardcodes no labels and no attributes.
 
 - **A label is a name a record wears, or does not.** Nothing travels with it — no
   note, no reference, no payload of any kind.
 - **An attribute is a named value a record carries**, with one of four fixed
   types: `number`, `text`, `url`, `date`. Validation is deliberately light — a
   number parses, a URL starts `http://` or `https://`, a date is `YYYY-MM-DD`.
-- **Nothing is shipped.** A store starts with zero of each. `migrated` is the
-  owner's example, not a value Retroloop knows about, so do not assume it exists.
+- **Nothing is shipped.** A store starts with zero of each. `migrated` is an
+  example above, not a value Retroloop knows about, so do not assume it exists.
 - **Pairing them is the user's convention and never a rule.** Do not refuse to do
   something because a labelled record carries no value; nothing in Retroloop checks
   that, and neither should you.
@@ -655,13 +648,12 @@ turns a word match into a recurrence has made a claim nobody checked. **The
 recurrence judgment belongs to the resolver's history deep dive**, which gets
 the record, the tools and the time to do it properly.
 
-**The lesson that put a history step here has not changed** (retro 12
-`r-instance-patch-loop`): the finish channel broke three times across retros 7,
-9 and 12 while each fix repaired only the hop that had just failed, and
-rules-that-do-not-bind accumulated six instances across retros 8–12 after
-retro 8's root had already named the mechanism — new instances kept getting new
-sentences because nothing in the loop read its own output. What changed is who
-reads it. The drafting side hands over named candidates with the evidence
+**The lesson that put a history step here has not changed**: in development the
+finish channel broke three times while each fix repaired only the hop that had
+just failed, and rules-that-do-not-bind accumulated six instances after the
+first root cause had already named the mechanism — new instances kept getting
+new sentences because nothing in the loop read its own output. What changed is
+who reads it. The drafting side hands over named candidates with the evidence
 attached; the solving side is where a class is established and fixed as a
 class.
 
@@ -709,8 +701,8 @@ list of retros — so write what this retro was *about* in plain language, never
 one wins, so when a later draft is about something else, retitle it.
 
 **The title is a one-liner of the work, never a summary of the records** (his
-rule, retro 5 `r-retro-title-convention`). Write it from the reader's vantage,
-not yours: the title is read at the moment someone picks a retro out of a list,
+rule). Write it from the reader's vantage, not yours: the title is read at the
+moment someone picks a retro out of a list,
 and at that moment they have not read the records — what they know is what was
 done. So name the work this retro covers, which is everything done in the
 session since the previous retro, or since the session started when this is the
@@ -784,10 +776,10 @@ any of them again. That is the whole list: nothing else moved.
 
 **Required on every record, never empty**, and the one field written for
 somebody other than the human: it is what the resolving side reads months
-later, when the session that produced the record is gone. The owner's ask for
-it: *"Give the complete picture to the resolver side — the tools, the
-arguments, everything related — so that it stays grounded on facts and does not
-invent, while still doing its own deep dive from a strong start."*
+later, when the session that produced the record is gone. It gives the complete
+picture to the resolving side — the tools, the arguments, everything related —
+so that that side stays grounded on facts and does not invent, while still
+doing its own deep dive from a strong start.
 
 **Nine headings, all of them present, each carrying the literal `none` when it
 is empty.** Markdown, in the same safe subset as every other prose field, so
@@ -902,8 +894,7 @@ before merge), `interactive` (human works the fix live), `other`, `undecided`
 leave it out and it is `undecided`.
 
 **A solution whose footprint touches a permission, credential, or security
-surface makes the whole record propose `interactive`** (retro 5
-`r-permission-footprint-interactive`), however mechanical
+surface makes the whole record propose `interactive`**, however mechanical
 the fix itself is: an agent granting itself permission rules is the guarded action
 class, so the actor rule — not the difficulty — is what demands the human, and
 involvement is what schedules the fix for a session he is present in. Read
@@ -990,10 +981,9 @@ written twice — collapse them, or say in the bullets what actually differs.
 
 ### Author every record in these three forms
 
-They are normative — the human dictated them (retro 3,
-`r-record-authoring-format`) after paying a full revision round for their
-absence; he reads by skimming the bold text, so a paragraph is a record he cannot
-read.
+They are normative — the human dictated them after paying a full revision round
+for their absence; he reads by skimming the bold text, so a paragraph is a
+record he cannot read.
 
 Every prose field in the revision file is a plain JSON string carrying a safe
 markdown subset — write the literal characters: `**bold**`, `` `code` ``,
@@ -1001,9 +991,8 @@ markdown subset — write the literal characters: `**bold**`, `` `code` ``,
 `> ` blockquote lines, which carry bullets and bold inside them and are how a
 reply quotes him back to himself, blank lines between paragraphs, and
 triple-backtick fenced blocks for preformatted excerpts (their contents are
-never parsed). The review page renders exactly that subset
-(retro 3, `r-prose-renders-raw`); anything else, including HTML, shows as
-literal text. One exemption: a solution's `footprint` is not markdown — the page
+never parsed). The review page renders exactly that subset; anything else,
+including HTML, shows as literal text. One exemption: a solution's `footprint` is not markdown — the page
 shows it preformatted, exactly as authored, whitespace intact, which is what
 makes the tree form below hold on screen.
 
@@ -1049,8 +1038,8 @@ reads best in the file.
    and the next entry is pushed down below. **Nothing gets shorter for it:** the
    rule decides where a line breaks, not how much it says.
 
-   The owner's pasted example, at the measure, with one entry wrapped (the fence
-   below is this document's, not the field's):
+   An example, at the measure, with one entry wrapped (the fence below is this
+   document's, not the field's):
 
    ```
    /path/to/the/project/root/where/fix/needs/to/be/made
@@ -1067,17 +1056,17 @@ reads best in the file.
    └── tsconfig.json              [UPDATE] the path alias the token map is imported through
    ```
 
-**A counted claim cites the enumeration it counts** (retro 5
-`r-uncounted-findings`). Whenever a record says how many of something there were
-— findings, files, failures — name where the full list durably lives and check
+**A counted claim cites the enumeration it counts.** Whenever a record says how
+many of something there were — findings, files, failures — name where the full
+list durably lives and check
 the number against it while you draft. A record that carried "thirteen standing
 findings" against the one note that enumerated eleven could not have its
 fix closed item by item: the solution's bullets and its footprint both inherit
 the count, and a fix session is left guessing at the difference.
 
-**A claim about the code names the evidence it was checked against** (retro 6
-`r-unverified-claims-travel`). A record that asserts something concrete about the
-codebase — this file is stale, that flag is unused, this command exists — says in
+**A claim about the code names the evidence it was checked against.** A record
+that asserts something concrete about the codebase — this file is stale, that
+flag is unused, this command exists — says in
 the record how it was checked: the command you ran, the `file:line` you read.
 Check it while you draft, not from memory, and if you cannot, write the claim as
 unverified so the human reads it as one. Review reads a record for direction, not
@@ -1223,23 +1212,23 @@ that bites you next is one nobody has looked at yet:
 | hop | what carries it | what it cost when it broke |
 |---|---|---|
 | his press → the store | the review page's mutation | — |
-| the store → the wait | `review wait`, polling or `--follow` | retro 9 `r-monitor-not-realtime`: a 20s sleep between the press and the wait noticing |
-| the wait → the watcher | the process you armed | retro 7 `r-finish-event-unnoticed`: nothing was armed at all |
-| the watcher → YOU | **its printed LINE, and its process EXIT** | retro 12 `r-monitor-notify-gap`: the watcher saw the press, printed a line into a file, and told nobody |
-| the watcher staying alive | whatever runs you | retro 13 `r-fourth-finish-channel-failure`: two outside kills, read as a stop gesture, and the watch stood down mid-review |
+| the store → the wait | `review wait`, polling or `--follow` | a 20s sleep between the press and the wait noticing |
+| the wait → the watcher | the process you armed | nothing was armed at all |
+| the watcher → YOU | **its printed LINE, and its process EXIT** | the watcher saw the press, printed a line into a file, and told nobody |
+| the watcher staying alive | whatever runs you | two outside kills, read as a stop gesture, and the watch stood down mid-review |
 
 **Two things wake a session, and they listen for different signals.** A
 **background task** wakes its session when the task **EXITS**. A **monitor
 watch** — the Monitor tool, or a plugin monitor — wakes it on **every line the
-command prints to stdout**. Retro 12's watcher used neither: it printed into a
-file and told nobody.
+command prints to stdout**. The watcher in the third row above used neither: it
+printed into a file and told nobody.
 
-**The correction that record's lead then wrote down went one step too far**, and
-it is worth correcting because it is still in front of you: it said this harness
+**The correction written down at the time went one step too far**, and it is
+worth correcting because it is still in front of you: it said this harness
 re-invokes on a background task's **exit** and on nothing else, a printed line
 included. **The second half of that is false.** A plugin monitor event on a
-printed line was received in a live session on 2026-09-13, and the Monitor tool
-documents every stdout line as an event. The lesson survives and the conclusion
+printed line has been received in a live session, and the Monitor tool documents
+every stdout line as an event. The lesson survives and the conclusion
 does not: a watcher must emit a signal its **arming mechanism** actually listens
 for, and which signal that is depends on how you armed it.
 
@@ -1275,8 +1264,7 @@ Two caveats, both about what a monitor does not survive:
   the recovery under "Recovering a `retroId` you have lost" above — **arms the
   watch again before anything else**, whatever the last session had running.
 - **Whether a monitor survives a compaction is unproven** — it is an open
-  experiment from retro 50 and nobody has run it. Until somebody does, assume
-  it does not:
+  experiment and nobody has run it. Until somebody does, assume it does not:
   **re-arm after any compaction you can detect**, and the detector is the folder
   the compaction count already comes from — a new file in
   `~/.retroloop/sessions/<id>/snapshots/` since you armed. Re-arming costs one
@@ -1332,11 +1320,11 @@ it is never a gesture, never a request to stop, and never permission to hand the
 notification burden back to the human. The watch ends at `review close`, or when
 he says in words to stop watching. Nothing else ends it.
 
-Retro 13 is what that sentence is made of: the harness killed the watch twice,
-the lead read the second kill as quieting, stood the watch down and asked him to
-say "done" in chat — and his press then sat in the store unread until he asked,
-in anger, *"I finished the review but you didn't get a notification? What did
-you fix then?"*
+A real failure is what that sentence is made of: the harness killed the watch
+twice, the second kill was read as a signal to stand down, the watch was stood
+down and the human was asked to say "done" in chat — and his press then sat in
+the store unread until he asked, in anger, what had been fixed if the
+notification never arrived.
 
 **Re-arming loses nothing, and that is measured rather than hoped.** The wait
 does not listen from "now": it listens from **the retrospective's latest
@@ -1448,8 +1436,8 @@ will never appear in `comment list`. Read it before you decide anything below,
 because it is the one place he speaks about the round as a whole.
 
 **A revision lands only as the first of a retrospective or as the answer to a
-finished round** (retro 9 `r-revision-sneaks-past-review`). `revision create`
-returns `CONFLICT` (exit `4`) while the latest revision's review is unfinished,
+finished round.** `revision create` returns `CONFLICT` (exit `4`) while the
+latest revision's review is unfinished,
 so everything below files *after* his Finish press and never during his reading.
 **When he asks for a change mid-review** — in chat, in a thread, however it
 reaches you — filing is not the answer. Ask him to mark the record `revise` and
@@ -1512,10 +1500,10 @@ there, because a record you write has no such section.
   take the export (step 5).
 
 **This list is the floor, not the ceiling.** The counts and flags are what the
-machinery can see; what you owe him is in what he wrote, and he said so himself:
-*"you look at what I requested and, based on it, send a new revision — or say OK,
-there are no new requests."* A record with no `revise` verdict whose note says
-"this is the wrong root cause" is a request for another revision, and no field
+machinery can see; what you owe him is in what he wrote: you look at what he
+requested and, based on it, send a new revision — or say that there are no new
+requests. A record with no `revise` verdict whose note says "this is the wrong
+root cause" is a request for another revision, and no field
 will tell you that. Read the notes and threads before you decide, always.
 
 **A question is not automatically a revision.** When his ask is answered by an
@@ -1782,13 +1770,12 @@ his values so the file says what is true. Two cases that need a word:
 **`involvement` says how much of the human this item needs.** `autonomous` is
 the solving side's to take; `interactive` and `pull-request` mean it is not to be
 done without them. There is no separate hold or parked flag — there was one for
-a session and the human removed it, because this field already said it (retro 4
-`r-remove-hold`).
+a session and the human removed it, because this field already said it.
 
 There is no `requests` key here and no request command. Requests were a second
-ask channel beside the comment threads and the human removed them (retro 4
-`r-remove-requests`): **every ask now arrives as a comment**, so `threads` is
-where you read them and `retroloop comment add` is how you answer.
+ask channel beside the comment threads and the human removed them: **every ask
+now arrives as a comment**, so `threads` is where you read them and
+`retroloop comment add` is how you answer.
 
 Drop `--feedback-only` to get the same document with the record bodies attached
 under a `content` key on each record, when you need to see what they were
@@ -1843,7 +1830,7 @@ retroloop comment add --retro <retroId> --thread <threadId> --text "<your reply>
 - **`--thread <threadId>` answers an existing thread** — review-level or
   record-level, whichever it is. **This is the one to use for anything the human
   opened**, and it is how you answer a review-level ask where he asked it rather
-  than in chat (retro 4 `r-cli-review-thread-reply`).
+  than in chat.
 - **`--record <rid> --section <section>` writes in that record's section thread**,
   creating it on first use and reusing it after. `--section` is one of `title`,
   `problem`, `human_words`, `root_cause`, `workaround`, `direction`, `footprint`,
@@ -1862,10 +1849,10 @@ Name exactly one of the three: none is exit 2 (it is a forgotten flag far more
 often than it is a review-level ask), and so is more than one. Use `--file
 <path>` or `--file -` for a long reply.
 
-**Every reply opens by replaying what he said, in his own voice** (retro 6
-`r-reply-replay-convention`). The rule is his, it is surface-independent, and it
-holds here exactly as it holds in chat: on a record thread, on a review-level
-thread, and on the thread you open to answer a `reviewerNote`. Before you answer
+**Every reply opens by replaying what he said, in his own voice.** The rule is
+his, it is surface-independent, and it holds here exactly as it holds in chat:
+on a record thread, on a review-level thread, and on the thread you open to
+answer a `reviewerNote`. Before you answer
 anything, say back what he said:
 
 1. **Open with the literal line** `**This is what I heard you say written in your
@@ -1884,8 +1871,8 @@ anything, say back what he said:
 
 The replay is what makes your answer checkable: he reads one block and knows
 whether you understood him before he reads a word of the reply. Four replies in
-one round of retro 6 went straight to the answer and cost him a comment to say
-so — after the same miss had been reported twice in the legacy system.
+one round went straight to the answer and cost him a comment to say so — after
+the same miss had been reported twice before.
 
 ```
 **This is what I heard you say written in your own voice:**
