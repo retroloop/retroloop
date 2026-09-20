@@ -4,6 +4,10 @@
 
 In each AI session, you focus on your goal. The AI keeps running notes on everything that gets in the way. One command turns those notes into a reviewable retrospective — every issue with its evidence, a root cause, and solutions at increasing levels of strength, each showing exactly what would change in your personalization plugin. You pick the solution you prefer and your own level of involvement; then the resolve lane applies what you approved — a background manager delegates each record to a worker team, releases your plugin, and you type one reload line in sessions that were already open. The next session starts on the newest version of your setup.
 
+**Before you start.** Three things have to be installed first. **Claude Code** — the client this plugin runs inside; get it from https://claude.com/claude-code · **git** — clones the app and the template and keeps your own plugin's history; macOS `xcode-select --install`, Linux your package manager · **[Bun](https://bun.sh)** — the runtime the app runs on; `curl -fsSL https://bun.sh/install | bash`, then a fresh terminal.
+
+**Supported systems.** Built and tested on macOS. Linux is expected to work but is untested. Windows is not supported yet. Tested against a current Claude Code release; older builds are untested.
+
 ## Install
 
 ```
@@ -42,7 +46,7 @@ Setup installs the review app locally and creates your personalization plugin fr
 
 ## Status
 
-**Launching — v0.1.** Expect rough edges; file them. (Retroloop's own rough edges are exactly the kind of thing it exists to capture.)
+**Early.** Expect rough edges; file them. The version you are running is whatever `/plugin install` reports — the manifest is the only place a version number lives.
 
 ## License
 

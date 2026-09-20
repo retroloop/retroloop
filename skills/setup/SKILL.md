@@ -22,21 +22,27 @@ verbatim wherever this file writes `~/.retroloop` if it is already set.
 If the user passed preferences as arguments (a different install directory, a
 different plugin name), honor them wherever this file names a default.
 
-## 1 · Verify bun
+## 1 · Verify bun and git
 
 ```
 bun --version
+git --version
 ```
 
-Any version output means bun is present. If the command is missing, stop and
+Any version output means the tool is present. If bun is missing, stop and
 tell the user:
 
 > Retroloop's app runs under [Bun](https://bun.sh). Install it with
-> `curl -fsSL https://bun.sh/install | bash` (macOS/Linux) or
-> `powershell -c "irm bun.sh/install.ps1 | iex"` (Windows), open a fresh
-> terminal, and run `/retroloop:setup` again.
+> `curl -fsSL https://bun.sh/install | bash`, open a fresh terminal, and run
+> `/retroloop:setup` again.
 
-Do not install bun yourself.
+If git is missing, stop and tell the user:
+
+> Retroloop uses git to clone the app and the template, and to keep your
+> personalization plugin's history. On macOS run `xcode-select --install`; on
+> Linux use your package manager. Then run `/retroloop:setup` again.
+
+Do not install either yourself.
 
 ## 2 · Install the Retroloop app
 
@@ -98,7 +104,21 @@ beyond the folder: its skills load as `/my:<skill>`, so short is worth keeping.
 ```
 git clone https://github.com/retroloop/personalization-template ~/.retroloop/plugins/my
 cd ~/.retroloop/plugins/my && rm -rf .git && git init -b main
-git add -A && git commit -m "my personalization plugin — created by Retroloop setup"
+```
+
+Check the identity git would use: `cd ~/.retroloop/plugins/my && git config
+user.name; git config user.email`. If either prints nothing, git invents one
+from the account and the machine name. Ask the user for the name and email they
+want on their own plugin's history and set them for this repository only:
+
+```
+cd ~/.retroloop/plugins/my && git config user.name "<name>" && git config user.email "<email>"
+```
+
+Then make the first commit:
+
+```
+cd ~/.retroloop/plugins/my && git add -A && git commit -m "my personalization plugin — created by Retroloop setup"
 ```
 
 From this moment the plugin is the user's: the template is copied once, never
@@ -260,7 +280,8 @@ tell the user to restart their Claude Code session so the new plugin loads:
   `~/.retroloop/apps/retroloop`.
 - **Server up** — `retroloop up --json` reported a URL.
 - **Review page loads** — the URL answered 200.
-- **Plugin created** — `~/.retroloop/plugins/my` is a git repo with one commit.
+- **Plugin created** — `~/.retroloop/plugins/my` is a git repo with one commit,
+  authored by the name and email the user confirmed.
 - **Choices recorded** — `retroloop.md` in the plugin names the tracking
   choice and the model.
 - **`agents/` exists** — `~/.retroloop/agents` is there for the resolve lane's
