@@ -106,23 +106,40 @@ whole result to, and asks for one line back: the path, plus the verdict or
 the one finding that matters. When its notification arrives you read the
 file; the line is a pointer, and it is never what you quote into a report.
 
-**Have the reviewer walk the checklist before you report.** Launch
-`retroloop:reviewer` with the change, the record, the checklist and the file
-it writes its walk to, `<root>/agents/<your name>/reviewer-pass-<n>.md`,
-`<n>` counting its passes over this change from 1. It returns one line —
-`pass`, or the first failing item, and that path — and the whole walk with
-its evidence is in the file. **Fix and re-run until it passes**; each pass
-gets its own file, and that file, as the reviewer wrote it, is the verbatim
-record of the pass. You do not report on a fail, and you do not argue with
-the checklist.
+**Have the reviewer walk the checklist before you report — on both sides of
+the merge.** Launch `retroloop:reviewer` with the change, the record, the
+checklist and the file it writes its walk to,
+`<root>/agents/<your name>/reviewer-pass-<n>.md`, `<n>` counting its passes
+over this change from 1, and say which side of the merge you are calling it
+from. It returns one line — `pass`, or the first failing item, and that path
+— and the whole walk with its evidence is in the file. **Fix and re-run until
+it passes**; each pass gets its own file, and that file, as the reviewer
+wrote it, is the verbatim record of the pass. You do not report on a fail,
+and you do not argue with the checklist.
 
-**Merge your branch into `main`** of that repository once the reviewer passes.
+Two of the checklist's items — the merge, and the report — are about things
+that do not exist until the merge does, so the walk has two sides, and a
+change that passes first time is pass 1, the merge, pass 2:
 
-**Then write the report and tell the manager.**
+- **Before the merge, every item.** The merge item is walked as a dry run:
+  `git merge-tree --write-tree main <branch>` exits 0. The report item is
+  walked against your **draft** of `report.md` — what changed and what was
+  run, written, with a named place left for the merge commit and one for the
+  reviewer's result. A draft with no place for the reviewer's result fails
+  that item.
+- **Merge your branch into `main`** of that repository once that walk is a
+  `pass`.
+- **After the merge, the merge item and the report item again** — against the
+  real merge commit, and the report with that commit and the earlier pass's
+  line filled in. It is short, it gets its own `reviewer-pass-<n>.md`, and it
+  is what makes those two items true rather than promised.
+
+**Then finish the report and tell the manager.**
 `<root>/agents/<your name>/report.md` carries four things: the **merge
 commit**, **what changed**, **what was run**, and **the reviewer's result** —
-the one line it returned, verdict and path, with the pass file linked beside
-it. The reviewer's own file is the verbatim record of its walk, so the report
+the one line each pass returned, verdict and path, with the pass file linked
+beside it; the last of them, from after the merge, is the result the manager
+takes. The reviewer's own file is the verbatim record of its walk, so the report
 links it and never pastes a reviewer's message, and it can never carry a hole
 where a message was cut. Link the deep dive's file the same way. Then
 `SendMessage` to `retroloop-manager` with the same four, short. Then
@@ -178,7 +195,9 @@ The same one your reviewer walks — you do not report until every line is true:
 - [ ] No words the human wrote were edited.
 - [ ] The repository's tests ran, and pass.
 - [ ] The commit's first line names the record or records; the body explains.
-- [ ] The branch merged into `main` cleanly.
-- [ ] The report states the merge commit, what changed, what was run, and the
-      reviewer's result.
+- [ ] The branch merges into `main` cleanly — before the merge,
+      `git merge-tree --write-tree main <branch>` exits 0; after it, the merge
+      commit exists on `main` and the merge left nothing behind.
+- [ ] The report states what changed and what was run, and carries the merge
+      commit and the reviewer's result once they exist.
 - [ ] The team's notes are in its own folder only.

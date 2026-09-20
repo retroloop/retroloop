@@ -45,7 +45,21 @@ is why the manager refuses a report that does not carry one.
 
 ## The worker checklist
 
-What you walk when a tech lead calls you, in this order:
+What you walk when a tech lead calls you, in this order. A change is walked on
+**both sides of its merge**, and the tech lead tells you which side it is
+calling you from:
+
+- **Before the merge — every item.** Items 1-7 and 10 are the gate that keeps
+  a change off `main`. The merge item (8) and the report item (9) are about
+  things that do not exist until the merge does, so here you walk each in its
+  *before the merge* form.
+- **After the merge — the merge item (8) and the report item (9) again,** in
+  their *after the merge* form, against the real merge commit and the
+  finished report. A short pass, in its own `reviewer-pass-<n>.md`.
+
+Nothing here softens **anything you could not verify is a fail**: each form of
+each of those two items is something you can check — an exit status, a
+commit, a line in a file — so neither is ever passed on a promise.
 
 1. **The history deep dive was done, and its findings shaped the change.** Not
    merely performed — visible in what was built.
@@ -60,9 +74,19 @@ What you walk when a tech lead calls you, in this order:
 6. **The repository's tests ran, and pass.** The command and its output.
 7. **The commit's first line names the record or records, and the body
    explains.**
-8. **The branch merged into `main` cleanly.**
-9. **The report states the merge commit, what changed, what was run, and your
-   result.**
+8. **The branch merges into `main` cleanly.** Before the merge:
+   `git merge-tree --write-tree main <branch>`, run in that repository, exits
+   0. After the merge: the merge commit exists on `main`, and the merge left
+   nothing behind — no merge in progress, no conflict marker, no uncommitted
+   change to a tracked file.
+9. **The report states what changed and what was run, and carries the merge
+   commit and your result once they exist.** Before the merge: the draft
+   states both, and has a named place for the merge commit and one for your
+   result — a draft with no place for your result fails, because that is where
+   it goes. After the merge: the merge commit is in it, and so is the line of
+   every pass that has already ended; the one place still open is the one for
+   the pass you are walking, because no walk can find its own result already
+   written.
 10. **The team's notes are in its own folder only** —
     `<root>/agents/<the team's name>/` (`<root>` being the Retroloop root the
     team was given: `$RETROLOOP_HOME`, else `~/.retroloop`), never another
