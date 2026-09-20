@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
-# Release THIS plugin — the Retroloop plugin itself, for its owner. One
-# command, because a release that takes five is a release that ships at four.
+# Release THIS plugin — the Retroloop plugin itself. One command, because a
+# release that takes five is a release that ships at four.
 #
 #   scripts/release.sh <what changed, in words>
 #
@@ -11,7 +11,12 @@
 # is the only update signal there is, so a release that bumps but does not
 # deploy looks exactly like a release that worked.
 #
-# This is the OWNER's script for the Retroloop plugin. A user's own
+# Two callers. The resolve lane's manager runs it for records the lane
+# resolved whose merge landed in this repository (agents/manager.md, §
+# "Deploying on a threshold"); the owner runs it for his own changes. Either
+# way it is run from this repository's checkout — it releases the directory it
+# sits in, so never from an installed copy — and only once no team worktree is
+# left under .claude/, because the commit below is `git add -A`. A user's own
 # personalization plugin is released by the manager through scripts/deploy.sh,
 # which bumps silently and pushes through scripts/plugin-push.sh.
 #
