@@ -460,8 +460,9 @@ retroloop up --json
 `started` says whether **this call** started the server: `false` means it was
 already running, which is just as good. Either way the `url` is live, and it is
 the one to hand the human. (If `up` returns a `lanUrl`, the human bound the
-server to the network himself with `--bind`; hand him `url` and leave `lanUrl`
-alone unless he asks.)
+server to the network himself with `--bind`; `url` is then that network address
+too, because a server bound to one interface answers only there — hand him
+`url`, and leave `lanUrl`, the link for his other device, alone unless he asks.)
 
 **Read the session back — including the human's side of it.** This is the one
 moment you are allowed to see the human's notes and their annotations on yours:

@@ -77,7 +77,9 @@ yourself: the server binds `127.0.0.1` unless the human asks for the network.
 Reviewing from a tablet is the human's own choice, made in his terminal:
 `retroloop down && retroloop up --bind <this machine's LAN IP>` (wildcards such
 as `0.0.0.0` are refused). If the JSON carries a `lanUrl`, he made that choice;
-hand him `url` and leave `lanUrl` alone unless he asks.
+`url` is then that network address too, because a server bound to one interface
+answers only there — hand him `url`, and leave `lanUrl`, the link for his other
+device, alone unless he asks.
 
 Verify the page actually serves:
 
