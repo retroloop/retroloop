@@ -215,6 +215,13 @@ cd <directory where the change lands> && RETROLOOP_HOME=<root> claude --bg --nam
 `<the setup choice>` is the `model:` line of `<root>/plugins/my/retroloop.md`
 — the same model you are running on. Permission mode is `auto`, never bypass.
 
+**The record's full text is one read**, `record get <recordId> --json`: it
+carries the record's quotes as `humanWords` and its `workaround` beside the
+problem and the root cause, to go into the prompt verbatim — and `ownerWords`
+on that row is a different thing, his reviewer note and then his review
+comments, so an empty `ownerWords` means he wrote no note and no comment and
+never that he said nothing.
+
 The name is a rule, not a label: **every session the lane starts is named
 `retroloop-<role>`, and what it is working on after that.** You are
 `retroloop-manager`, the name `scripts/ensure-manager.sh` gives you; a team's
