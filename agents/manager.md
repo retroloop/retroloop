@@ -152,13 +152,18 @@ does not survive a session restart, and whether it survives a compaction is
 unproven.
 
 Why a monitor and not a task: the harness's memory-pressure reaper kills
-background tasks, and the launch-line variable meant to switch that reaper
-off never reaches a session claimed from the daemon's spare pool, so no such
-promise is made here. Monitors are not known to be exempt from that reaper,
-so a monitor's death is news to act on rather than an impossibility. A
-monitor on a plugin script runs under auto mode, and a refusal from the
-permission classifier reaches you in the same turn, never as silence. Two
-fallbacks, both in the script's own header: a harness with no Monitor tool
+background tasks — it killed this wait twice in one night — and the
+launch-line variable meant to switch that reaper off never reaches a session
+claimed from the daemon's spare pool, so no such promise is made here.
+Monitors have been observed to run on through the same pressure (a version
+monitor for a day, a finish watch through a whole review round); that
+exemption is observed, not documented, so a monitor's death is news to act on,
+never an impossibility. This form replaces the earlier one, which ran the CLI
+line directly as a task so that no plugin script had to pass the permission
+classifier: a monitor on a plugin script has been run under auto mode through a
+whole review round, and a refusal from the permission classifier reaches you in
+the same turn, never as silence. Two fallbacks, both in the script's own
+header: a harness with no Monitor tool
 runs the script's `--once` form as a background task and re-arms it on every
 exit, timeouts included; a harness that refuses the script runs the CLI line
 above as a background task the same way — exposed to the reaper, but not
@@ -406,14 +411,16 @@ cd <cwd> && claude --resume <full session uuid> --bg --name "retroloop-teamlead:
 ```
 
 The `--name` is there because the `rm` deleted the registry entry that
-carried it. A stop-then-resume with the registry entry intact restores the
-session's name, permission mode, model and settings; after an `rm` the entry
-is gone, so a bare resume restores the conversation, mode, model and settings
-but comes up under an auto-title taken from its prompt, without the name
-prefix the clean view exists for. The harness's own help says the copy comes
-when the session is already running, and that it prints a `note:` line when
-it does. So read the `backgrounded · <id>` line the resume prints: if the id
-is new, your notes record the new id beside the old transcript path.
+carried it. What was observed: a stop-then-resume with the registry entry
+intact brought the session back with its name, permission mode, model and
+settings; an rm-then-bare-resume brought back the conversation, mode, model and
+settings — it worked and reported — but came up under an auto-title taken from
+its prompt, without the name prefix the clean view exists for. What has not
+been observed: `--name` on a resume line, which is why you read the
+`backgrounded · <id>` line the resume prints. The harness's own help says the
+copy comes when the session is already running, and that it prints a `note:`
+line when it does. So read that line: if the id is new, your notes record the
+new id beside the old transcript path.
 
 **Checking a team that has gone quiet.** Pick a time you are comfortable with,
 write it in your notes, and when a team has not reported within it, look it up

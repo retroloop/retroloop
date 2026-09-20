@@ -172,8 +172,8 @@ has 'history: the lesson of patching instance after instance is kept' "$SKILL" \
 # ── the candidate search: up to three word choices ───────────────────────────
 # One query finds the known earlier record in 3 of 10 known recurrences; three
 # word choices find it in 9 of 10. A generic word finds everything, which is the
-# same as finding nothing — "lead" matches nearly every record in a store. So the
-# fallback is part of the instruction, in every place the instruction is given.
+# same as finding nothing — "lead" matched 85 records. So the fallback is part
+# of the instruction, in every place the instruction is given.
 for f in "$SKILL" "$DRAFTER" "$FIVE_WHYS"; do
   b="$(basename "$f")"
   has "search/$b: up to three word choices" "$f" \

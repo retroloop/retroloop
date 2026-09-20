@@ -70,7 +70,7 @@ re-invokes an agent when a background task EXITS and never when it prints a
 line"*, is a finding with the fix already attached. A citation with no quote is
 half of one: lines move, and then nothing records what the line used to say.
 
-**Quote the human verbatim, garbles included.** They dictates, so words arrive
+**Quote the human verbatim, garbles included.** They dictate, so words arrive
 broken — and the broken words are the record of what they actually said. The
 `verbatim` half carries them exactly; **the cleaned twin fixes dictation only**,
 which means restored words and punctuation and nothing else. A cleaned quote

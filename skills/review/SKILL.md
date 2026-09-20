@@ -619,14 +619,13 @@ query found the earlier record **3 of 10** times, and up to three choices found
 it **9 of 10**. Try **single distinctive words** of the class first, one per
 query, and fall back to a **two-word phrase** only when the single words return
 nothing. **Never generic words** — lead, test, review, agent and their like
-match nearly everything; a query for `lead` matched nearly every record in the
-store, which is the same as finding nothing.
+match nearly everything; a query for `lead` returned 85 records, which is the
+same as finding nothing.
 
 **List at most the ten most plausible by title, and say which query found
 them.** Every query you ran and the row count it returned goes in the diagnostic
-data beside them: a search that returned scores of rows and a search that
-returned two are different evidence, and the resolver has to know which one it
-is holding.
+data beside them: a search that returned 85 rows and a search that returned two
+are different evidence, and the resolver has to know which one it is holding.
 
 **`--all` is what makes this a different command from the `record list` of
 step 4.** That one answers about one revision of one retrospective; this one
@@ -650,13 +649,14 @@ turns a word match into a recurrence has made a claim nobody checked. **The
 recurrence judgment belongs to the resolver's history deep dive**, which gets
 the record, the tools and the time to do it properly.
 
-**The lesson that put a history step here has not changed**: a fix aimed at the
-instance repairs the hop that just failed and leaves the class alive, and new
-instances keep getting new sentences when nothing reads the loop's own output.
-What changed is
-who reads it. The drafting side hands over named candidates with the evidence
-attached; the solving side is where a class is established and fixed as a
-class.
+**The lesson that put a history step here has not changed**: the finish channel
+broke three times over successive retrospectives while each fix repaired only
+the hop that had just failed, and rules-that-do-not-bind accumulated six
+instances after an earlier root cause had already named the mechanism — new
+instances kept getting new sentences because nothing in the loop read its own
+output. What changed is who reads it. The drafting side hands over named
+candidates with the evidence attached; the solving side is where a class is
+established and fixed as a class.
 
 **Then propose one to three ways to solve it, and say which one you recommend.**
 Not three for the sake of three — where the fix is quick, only one or two may
@@ -1522,7 +1522,7 @@ have not seen is inferring agreement from silence.
 and that you are ready to close when they are happy, and stop there. Do not
 wait, do not poll: they have already pressed Finish review for this round, so
 nothing is coming that you could detect, and a reply from them arrives as a new
-message to you — not as an event. When they come back and says go ahead, close
+message to you — not as an event. When they come back and say go ahead, close
 it (step 5). If they reply in the thread instead, you will see it in
 `comment list` the next time they bring you back to this retrospective.
 
@@ -1876,7 +1876,7 @@ to answer a `reviewerNote`. Before you answer anything, say back what they said:
    drops half their comment tells them the other half was not read.
 5. **Only then answer**, below the quote, in your own voice.
 
-The replay is what makes your answer checkable: they read one block and knows
+The replay is what makes your answer checkable: they read one block and know
 whether you understood them before they read a word of the reply. Four replies
 in one round went straight to the answer and cost them a comment to say so —
 after the same miss had been reported twice before.
@@ -1992,7 +1992,7 @@ the header, so the one way to recover it is to **ask the human to read it off
 the page** — give them the URL and ask for the line under the breadcrumb. If
 they would rather not, write a new one by the same rule as any other (§3, "the
 title names the work this retro covers") and say in a review-level comment that
-you renamed it and why, so the rename is their to object to.
+you renamed it and why, so the rename is theirs to object to.
 
 **Re-author the `title` — nothing gives it back to you.** The revision's title is
 not in `revision get`'s output, or in any other read, so a draft rebuilt this way
@@ -2120,7 +2120,7 @@ records forever.
 - **Never choose the solution.** You propose one to three and mark one
   recommended; **which one is built is theirs**, and so is the level that comes
   with it. Recommending is not choosing, a record where only one solution is
-  worth proposing is still their to accept, and no comment saying "we should
+  worth proposing is still theirs to accept, and no comment saying "we should
   obviously do Solution 3" makes the choice for them. They may pick the one you
   did not recommend, and when they do, that is an answer and not a mistake to
   correct.
