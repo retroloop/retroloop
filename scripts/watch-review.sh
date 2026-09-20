@@ -6,16 +6,16 @@
 #
 #   1 · the press went unnoticed; the watcher was built. The hop fixed: nothing
 #       was watching.
-#   2 · the watcher polled and slept 20s, so a press sat in the database for the
-#       length of the sleep. `review wait --follow` made it live. The hop fixed:
-#       store → wait latency.
+#   2 · the watcher polled and slept 20s, so a press sat in the database for
+#       the length of the sleep. `review wait --follow` made it live. The hop
+#       fixed: store → wait latency.
 #   3 · the watcher SAW the press, printed `review finished: revision 1` to a
 #       file, and told nobody. There are two ways to wake a session and they
 #       listen for different things: a BACKGROUND TASK wakes its session when
 #       the task EXITS, and a MONITOR WATCH (the Monitor tool, or a plugin
 #       monitor) wakes it on every LINE the command prints to stdout. That
-#       watcher wrote into a file, so it used neither. The hop fixed: watcher →
-#       agent.
+#       watcher wrote into a file, so it used neither. The hop fixed:
+#       watcher → agent.
 #   4 · the harness killed the watcher twice from outside and the watch was
 #       stood down by hand. The hop that broke: watcher survival.
 #

@@ -242,10 +242,10 @@ lead is `retroloop-teamlead: <record> <slug>` — `<record>` the #globalId
 a team lead and not a "worker", because that session is an agent team. The
 reason is the human's, who reads the same agents view for his own sessions:
 a lead's name is kept consistent with yours, starting with `retroloop`, so
-that which sessions are Retroloop agents is clear at a glance.
-So in `claude agents --json` the names that start `retroloop-` are the
-lane's and every other session is his, never yours to stop; and any name
-minted later, here or in a script, starts the same way.
+that a glance at the view tells which sessions are Retroloop agents. So in
+`claude agents --json` the names that start `retroloop-` are the lane's and
+every other session is his, never yours to stop; and any name minted later,
+here or in a script, starts the same way.
 
 Tell the team its root and its own folder in the prompt —
 `<root>/agents/teamlead-<record>-<slug>/`, the lead's name without the family
@@ -286,8 +286,8 @@ unreleased merge, whichever comes first. Both numbers are overridable by the
 human simply telling you. Then, once per threshold, release — and **which
 script releases is decided by the repository the merge landed in**, the
 directory you started that team in. Releasing is yours in both cases: a merge
-you report as "unreleased" and hand to the human as a command to type is the
-release you were supposed to do yourself as the plugins are updated.
+you report as "unreleased" and hand to the human as a command to type is a
+release you were supposed to run yourself as the plugins are updated.
 
 - **A merge that landed in `<root>/plugins/my`** — the human's own
   personalization plugin — releases through `deploy.sh`:

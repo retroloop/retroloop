@@ -702,12 +702,12 @@ one wins, so when a later draft is about something else, retitle it.
 
 **The title is a one-liner of the work, never a summary of the records** (his
 rule). Write it from the reader's vantage, not yours: the title is read at the
-moment someone picks a retro out of a list,
-and at that moment they have not read the records — what they know is what was
-done. So name the work this retro covers, which is everything done in the
-session since the previous retro, or since the session started when this is the
-first one. A second retro on the same session is titled by its own segment
-alone; a whole-session title on it would misname both.
+moment someone picks a retro out of a list, and at that moment they have not
+read the records — what they know is what was done. So name the work this retro
+covers, which is everything done in the session since the previous retro, or
+since the session started when this is the first one. A second retro on the
+same session is titled by its own segment alone; a whole-session title on it
+would misname both.
 
 - **Right:** `Shipped the whole retro-4 fix queue and rebuilt the review experience`
 - **Wrong:** `Four cold reads, a committed lane report, and two toothless assertions`
@@ -894,8 +894,8 @@ before merge), `interactive` (human works the fix live), `other`, `undecided`
 leave it out and it is `undecided`.
 
 **A solution whose footprint touches a permission, credential, or security
-surface makes the whole record propose `interactive`**, however mechanical
-the fix itself is: an agent granting itself permission rules is the guarded action
+surface makes the whole record propose `interactive`**, however mechanical the
+fix itself is: an agent granting itself permission rules is the guarded action
 class, so the actor rule — not the difficulty — is what demands the human, and
 involvement is what schedules the fix for a session he is present in. Read
 **every** solution's footprint before you propose this field, not just the fix:
@@ -992,9 +992,9 @@ markdown subset — write the literal characters: `**bold**`, `` `code` ``,
 reply quotes him back to himself, blank lines between paragraphs, and
 triple-backtick fenced blocks for preformatted excerpts (their contents are
 never parsed). The review page renders exactly that subset; anything else,
-including HTML, shows as literal text. One exemption: a solution's `footprint` is not markdown — the page
-shows it preformatted, exactly as authored, whitespace intact, which is what
-makes the tree form below hold on screen.
+including HTML, shows as literal text. One exemption: a solution's `footprint`
+is not markdown — the page shows it preformatted, exactly as authored,
+whitespace intact, which is what makes the tree form below hold on screen.
 
 Hard-wrapping a bullet or a paragraph across source lines is tolerated rather
 than preferred: a line that opens no marker continues the block above it, so a
@@ -1058,22 +1058,22 @@ reads best in the file.
 
 **A counted claim cites the enumeration it counts.** Whenever a record says how
 many of something there were — findings, files, failures — name where the full
-list durably lives and check
-the number against it while you draft. A record that carried "thirteen standing
-findings" against the one note that enumerated eleven could not have its
-fix closed item by item: the solution's bullets and its footprint both inherit
-the count, and a fix session is left guessing at the difference.
+list durably lives and check the number against it while you draft. A record
+that carried "thirteen standing findings" against the one note that enumerated
+eleven could not have its fix closed item by item: the solution's bullets and
+its footprint both inherit the count, and a fix session is left guessing at the
+difference.
 
 **A claim about the code names the evidence it was checked against.** A record
 that asserts something concrete about the codebase — this file is stale, that
-flag is unused, this command exists — says in
-the record how it was checked: the command you ran, the `file:line` you read.
-Check it while you draft, not from memory, and if you cannot, write the claim as
-unverified so the human reads it as one. Review reads a record for direction, not
-for code truth, so an unchecked premise is not caught downstream: an approved
-record once directed removing a documented `--data` flag as stale when `--data`
-was live in the CLI's own source, and applying it would have written in the very
-false claim the record existed to remove.
+flag is unused, this command exists — says in the record how it was checked:
+the command you ran, the `file:line` you read. Check it while you draft, not
+from memory, and if you cannot, write the claim as unverified so the human
+reads it as one. Review reads a record for direction, not for code truth, so
+an unchecked premise is not caught downstream: an approved record once directed
+removing a documented `--data` flag as stale when `--data` was live in the
+CLI's own source, and applying it would have written in the very false claim
+the record existed to remove.
 
 ### One whole record, as a file
 
@@ -1220,15 +1220,15 @@ that bites you next is one nobody has looked at yet:
 **Two things wake a session, and they listen for different signals.** A
 **background task** wakes its session when the task **EXITS**. A **monitor
 watch** — the Monitor tool, or a plugin monitor — wakes it on **every line the
-command prints to stdout**. The watcher in the third row above used neither: it
-printed into a file and told nobody.
+command prints to stdout**. The watcher in the `the watcher → YOU` row above
+used neither: it printed into a file and told nobody.
 
 **The correction written down at the time went one step too far**, and it is
 worth correcting because it is still in front of you: it said this harness
 re-invokes on a background task's **exit** and on nothing else, a printed line
 included. **The second half of that is false.** A plugin monitor event on a
-printed line has been received in a live session, and the Monitor tool documents
-every stdout line as an event. The lesson survives and the conclusion
+printed line has been received in a live session, and the Monitor tool
+documents every stdout line as an event. The lesson survives and the conclusion
 does not: a watcher must emit a signal its **arming mechanism** actually listens
 for, and which signal that is depends on how you armed it.
 
@@ -1437,8 +1437,8 @@ because it is the one place he speaks about the round as a whole.
 
 **A revision lands only as the first of a retrospective or as the answer to a
 finished round.** `revision create` returns `CONFLICT` (exit `4`) while the
-latest revision's review is unfinished,
-so everything below files *after* his Finish press and never during his reading.
+latest revision's review is unfinished, so everything below files *after* his
+Finish press and never during his reading.
 **When he asks for a change mid-review** — in chat, in a thread, however it
 reaches you — filing is not the answer. Ask him to mark the record `revise` and
 press **Finish review**, and file the rewrite as the next round; that is the
@@ -1503,8 +1503,8 @@ there, because a record you write has no such section.
 machinery can see; what you owe him is in what he wrote: you look at what he
 requested and, based on it, send a new revision — or say that there are no new
 requests. A record with no `revise` verdict whose note says "this is the wrong
-root cause" is a request for another revision, and no field
-will tell you that. Read the notes and threads before you decide, always.
+root cause" is a request for another revision, and no field will tell you that.
+Read the notes and threads before you decide, always.
 
 **A question is not automatically a revision.** When his ask is answered by an
 answer — he wanted to know something, and nothing in the record has to change —
@@ -1852,8 +1852,7 @@ often than it is a review-level ask), and so is more than one. Use `--file
 **Every reply opens by replaying what he said, in his own voice.** The rule is
 his, it is surface-independent, and it holds here exactly as it holds in chat:
 on a record thread, on a review-level thread, and on the thread you open to
-answer a `reviewerNote`. Before you answer
-anything, say back what he said:
+answer a `reviewerNote`. Before you answer anything, say back what he said:
 
 1. **Open with the literal line** `**This is what I heard you say written in your
    own voice:**`
