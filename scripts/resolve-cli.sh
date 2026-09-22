@@ -10,7 +10,15 @@
 # There used to be two resolvers: the SessionStart hook probed PATH and one
 # hardcoded directory, the finish watch had its own. A user who installed the
 # app anywhere else was told "Retroloop is installed but not set up" at every
-# session start, forever. One resolver, one answer, every caller.
+# session start, forever. One resolver, one answer, every caller — the hook,
+# the two watch scripts, and `bin/retroloop`, the command this plugin ships.
+#
+# That shipped command is the one caller this file must not answer with. It
+# lives on every session's PATH, so step 1 below would hand it back to itself
+# and it would run itself for ever; and the hook would greet a machine that
+# never ran setup with "this session is tracked". Both are prevented by one
+# marker, `bin/.retroloop-bin`, which sits beside the shipped command and which
+# step 1 looks for before it accepts a hit.
 #
 # Then there was a pointer file — a line on disk naming the install — to cover
 # the user who chose their own directory. It is gone: Retroloop now has ONE
@@ -25,7 +33,7 @@
 # and returns 0. On a total miss RETROLOOP_CLI is empty and it returns 1.
 #
 # Resolution order, first hit wins:
-#   1 path     `retroloop` on PATH
+#   1 path     `retroloop` on PATH, unless it is the command this plugin ships
 #   2 env      $RETROLOOP_APP, then $WATCH_REVIEW_CLI (the older spelling)
 #   3 default  <root>/apps/retroloop/apps/cli/src/bin.ts, where <root> is
 #              $RETROLOOP_HOME, else ~/.retroloop
@@ -83,6 +91,30 @@ retroloop_cli_from_command() {
   return 0
 }
 
+# Is this PATH hit the command the plugin ships? It is if the marker file sits
+# beside it — and a marker beside the file a symlink points at counts too, so
+# linking the shipped command onto a PATH directory does not defeat the guard.
+# The judgment is on the resolved path, never on the name: a user's own
+# `retroloop` is still the answer that outranks everything.
+retroloop_cli_is_shipped() { # <path to a retroloop found on PATH>
+  local p="${1:-}" dir target hops=0
+  [ -n "$p" ] || return 1
+  while [ "$hops" -lt 8 ]; do
+    dir="${p%/*}"
+    [ "$dir" = "$p" ] && dir='.'
+    [ -f "$dir/.retroloop-bin" ] && return 0
+    [ -L "$p" ] || return 1
+    target="$(readlink "$p" 2>/dev/null)" || return 1
+    [ -n "$target" ] || return 1
+    case "$target" in
+      /*) p="$target" ;;
+      *) p="$dir/$target" ;;
+    esac
+    hops=$((hops + 1))
+  done
+  return 1
+}
+
 # The root everything Retroloop keeps lives under: $RETROLOOP_HOME, else
 # ~/.retroloop. Callers that print the root to a human want the tilde back, so
 # this returns the expanded path and the printing is theirs.
@@ -99,8 +131,11 @@ retroloop_resolve_cli() {
   RETROLOOP_CLI=()
   RETROLOOP_CLI_SOURCE=''
 
-  # 1 · an installed binary is the user's own answer; nothing outranks it.
-  if found="$(command -v retroloop 2>/dev/null)" && [ -n "$found" ]; then
+  # 1 · an installed binary is the user's own answer; nothing outranks it —
+  # except the command this plugin ships, which is this file's own caller and
+  # is always on PATH. Answering with that one is a command that runs itself.
+  if found="$(command -v retroloop 2>/dev/null)" && [ -n "$found" ] &&
+    ! retroloop_cli_is_shipped "$found"; then
     RETROLOOP_CLI=("$found")
     RETROLOOP_CLI_SOURCE=path
     return 0

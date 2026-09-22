@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+#
+# `retroloop` — the command this plugin ships, so every session can reach the
+# app by its short name. Claude Code puts an installed plugin's bin directory
+# on the search path of every session it runs, at the plugin version that
+# session started with, so nothing is installed, copied or linked anywhere on
+# the user's machine for this to work — and a plugin update carries it forward.
+#
+# It decides nothing of its own. The shared resolver (scripts/resolve-cli.sh)
+# picks which app to run, this runs it with every argument it was handed, and
+# the app's exit code is the one the caller gets back.
+#
+# THE MARKER. `bin/.retroloop-bin` sits beside this file, and the resolver
+# looks for it: a `retroloop` found on the search path whose directory carries
+# that marker is this script, and the resolver looks past it. Without the
+# marker the resolver's first answer is this very command, which would then run
+# itself for ever — and the session-start line would tell a user who has never
+# run setup that their session is tracked.
+#
+# It is never copied out of the plugin folder: that folder's name carries the
+# plugin version, and a copy would be stranded by the next update while this
+# one follows it.
+
+set -uo pipefail
+
+_rl_dir="${BASH_SOURCE[0]%/*}"
+[ "$_rl_dir" = "${BASH_SOURCE[0]}" ] && _rl_dir='.'
+_rl_resolver="$_rl_dir/../scripts/resolve-cli.sh"
+
+if [ ! -f "$_rl_resolver" ]; then
+  printf 'Retroloop: this plugin is incomplete — no resolver at %s. Reinstall the plugin.\n' "$_rl_resolver" >&2
+  exit 127
+fi
+
+# shellcheck source=../scripts/resolve-cli.sh
+. "$_rl_resolver"
+
+if ! retroloop_resolve_cli; then
+  printf "Retroloop's app is not installed on this machine — run /retroloop:setup\n" >&2
+  exit 127
+fi
+
+exec "${RETROLOOP_CLI[@]}" "$@"

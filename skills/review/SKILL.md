@@ -30,28 +30,47 @@ here, ask the human rather than inventing it.
 ## 0 · Running the CLI
 
 Every command is `retroloop <something> --json`: one JSON object on stdout, errors as
-`{"error":{"code","message"}}` on stderr. Find out once, before anything else,
-which of the three worlds you are in:
+`{"error":{"code","message"}}` on stderr.
 
-**1 · `retroloop` is on your PATH.** Run the commands exactly as this file writes
-them.
+**The plugin ships the `retroloop` command**, so it is already on the search
+path of every session — nothing was installed on this machine for it, and there
+is no longer form to carry into every call. Run the commands exactly as this
+file writes them. Settle it once, before anything else:
 
 ```
 retroloop --version
 ```
 
 That prints a bare version string (`0.0.0`) on stdout — it is the one command
-that ignores `--json`. Any output at exit 0 means the binary is there.
+that ignores `--json`. Any output at exit 0 means Retroloop is there and every
+command in this file runs as written. Two other answers are possible, and each
+has one thing to do.
 
-**2 · It is not on PATH, but you are inside the Retroloop repository.** Find the root
+**It answers that the app is not installed** — one line naming
+`/retroloop:setup`. The command ships with the plugin, so it is always there;
+what is missing is the app behind it, which setup installs. Nothing you can do
+puts that right, so tell the human, in these terms — *"Retroloop's app is not
+installed on this machine, so I cannot file this retrospective. Run
+`/retroloop:setup` and I will file it. Meanwhile here is what I would have
+recorded: …"* — then give them the frictions in plain text so the session's
+findings are not lost. Do not install anything yourself, and do not invent a
+place to write the retrospective.
+
+**It is not found at all** (`retroloop: command not found`, exit 127). This
+session started before the plugin version that ships the command, and a restart
+is what brings it in. If you are working inside the Retroloop app's own
+checkout, the fallback below runs the same CLI meanwhile; otherwise say the
+sentence above, naming a restart of the session instead of setup.
+
+**The fallback — you are inside the Retroloop app repository.** Find the root
 by walking **every** ancestor of your working directory, not just the nearest
 one: at each level, read a `package.json` if there is one, and stop at the first
 whose `name` is `retroloop` **and** whose `scripts` contain `retroloop`. That directory
 is the repository root. Keep walking past any other `package.json` you meet —
 Retroloop is a workspace, so a subdirectory like `apps/cli` has its own, named
-`@retro/cli`, and stopping there would tell you world 3 while you are standing
-inside world 2. Only a walk that reaches the filesystem root without a match
-means you are not in the repository.
+`@retro/cli`, and stopping there would tell you that you are outside the
+repository while you are standing inside it. Only a walk that reaches the
+filesystem root without a match means you are not in the repository.
 
 Every command in this file then runs **from that root** as
 `bun run --silent retroloop <the same arguments>`. Put the `cd` in the same command,
@@ -62,7 +81,7 @@ every time — most harnesses reset the working directory between calls, so a
 cd /path/to/the/retroloop-app/repo && bun run --silent retroloop up --json
 ```
 
-And in this world, **give `--file` and `--out` absolute paths**. A relative one
+And when you run it this way, **give `--file` and `--out` absolute paths**. A relative one
 resolves against the repository root you just moved into, not against wherever
 you wrote the file, which is how a draft goes missing between writing it and
 submitting it.
@@ -75,27 +94,16 @@ answers `Script not found "retroloop"`, which is the loud failure you want rathe
 than a silent wrong binary.
 
 **If `bun` itself is missing**, the checkout cannot help you — the CLI is run by
-bun and there is no other way in. Treat it as world 3, but say the true thing
-rather than the world-3 script: *"The Retroloop repository is right here at
-`<root>`, but `bun` is not installed, and the CLI only runs under bun. Install
-bun and I can file this retrospective; meanwhile here is what I would have
-recorded: …"* Naming the one missing piece turns a dead end into a one-line fix
-for them.
+bun and there is no other way in. Say the true thing: *"The Retroloop repository
+is right here at `<root>`, but `bun` is not installed, and the CLI only runs
+under bun. Install bun and I can file this retrospective; meanwhile here is what
+I would have recorded: …"* Naming the one missing piece turns a dead end into a
+one-line fix for them.
 
-**3 · Neither.** Then Retroloop is not usable here and there is nothing more to
-find: **stop and tell the human**, in these terms — *"I can file this
-retrospective through Retroloop, but the `retroloop` command is not installed and this is
-not the Retroloop repository. Install it, or tell me where the Retroloop checkout is, and
-I will file it. Meanwhile here is what I would have recorded: …"* — then give
-them the frictions in plain text so the session's findings are not lost. Do not
-install anything and do not invent a place to write the retrospective. The two
-checks above are the whole search: once the PATH lookup has failed and the walk
-has reached the filesystem root, **stop searching** — going hunting for a
-checkout elsewhere on the machine finds strangers' repositories, not yours.
-
-Two things not to reach for in any world: `bunx retroloop` downloads and runs an
+Two things not to reach for, either way: `bunx retroloop` downloads and runs an
 unrelated package of that name when the workspace has not been installed, and
-there is no globally installed `retroloop` on a machine that only has a checkout.
+a machine that only has a checkout has no `retroloop` of its own outside the one
+the plugin ships.
 
 ## What you may assume
 
@@ -110,9 +118,9 @@ there is no globally installed `retroloop` on a machine that only has a checkout
 ## Exit codes
 
 **These are all the codes Retroloop itself returns.** A code outside this list did
-not come from Retroloop: either your shell never ran it (`127` is "command not
-found", which means you are in the wrong world — go back to §0) or something
-killed the process. Neither is a condition to improvise around. A code that *is*
+not come from Retroloop: either your shell never ran it, or the shipped command
+found no app to run (`127` covers both — go back to §0, which tells them apart
+by the line that came with it), or something killed the process. Neither is a condition to improvise around. A code that *is*
 on this list but makes no sense where you got it is a bug in Retroloop: report the
 code and the error document to the human and stop.
 

@@ -250,8 +250,13 @@ SHIPPED_RC=0
 # run_shipped [VAR=VALUE ...] -- [argument ...]
 # Runs `retroloop` by name only, so the case proves what a session gets: the
 # plugin's bin directory is first on PATH and nothing else on that PATH carries
-# the name. `ulimit -t` is the depth guard — a command that resolves to itself
-# burns CPU exec'ing forever, and the cap turns that hang into a failed case.
+# the name.
+#
+# The watchdog is the depth guard. A command that resolves to itself replaces
+# itself with itself for ever — one process, no output, no end — so the run is
+# backgrounded and killed after ten seconds. A CPU limit does not do it: the
+# looping process spends its time in short-lived children, so it was still
+# going after a minute and a half of measured CPU when this was tried.
 run_shipped() {
   local -a envs=() args=()
   local sawdashdash=0 a
@@ -259,12 +264,32 @@ run_shipped() {
     if [ "$sawdashdash" -eq 0 ] && [ "$a" = '--' ]; then sawdashdash=1; continue; fi
     if [ "$sawdashdash" -eq 0 ]; then envs[${#envs[@]}]="$a"; else args[${#args[@]}]="$a"; fi
   done
-  SHIPPED_OUT="$(
-    ulimit -t 10
-    env -i HOME="$SB/home" PATH="$PLUGIN_BIN:$SB/bin:$BASE_PATH" \
-      ${envs[@]+"${envs[@]}"} retroloop ${args[@]+"${args[@]}"} 2>&1 </dev/null
-  )"
+
+  : >"$SB/shipped.out"
+  env -i HOME="$SB/home" PATH="$PLUGIN_BIN:$SB/bin:$BASE_PATH" \
+    ${envs[@]+"${envs[@]}"} retroloop ${args[@]+"${args[@]}"} \
+    >"$SB/shipped.out" 2>&1 </dev/null &
+  local pid=$! waited=0 alive=1
+  while [ "$waited" -lt 100 ]; do
+    if kill -0 "$pid" 2>/dev/null; then
+      sleep 0.1
+      waited=$((waited + 1))
+    else
+      alive=0
+      break
+    fi
+  done
+
+  if [ "$alive" -eq 1 ]; then
+    kill -9 "$pid" 2>/dev/null
+    wait "$pid" 2>/dev/null
+    SHIPPED_RC=137
+    SHIPPED_OUT='(killed after ten seconds — the command never returned, which is what running itself looks like)'
+    return
+  fi
+  wait "$pid" 2>/dev/null
   SHIPPED_RC=$?
+  SHIPPED_OUT="$(cat "$SB/shipped.out")"
 }
 
 # ── preflight ────────────────────────────────────────────────────────────────

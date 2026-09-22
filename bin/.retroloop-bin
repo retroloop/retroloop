@@ -1,0 +1,3 @@
+This file marks bin/retroloop as the command the plugin ships.
+scripts/resolve-cli.sh looks past a `retroloop` on PATH whose directory holds
+this marker, so the shipped command can never resolve to itself.
