@@ -162,6 +162,13 @@ has 'the git identity question' "name and email"
 has 'the shortcut question' 'browse your plugin from\?'
 has 'the issue-tracking question' 'Where do you track issues\?'
 has 'the model question' 'Which model runs the manager and the tech leads\?'
+# Opus is the recommended model because every account can run it; Fable is the
+# top-tier model and many corporate accounts do not have it, so it stays an
+# option and never the default a newcomer lands on.
+has 'the model question recommends Opus, first' '\*\*Opus \(Recommended\)\*\*'
+has 'and the example file records that same default' \
+  'tracking: this tool only model: opus subagent model: opus'
+lacks 'nothing in the skill still recommends Fable' 'Fable \(Recommended\)'
 has 'the launch-rule question' 'launch rule'
 
 has 'the missing-tools question names what this machine actually lacks' \
