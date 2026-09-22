@@ -87,7 +87,7 @@ has 'the managed-machine wording is shown' \
 # --- 4 · one route, with the two ways to approve it
 
 has 'exactly one route is proposed, not a menu' \
-  'one. proposal — the route that fits this machine, not'
+  'proposal — the route that fits this machine, not'
 has 'the route is the exact commands, in order' \
   'exact commands in the order they run'
 has 'the choice is approve-all or one-at-a-time' \

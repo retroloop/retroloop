@@ -22,27 +22,100 @@ verbatim wherever this file writes `~/.retroloop` if it is already set.
 If the user passed preferences as arguments (a different install directory, a
 different plugin name), honor them wherever this file names a default.
 
-## 1 · Verify bun and git
+## 1 · Check what this machine already has
+
+Setup needs four tools, and all four are needed by setup's own commands:
+**bun**, the runtime the Retroloop app runs on; **git**, which clones the app
+and the template and keeps the user's plugin history; **unzip**, which Bun's
+installer unpacks with; and **curl**, which Bun's installer downloads with.
+Check all four before touching anything:
 
 ```
 bun --version
 git --version
+unzip -v
+curl --version
 ```
 
-Any version output means the tool is present. If bun is missing, stop and
-tell the user:
+Any version output means the tool is present. This step only looks — nothing on
+this machine changes before the user says so, which is what makes setup safe to
+run again from here.
 
-> Retroloop's app runs under [Bun](https://bun.sh). Install it with
-> `curl -fsSL https://bun.sh/install | bash`, open a fresh terminal, and run
-> `/retroloop:setup` again.
+If all four answer, say so and go on to step 2:
 
-If git is missing, stop and tell the user:
+> Everything is already present. Nothing to install.
 
-> Retroloop uses git to clone the app and the template, and to keep your
-> personalization plugin's history. On macOS run `xcode-select --install`; on
-> Linux use your package manager. Then run `/retroloop:setup` again.
+If something is missing, say what is missing and what each missing one is for,
+then ask one question and nothing more:
 
-Do not install either yourself.
+> Bun, unzip and curl are missing. Shall I look into how to install them on this machine?
+
+Do not propose a command yet, and do not install anything yet.
+
+### On a yes, understand the machine before proposing anything
+
+Only after that yes, work out where you are. There is no single right way to
+install these tools: the right way is a property of this machine, not of a
+recipe, and the same command line that is correct on a rented Linux box is
+wrong or forbidden on a work laptop. Establish, with short read-only commands:
+
+- **The operating system, and the package manager that is actually present** —
+  `apt-get`, `dnf`, `apk` and `brew` are the likely ones. Check; never assume.
+- **Whether elevation is usable at all** — `id -u`, then `sudo -n true`. Never
+  run a command that can block on a password prompt.
+- **Signs of a corporate or managed machine** — no administrator rights, a
+  company proxy or an internal package mirror in the environment or in the
+  package manager's configuration, device-management software.
+- **Anything already loaded in this session that says how software is installed
+  here** — a skill, a `CLAUDE.md` or another project instruction file, standing
+  session context. These win over anything you would otherwise choose, so read
+  them before you decide, and say which one you are following:
+
+> This looks like a managed machine, and your instructions say installs go through the internal mirror. I'll follow that.
+
+### Then propose one route, and ask how they want to approve it
+
+Out of that look comes **one** proposal — the route that fits this machine, not
+a menu of options for the user to weigh. Write the exact commands in the order
+they run, one plain line each saying what that command does, and one sentence
+saying why this route on this machine. Then ask, through the question tool,
+once, for the whole missing set — never one question per tool:
+
+> Here are the exact commands. Approve all at once, or one at a time?
+
+On **approve all at once**, run them in order, then re-check the four tools and
+report what is now present. On **one at a time**, stop for a yes before each
+command. Either way nothing runs that was not shown first. Anything you cannot
+run goes in the same message, marked plainly as theirs to do — on macOS the git
+installer opens a window a person has to click through, so git there is always
+a hand-off.
+
+### When the machine's rules block the install, stop cleanly
+
+If the look finds no usable way — no administrator rights and no usable `sudo`,
+a mirror that refuses, a policy that says ask IT — do not improvise around it
+and do not try anyway. Print what to ask IT for: the tools by name, why each is
+needed, and the command an administrator would run. Then stop:
+
+> Your machine's rules block this. Ask IT for: unzip, curl, Bun. Then re-run setup.
+
+That same block is what you print on a plain "no". The stop is clean because
+nothing was half-installed — setup is a checklist, so running it again picks up
+from what is actually on the machine rather than from anything remembered.
+
+### If you installed Bun in this run, call it by its full path
+
+Installing Bun mid-run does not make the word `bun` work mid-run: Bun's
+installer only appends a line to a shell start-up file, and the shells the rest
+of this run uses never read it. So when you installed Bun yourself, call it for
+the remainder of setup by its full installed location,
+`${BUN_INSTALL:-$HOME/.bun}/bin/bun`, everywhere below this file writes `bun`.
+
+Once Bun answers, check that a script shell finds it too — `env -i bash -c
+'command -v bun'` is the non-interactive, nothing-inherited case — and if it
+does not, fix it in the way that fits this machine, the same way you chose the
+install route. Retroloop's hooks and watch scripts run in exactly that kind of
+shell.
 
 ## 2 · Install the Retroloop app
 
@@ -55,6 +128,15 @@ cd ~/.retroloop/apps/retroloop && bun install
 
 If the directory already exists with a checkout inside, skip the clone and run
 `cd ~/.retroloop/apps/retroloop && git pull && bun install` instead.
+
+Installing the dependencies does not build the review page, and the server
+answers `503` until it exists — so build it now, right here, either way:
+
+```
+cd ~/.retroloop/apps/retroloop && bun run --filter '@retro/web' build
+```
+
+It takes a second or two. Without it the link step 3 hands over opens nothing.
 
 Verify the CLI answers:
 
