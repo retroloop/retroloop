@@ -78,14 +78,36 @@ cd ~/.retroloop/apps/retroloop && bun run --silent retroloop up --json
 ```
 
 `up` is idempotent — it starts the server or reports the one already running.
-Read the JSON it prints: it carries the server URL. Never pass `--bind`
-yourself: the server binds `127.0.0.1` unless the human asks for the network.
-Reviewing from a tablet is the human's own choice, made in their terminal:
-`retroloop down && retroloop up --bind <this machine's LAN IP>` (wildcards such
-as `0.0.0.0` are refused). If the JSON carries a `lanUrl`, they made that
-choice; `url` is then that network address too, because a server bound to one
-interface answers only there — hand them `url`, and leave `lanUrl`, the link for
-their other device, alone unless they ask.
+Read the JSON it prints: it carries the server URL, and that URL always names
+the machine you are on. **The review server only ever listens on this machine.**
+There is no network address to offer and nothing to type that changes it — the
+page has no password, so being reachable from anywhere else would mean anyone
+who found it could read the human's own words and write decisions on them.
+
+**Reaching the page from another computer — forward the port over SSH.** When
+Retroloop runs on a machine the human reaches over SSH, the way in is their own
+secure login. They run this on their **own computer**, not on the server, with
+the port the JSON reported (`24100` is the default) and their own login in place
+of `you@your-server`:
+
+```
+ssh -N -L 24100:127.0.0.1:24100 you@your-server
+```
+
+Then they open `http://localhost:24100`. The command holds the connection open
+and prints nothing; it is stopped with Ctrl-C when they are done.
+
+**If they already run Retroloop on their own computer**, that local port is
+taken, so forward to a free one instead — the first number is theirs to choose,
+the second pair is the server's:
+
+```
+ssh -N -L 24101:127.0.0.1:24100 you@your-server
+```
+
+Then they open `http://localhost:24101`. Either form works, because the review
+page asks its own server for data at a relative address and so does not care
+which local port it is opened on.
 
 Verify the page actually serves:
 
