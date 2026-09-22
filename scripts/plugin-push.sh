@@ -4,7 +4,7 @@
 #
 #   plugin-push.sh <plugin dir>
 #
-# A remote is the user's opt-in, offered once at setup and never again. So this
+# A remote is the user's own choice; setup does not ask about one. So this
 # script has exactly two behaviors: with a remote it pushes and says so in one
 # line; without one it does nothing and says nothing. It NEVER asks for a
 # remote to be added — nagging for a backup the human already declined is the
