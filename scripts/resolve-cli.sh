@@ -20,6 +20,14 @@
 # marker, `bin/.retroloop-bin`, which sits beside the shipped command and which
 # step 1 looks for before it accepts a hit.
 #
+# And step 1 walks PATH itself rather than asking the shell "which retroloop?".
+# The shell answers with the FIRST one, which is almost always the shipped
+# command, because Claude Code puts the plugin's bin directory near the front.
+# Skipping that single answer would end the rung there and never see a user's
+# own `retroloop` a couple of entries later — which is the answer that outranks
+# everything. So the rung is every PATH entry, in order, and the first one
+# holding a `retroloop` that is not the shipped command wins.
+#
 # Then there was a pointer file — a line on disk naming the install — to cover
 # the user who chose their own directory. It is gone: Retroloop now has ONE
 # root, `~/.retroloop`, and the app has one place inside it,
@@ -33,7 +41,8 @@
 # and returns 0. On a total miss RETROLOOP_CLI is empty and it returns 1.
 #
 # Resolution order, first hit wins:
-#   1 path     `retroloop` on PATH, unless it is the command this plugin ships
+#   1 path     the first `retroloop` along PATH that is not the command this
+#              plugin ships
 #   2 env      $RETROLOOP_APP, then $WATCH_REVIEW_CLI (the older spelling)
 #   3 default  <root>/apps/retroloop/apps/cli/src/bin.ts, where <root> is
 #              $RETROLOOP_HOME, else ~/.retroloop
@@ -44,10 +53,10 @@
 # `RETRO_HOME` is retired and is read nowhere: a stale one in someone's profile
 # must not be able to move the answer.
 #
-# It runs at EVERY session start, so it costs one `command -v` and a handful of
-# file tests: no network, no `git`, no `bun`. It never runs the CLI it finds —
-# it only decides what the command would be. It is safe under `set -u`,
-# `set -e` and `set -o pipefail`.
+# It runs at EVERY session start, so it costs two file tests per PATH entry and
+# a handful more: no forks, no network, no `git`, no `bun`. It never runs the
+# CLI it finds — it only decides what the command would be. It is safe under
+# `set -u`, `set -e` and `set -o pipefail`.
 
 RETROLOOP_CLI=()
 RETROLOOP_CLI_SOURCE=''
@@ -115,6 +124,33 @@ retroloop_cli_is_shipped() { # <path to a retroloop found on PATH>
   return 1
 }
 
+# The whole PATH rung: the first `retroloop` along PATH that is not the command
+# the plugin ships. Walked by hand, because `command -v` returns only the first
+# `retroloop` of any kind and the shipped one is nearly always it — asking the
+# shell and then refusing its answer would end the rung on the shipped command
+# and never reach a user's own. Fills RETROLOOP_CLI and returns 0 on a hit.
+retroloop_cli_on_path() {
+  local IFS=':' entry candidate found
+  local -a entries=()
+  read -r -a entries <<<"${PATH:-}"
+  for entry in ${entries[@]+"${entries[@]}"}; do
+    # An empty PATH entry means the working directory, as it does to the shell.
+    [ -n "$entry" ] || entry='.'
+    candidate="$entry/retroloop"
+    [ -f "$candidate" ] && [ -x "$candidate" ] || continue
+    retroloop_cli_is_shipped "$candidate" && continue
+    RETROLOOP_CLI=("$candidate")
+    return 0
+  done
+
+  # The shell's own answer as a backstop, for anything the walk cannot see.
+  found="$(command -v retroloop 2>/dev/null)" || return 1
+  [ -n "$found" ] || return 1
+  retroloop_cli_is_shipped "$found" && return 1
+  RETROLOOP_CLI=("$found")
+  return 0
+}
+
 # The root everything Retroloop keeps lives under: $RETROLOOP_HOME, else
 # ~/.retroloop. Callers that print the root to a human want the tilde back, so
 # this returns the expanded path and the printing is theirs.
@@ -126,7 +162,6 @@ retroloop_root() {
 retroloop_resolve_cli() {
   local repo_root="${1:-}"
   local root="${RETROLOOP_HOME:-${HOME:-}/.retroloop}"
-  local found=''
 
   RETROLOOP_CLI=()
   RETROLOOP_CLI_SOURCE=''
@@ -134,9 +169,9 @@ retroloop_resolve_cli() {
   # 1 · an installed binary is the user's own answer; nothing outranks it —
   # except the command this plugin ships, which is this file's own caller and
   # is always on PATH. Answering with that one is a command that runs itself.
-  if found="$(command -v retroloop 2>/dev/null)" && [ -n "$found" ] &&
-    ! retroloop_cli_is_shipped "$found"; then
-    RETROLOOP_CLI=("$found")
+  # So the walk steps over the shipped command and keeps going down PATH; only
+  # a PATH with no other `retroloop` on it falls through to step 2.
+  if retroloop_cli_on_path; then
     RETROLOOP_CLI_SOURCE=path
     return 0
   fi

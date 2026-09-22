@@ -62,6 +62,14 @@ is what brings it in. If you are working inside the Retroloop app's own
 checkout, the fallback below runs the same CLI meanwhile; otherwise say the
 sentence above, naming a restart of the session instead of setup.
 
+**The shipped command always runs the installed app** — the one setup put
+under the Retroloop root — and never a checkout you happen to be standing in.
+For filing a real retrospective that is what you want, and it is a change worth
+knowing: an agent inside the Retroloop app's own checkout used to fall back to
+that checkout's CLI, and now it does not. **Work on the app's own code** has to
+ask for the checkout on purpose, with the `bun run --silent retroloop` form
+below, run from the checkout root.
+
 **The fallback — you are inside the Retroloop app repository.** Find the root
 by walking **every** ancestor of your working directory, not just the nearest
 one: at each level, read a `package.json` if there is one, and stop at the first
@@ -81,10 +89,10 @@ every time — most harnesses reset the working directory between calls, so a
 cd /path/to/the/retroloop-app/repo && bun run --silent retroloop up --json
 ```
 
-And when you run it this way, **give `--file` and `--out` absolute paths**. A relative one
-resolves against the repository root you just moved into, not against wherever
-you wrote the file, which is how a draft goes missing between writing it and
-submitting it.
+And when you run it this way, **give `--file` and `--out` absolute paths**. A
+relative one resolves against the repository root you just moved into, not
+against wherever you wrote the file, which is how a draft goes missing between
+writing it and submitting it.
 
 `--silent` matters: without it bun echoes the command onto **stderr**, which is
 where the error JSON lives. This form is the only exception to "every command is
@@ -120,9 +128,10 @@ the plugin ships.
 **These are all the codes Retroloop itself returns.** A code outside this list did
 not come from Retroloop: either your shell never ran it, or the shipped command
 found no app to run (`127` covers both — go back to §0, which tells them apart
-by the line that came with it), or something killed the process. Neither is a condition to improvise around. A code that *is*
-on this list but makes no sense where you got it is a bug in Retroloop: report the
-code and the error document to the human and stop.
+by the line that came with it), or something killed the process. None of those
+is a condition to improvise around. A code that *is* on this list but makes no
+sense where you got it is a bug in Retroloop: report the code and the error
+document to the human and stop.
 
 `0` ok · `1` unclassified — the bug case just described · `2` you sent something
 wrong (bad flags, or a revision file that failed validation) · `3` not found ·

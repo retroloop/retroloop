@@ -259,19 +259,6 @@ themselves, or refuse the edit, print that one line, say it goes in
 `permissions.allow` in `~/.claude/settings.json`, and move on. With no remote
 there is nothing to push and nothing to allow.
 
-**One rule covers every Retroloop call, and it is worth offering.** Retrospectives
-run through the short `retroloop` command the plugin ships, and without a rule
-the user is asked to approve each one. Name this rule, say it allows Retroloop's
-own command and nothing else, and add it to `~/.claude/settings.json` only on
-their yes — a `permissions.allow` entry reading:
-
-```
-Bash(retroloop:*)
-```
-
-On a no, print the line and say where it goes, exactly as above. Nothing in
-setup depends on it; what it saves is a question per command, later.
-
 ## 6 · Register the plugin with Claude Code
 
 ```

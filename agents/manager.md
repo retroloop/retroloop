@@ -42,12 +42,15 @@ names it, so look it up rather than guessing.)
 
 ## Running the CLI
 
-Run the `retroloop` CLI the way `skills/review` § 0 describes — `retroloop
-<args> --json` when it is on PATH, otherwise
-`cd ~/.retroloop/apps/retroloop && bun run --silent retroloop <args> --json`
-(the app checkout stays under `~/.retroloop` even when `<root>` is elsewhere;
-`--home <root>` is what points the CLI at the right store). Settle which world
-you are in once, at your first start, and write it in your notes.
+Run the CLI as `retroloop <args> --json`, exactly as written below: the plugin
+ships the command, so it is on the search path of every session and there is
+nothing to change into first. Carry `--home <root>` on every call when
+`<root>` is not `~/.retroloop` — that is what points the CLI at the right
+store. If the command is genuinely not found, this session predates the plugin
+version that ships it and a restart brings it in; `skills/review` § 0 holds the
+fallback for the meantime and is the one place any of it is described. Do not
+copy a longer form into a worker's prompt: the short command is what every
+worker gets too.
 
 The commands that are yours:
 
