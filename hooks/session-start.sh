@@ -39,8 +39,16 @@ if [ -f "$_rl_resolver" ]; then
   retroloop_resolve_cli && found=1
 fi
 
+# Two different sentences, because they are two different situations and only
+# one of them is answered by running setup. When the app is installed and Bun
+# is what cannot be found, setup already succeeded for this person: sending
+# them back through it fixes nothing and hides the cause.
 if [ "$found" -ne 1 ]; then
-  echo 'Retroloop is installed but not set up — run /retroloop:setup'
+  if [ "${RETROLOOP_CLI_MISS:-}" = 'no-bun' ]; then
+    echo 'Retroloop is set up, but Bun is missing — install Bun, or set RETROLOOP_BUN to the bun program'
+  else
+    echo 'Retroloop is installed but not set up — run /retroloop:setup'
+  fi
   exit 0
 fi
 

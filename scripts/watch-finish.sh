@@ -100,6 +100,11 @@ Environment — the shared resolver (scripts/resolve-cli.sh), first hit wins:
      WATCH_REVIEW_CLI   the older spelling: a whole command string
   3  <root>/apps/retroloop, where <root> is $RETROLOOP_HOME, else ~/.retroloop
   4  this repo's apps/cli/src/bin.ts
+
+Answers 2 to 4 are run by Bun, which the resolver finds itself — the shell's
+own lookup, Bun's install folder, then the Homebrew and system folders — so
+nothing has to be on PATH. RETROLOOP_BUN names the bun program outright, for a
+Bun none of those places covers.
 USAGE
   exit 2
 }
@@ -117,9 +122,15 @@ RESOLVER="${BASH_SOURCE[0]%/*}/resolve-cli.sh"
 # shellcheck source=resolve-cli.sh
 . "$RESOLVER"
 
+# Two refusals, because they are two different machines. An app installed with
+# no Bun to run it is not a machine that needs setup run again — setup already
+# succeeded there — so that one names Bun and stops the failure travelling.
 require_cli() {
-  retroloop_resolve_cli "$ROOT" ||
-    refuse "no retroloop CLI — nothing on PATH, no usable RETROLOOP_APP, no checkout at $(retroloop_root)/apps/retroloop. Run /retroloop:setup, or set RETROLOOP_APP to the app checkout."
+  retroloop_resolve_cli "$ROOT" && return 0
+  if [ "${RETROLOOP_CLI_MISS:-}" = 'no-bun' ]; then
+    refuse "Bun is missing — the app is at $(retroloop_root)/apps/retroloop and there is no Bun here to run it with. This watch looks for Bun itself, so nothing needs to be on PATH: install Bun, or set RETROLOOP_BUN to the bun program."
+  fi
+  refuse "no retroloop CLI — nothing on PATH, no usable RETROLOOP_APP, no checkout at $(retroloop_root)/apps/retroloop. Run /retroloop:setup, or set RETROLOOP_APP to the app checkout."
 }
 
 # ── one wait ─────────────────────────────────────────────────────────────────
@@ -263,6 +274,8 @@ nap() { # <seconds>
 where() {
   if retroloop_resolve_cli "$ROOT"; then
     printf 'cli:              %s  (%s)\n' "${RETROLOOP_CLI[*]}" "$RETROLOOP_CLI_SOURCE"
+  elif [ "${RETROLOOP_CLI_MISS:-}" = 'no-bun' ]; then
+    printf 'cli:              <none — Bun is missing; install Bun, or set RETROLOOP_BUN to the bun program>\n'
   else
     printf 'cli:              <none — put retroloop on PATH, set RETROLOOP_APP, or run /retroloop:setup>\n'
   fi

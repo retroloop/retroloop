@@ -109,6 +109,11 @@ Environment — the shared resolver (scripts/resolve-cli.sh), first hit wins:
   3  <root>/apps/retroloop, where <root> is $RETROLOOP_HOME, else ~/.retroloop
   4  this repo's apps/cli/src/bin.ts
 
+Answers 2 to 4 are run by Bun, which the resolver finds itself — the shell's
+own lookup, Bun's install folder, then the Homebrew and system folders — so
+nothing has to be on PATH. RETROLOOP_BUN names the bun program outright, for a
+Bun none of those places covers.
+
 `where` prints what each of these is worth right now.
 USAGE
   exit 2
@@ -128,9 +133,16 @@ RESOLVER="${BASH_SOURCE[0]%/*}/resolve-cli.sh"
 # shellcheck source=resolve-cli.sh
 . "$RESOLVER"
 
+# The refusal a human actually reads when the watch will not start, and it has
+# to name the right thing. The app installed with no Bun to run it is not a
+# machine that needs setup run again; it is a machine where Bun is hiding from
+# the kind of shell this script is.
 require_cli() {
-  retroloop_resolve_cli "$ROOT" ||
-    refuse "no retroloop CLI — nothing on PATH, no usable RETROLOOP_APP, no checkout at $(retroloop_root)/apps/retroloop. Run /retroloop:setup, or set RETROLOOP_APP to the app checkout."
+  retroloop_resolve_cli "$ROOT" && return 0
+  if [[ "${RETROLOOP_CLI_MISS:-}" == 'no-bun' ]]; then
+    refuse "Bun is missing — the app is at $(retroloop_root)/apps/retroloop and there is no Bun here to run it with. This watch looks for Bun itself, so nothing needs to be on PATH: install Bun, or set RETROLOOP_BUN to the bun program."
+  fi
+  refuse "no retroloop CLI — nothing on PATH, no usable RETROLOOP_APP, no checkout at $(retroloop_root)/apps/retroloop. Run /retroloop:setup, or set RETROLOOP_APP to the app checkout."
 }
 
 # ── the wait's own arguments ──────────────────────────────────────────────────
@@ -178,12 +190,17 @@ arm() {
 # ── print ─────────────────────────────────────────────────────────────────────
 # The dry run: exactly what arming would exec, on one line, waiting on nothing.
 # It resolves the CLI when it can and says so when it cannot, so the argv can be
-# read in an environment where no app is installed at all.
+# read in an environment where no app is installed at all — and it tells the two
+# misses apart like every other line here, because someone reading this is
+# working out why a watch will not start and "no retroloop CLI" would send them
+# to setup when the CLI is installed and Bun is what is hiding.
 print_argv() {
   local retro="$1" timeout="$2"
   build_wait_argv "$retro" "$timeout"
   if retroloop_resolve_cli "$ROOT"; then
     printf '%s %s\n' "${RETROLOOP_CLI[*]}" "${WAIT_ARGV[*]}"
+  elif [[ "${RETROLOOP_CLI_MISS:-}" == 'no-bun' ]]; then
+    printf '<no retroloop CLI — Bun is missing> %s\n' "${WAIT_ARGV[*]}"
   else
     printf '<no retroloop CLI> %s\n' "${WAIT_ARGV[*]}"
   fi
@@ -196,16 +213,22 @@ print_argv() {
 where() {
   if retroloop_resolve_cli "$ROOT"; then
     printf 'cli:              %s  (%s)\n' "${RETROLOOP_CLI[*]}" "$RETROLOOP_CLI_SOURCE"
+  elif [[ "${RETROLOOP_CLI_MISS:-}" == 'no-bun' ]]; then
+    printf 'cli:              <none — Bun is missing; install Bun, or set RETROLOOP_BUN to the bun program>\n'
   else
     printf 'cli:              <none — put retroloop on PATH, set RETROLOOP_APP, or run /retroloop:setup>\n'
   fi
 
   if [[ -n "${RETROLOOP_APP:-}" ]]; then
-    if retroloop_cli_from_hint "$RETROLOOP_APP"; then
-      printf 'RETROLOOP_APP:    %s  (%s)\n' "$RETROLOOP_APP" "${RETROLOOP_CLI[*]}"
-    else
-      printf 'RETROLOOP_APP:    [%s]  (set but unusable)\n' "$RETROLOOP_APP"
-    fi
+    # Read off a command that is allowed to fail, the way the resolver itself
+    # does it: a bare call whose answer is 1 or 2 is a failing command.
+    local hint_rc=0
+    retroloop_cli_from_hint "$RETROLOOP_APP" || hint_rc=$?
+    case "$hint_rc" in
+      0) printf 'RETROLOOP_APP:    %s  (%s)\n' "$RETROLOOP_APP" "${RETROLOOP_CLI[*]}" ;;
+      2) printf 'RETROLOOP_APP:    %s  (an app checkout, and no Bun to run it)\n' "$RETROLOOP_APP" ;;
+      *) printf 'RETROLOOP_APP:    [%s]  (set but unusable)\n' "$RETROLOOP_APP" ;;
+    esac
   fi
 
   if [[ -n "${WATCH_REVIEW_CLI:-}" ]]; then
