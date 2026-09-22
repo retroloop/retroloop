@@ -9,11 +9,12 @@ argument-hint: "<optional preferences, e.g. install directory>"
 
 You are setting up Retroloop for this user. Setup installs software, so **every
 install step asks for consent before running** — name the command, say what it
-does, then run it only on the user's yes. Walk the steps in order; at the end,
-report the checklist. If a step fails, tell the user exactly what failed and
-what to do. Step 1 is the one step that works out a route for this machine and
-proposes it before anything runs; everywhere else, run the commands as they are
-written here and never invent an install path of your own.
+does, ask through the question panel, then run it only on the user's yes. Walk
+the steps in order; at the end, report the checklist. If a step fails, tell the
+user exactly what failed and what to do. Step 1 is the one step that works out
+a route for this machine and proposes it before anything runs; everywhere else,
+run the commands as they are written here and never invent an install path of
+your own.
 
 Everything Retroloop keeps lives under one root, `~/.retroloop`: the app in
 `apps/`, the user's plugins in `plugins/`, and later the database, the session
@@ -23,6 +24,33 @@ verbatim wherever this file writes `~/.retroloop` if it is already set.
 
 If the user passed preferences as arguments (a different install directory, a
 different plugin name), honor them wherever this file names a default.
+
+**Every question goes through the question panel.** Ask with the
+`AskUserQuestion` tool, never as prose in a message: the user sees the options
+laid out and picks one, and the panel adds a free-text choice of its own, so
+never write one into the options yourself: a question whose other answer is a
+value the user types lists just the real choices, and lets the panel carry the
+rest.
+
+The panel's own shape is not yours to choose, and a question that breaks it
+never draws at all:
+
+- **Two to four written options**, each one a real choice. One option is not a
+  panel, so a question with a single obvious answer still needs a second that
+  genuinely differs — never "type your own", which is the free-text choice the
+  panel already adds by itself.
+- **A header of at most twelve characters** — the chip the panel shows above
+  the question. Each question below names its own.
+- **A label of one to five words** on every option, `(Recommended)` aside.
+  Keep the label short and put the reasoning underneath, in the description
+  line: one line, plain words, what happens if this one is chosen.
+
+Every question carries a recommendation — the option you recommend comes
+first, and its label ends with `(Recommended)`. When you are genuinely unsure
+which option is right for this user, say so in the question itself and mark
+nothing; a recommendation you do not believe is worse than none. Each question
+below is written the way the panel shows it: the header, the question
+sentence, then its options, one line of description each.
 
 ## 1 · Check what this machine already has
 
@@ -50,12 +78,20 @@ If all four answer, say so and go on to step 2:
 
 > Everything is already present. Nothing to install.
 
-If something is missing, say what is missing and what each missing one is for,
-then ask one question and nothing more:
+If something is missing, say what is missing and what each missing one is for.
+Name the tools this machine actually lacks — the question below is a shape, not
+a sentence to copy — and ask it through the question panel, and nothing more:
 
-> Bun, unzip and curl are missing. Shall I look into how to install them on this machine?
+> **<the missing tools, named> are missing. Shall I look into how to install them on this machine?**
+>
+> Header: `Install`
+>
+> - **Look into it (Recommended)** — work out the way that fits this machine and show you the commands before anything runs.
+> - **Not now** — stop here and print the list of what is missing, for you to install yourself.
 
-Do not propose a command yet, and do not install anything yet.
+With only Bun missing that reads `Bun is missing. Shall I look into how to
+install it on this machine?`; the two option lines never change. Do not propose
+a command yet, and do not install anything yet.
 
 ### On a yes, understand the machine before proposing anything
 
@@ -88,10 +124,15 @@ wrong or forbidden on a work laptop. Establish, with short read-only commands:
 Out of that look comes **one** proposal — the route that fits this machine, not
 a menu of options for the user to weigh. Write the exact commands in the order
 they run, one plain line each saying what that command does, and one sentence
-saying why this route on this machine. Then ask, through the question tool,
+saying why this route on this machine. Then ask, through the question panel,
 once, for the whole missing set — never one question per tool:
 
-> Here are the exact commands. Approve all at once, or one at a time?
+> **Approve all at once, or one at a time?**
+>
+> Header: `Approval`
+>
+> - **All at once (Recommended)** — run the commands above in order; you have seen every one of them.
+> - **One at a time** — stop for a yes before each command.
 
 On **approve all at once**, run them in order, then re-check the four tools and
 report what is now present. On **one at a time**, stop for a yes before each
@@ -138,7 +179,15 @@ environment proves nothing, because nothing Retroloop runs works that way. If
 it prints a path, there is nothing to fix. If it prints nothing, fix it in the
 way that fits this machine, the same way you chose the install route — and
 that fix goes through the same consent as an install, because it is one more
-change to someone's machine.
+change to someone's machine. Name the exact file and the exact line, then ask
+through the question panel:
+
+> **Script shells cannot find Bun. Shall I fix that?**
+>
+> Header: `Bun on path`
+>
+> - **Make the change (Recommended)** — the one line named above, in the file named above, and nothing else.
+> - **Leave it to me** — the line is printed for you instead; until it is there, Retroloop's hooks and watch scripts cannot find Bun.
 
 ## 2 · Install the Retroloop app
 
@@ -235,12 +284,41 @@ cd ~/.retroloop/plugins/my && rm -rf .git && git init -b main
 
 Check the identity git would use: `cd ~/.retroloop/plugins/my && git config
 user.name; git config user.email`. If either prints nothing, git invents one
-from the account and the machine name. Ask the user for the name and email they
-want on their own plugin's history and set them for this repository only:
+from the account and the machine name. Ask which name and email the plugin's
+own history should carry, through the question panel, and recommend whatever
+git already reports — it is the identity the user's other repositories carry:
+
+> **Which name and email should your plugin's history carry?**
+>
+> Header: `Git identity`
+>
+> - **Use this identity (Recommended)** — `<the name git reports>`, `<the email git reports>`: the identity your other repositories already use, written into this repository so it holds whatever your global one becomes later.
+> - **Follow your global identity** — nothing is written here, and every commit takes whatever `git config --global` says at the time.
+
+Both are real answers. Any other name and email is typed into the panel's own
+free-text choice.
+
+If git reports neither, there is nothing to recommend, and the question says so
+itself rather than dressing a guess up as advice. Ask this instead, through the
+same question panel:
+
+> **This machine has no git identity set, so I have nothing to recommend here. Which name and email should your plugin's history carry?**
+>
+> Header: `Git identity`
+>
+> - **Let git invent one** — git builds a name and email from your account and this machine's name, and the plugin's history carries that.
+> - **Use a neutral identity** — the history carries `me <me@localhost>` instead, so your account and this machine's name stay out of it.
+
+Then write the answer into this repository, and nowhere else — the identity git
+reports, the neutral one, or whatever came back from the free-text choice:
 
 ```
 cd ~/.retroloop/plugins/my && git config user.name "<name>" && git config user.email "<email>"
 ```
+
+On **Follow your global identity** or **Let git invent one** there is nothing
+to write: git works an author out for itself on every commit, and the plugin's
+history follows it.
 
 Then make the first commit:
 
@@ -277,9 +355,18 @@ JSON
 ```
 
 **Offer a shortcut to it, once.** The plugin is the thing the loop changes on
-the user's behalf, and a hidden folder is a poor place to go looking. Ask where
-they would like to browse it from — a folder they actually open, e.g.
-`~/Developer/my` — and link it there:
+the user's behalf, and a hidden folder is a poor place to go looking. Ask through
+the question panel:
+
+> **Where would you like to browse your plugin from?**
+>
+> Header: `Shortcut`
+>
+> - **`~/Developer/my` (Recommended)** — a folder you already open, one link away from the real thing.
+> - **No shortcut** — nothing is linked; the plugin stays at `~/.retroloop/plugins/my`.
+
+Any other folder is typed into the panel's own free-text choice. Then link it
+there:
 
 ```
 ln -s ~/.retroloop/plugins/my <the path they chose>
@@ -288,38 +375,32 @@ ln -s ~/.retroloop/plugins/my <the path they chose>
 The link is for their eyes only; every command still names the real path. If
 they would rather not have one, drop it and move on.
 
-**Offer a remote, once, and never again.** A backup of the plugin is the user's
-call. If they want one it should be a **private** repository, named whatever
-they like — `my` keeps it obvious which plugin it backs — and they run the
-command themselves:
-
-```
-gh repo create <their-user>/my --private --source ~/.retroloop/plugins/my --push
-```
-
-If they decline, that is the answer for good: nothing in Retroloop asks again,
-and the resolve lane pushes only when a remote already exists.
-
 ## 5 · Two choices, recorded in your plugin
 
-Two questions, asked through the question tool, and both answers land in one
-file the rest of Retroloop reads back. Neither is a one-time chance: the file
-is plain text, so the user can edit it by hand or run setup again.
+Two questions, and both answers land in one file the rest of Retroloop reads
+back. Neither is a one-time chance: the file is plain text, so the user can
+edit it by hand or run setup again.
 
-**1 · Where do you track issues?**
+**1 · Issue tracking.** Ask through the question panel:
 
-- **This tool only** *(default)* — the retrospective is the record, and
-  nothing leaves Retroloop.
-- **Elsewhere (GitHub, Asana, anything)** — after every finished review the
-  closing session runs the plugin's own `/my:file-issues` skill, which the
-  user adapts to their tracker, so the approved records also land where they
-  already work.
+> **Where do you track issues?**
+>
+> Header: `Tracking`
+>
+> - **This tool only (Recommended)** — the retrospective is the record, and nothing leaves Retroloop.
+> - **Elsewhere** — GitHub, Asana, anything: after every finished review the closing session runs your plugin's own `/my:file-issues` skill, which you adapt to your tracker, so the approved records land where you already work.
 
-**2 · Which model runs the manager and the tech leads?**
+**2 · The model.** Ask through the question panel:
 
-Default **Fable** — the model of the standing manager session and of each
-worker team's tech lead. Their subagents run on **Opus** unless the user says
-otherwise.
+> **Which model runs the manager and the tech leads?**
+>
+> Header: `Model`
+>
+> - **Fable (Recommended)** — the model of the standing manager session and of each worker team's tech lead.
+> - **Opus** — the heavier model on the manager and the leads as well.
+
+Their subagents run on **Opus** either way, unless the user says otherwise. Any
+other model is typed into the panel's own free-text choice.
 
 Write both answers into `~/.retroloop/plugins/my/retroloop.md`. The template
 ships that file with the defaults already in it: overwrite the values, and
@@ -354,9 +435,16 @@ is what lets it launch worker teams as background sessions. It applies only to
 sessions whose working directory is the plugin, so nothing else on the machine
 is widened by it; worker teams run from the repository the change lands in and
 rely on auto mode there. Print the rule, say that much, and ask through the
-question tool whether to keep it or remove it. On remove, delete the file and
-commit; the manager then stops at its first launch and says so. Never write
-that rule anywhere else, and never into a local settings file.
+question panel whether to keep it or remove it:
+
+> **Keep the launch rule that lets the manager start worker teams?**
+>
+> Header: `Launch rule`
+>
+> - **Keep it (Recommended)** — the manager can launch worker teams; the rule reaches only sessions running from this folder.
+> - **Remove it** — the file is deleted and committed, and the manager stops at its first launch and says so.
+
+Never write that rule anywhere else, and never into a local settings file.
 
 **Then have the plugin folder trusted, or the rule is ignored.** Claude Code
 reads a project's `permissions.allow` only in a workspace the human has
@@ -370,21 +458,6 @@ cd ~/.retroloop/plugins/my && claude
 Accept the trust dialog, then leave the session. Say exactly that, and say it
 is the one step of setup only the human can take; do not write the trust entry
 into Claude Code's own configuration yourself.
-
-**Only if the user took a remote above**, one more permission rule is worth
-adding: the resolve lane pushes the plugin through the plugin's own push
-script, and that script has to be allowed. Name the rule, ask for consent, and
-add it to `~/.claude/settings.json` only on their yes — a `permissions.allow`
-entry reading:
-
-```
-Bash(bash */scripts/plugin-push.sh */.retroloop/plugins/my)
-```
-
-Their own edit is just as good as yours. If they would rather do it
-themselves, or refuse the edit, print that one line, say it goes in
-`permissions.allow` in `~/.claude/settings.json`, and move on. With no remote
-there is nothing to push and nothing to allow.
 
 ## 6 · Register the plugin with Claude Code
 

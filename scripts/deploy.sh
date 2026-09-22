@@ -115,7 +115,7 @@ git -C "$DIR" commit -qm "$MESSAGE" ||
   die 'git commit failed — nothing staged, or a hook refused it'
 
 # ── the backup, if there is one ──────────────────────────────────────────────
-# A remote is the human's opt-in, offered once at setup. With one this pushes;
+# A remote is the human's own choice; setup does not ask. With one this pushes;
 # without one it does nothing and says nothing, and either way it cannot fail
 # the release.
 bash "$HERE/plugin-push.sh" "$DIR"
