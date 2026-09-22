@@ -44,7 +44,14 @@ fi
 . "$_rl_resolver"
 
 if ! retroloop_resolve_cli; then
-  printf "Retroloop's app is not installed on this machine — run /retroloop:setup\n" >&2
+  # The app installed and no Bun to run it is a different machine from one that
+  # never ran setup, and it gets a different sentence: setup already succeeded
+  # for that person, and running it again is not what helps them.
+  if [ "${RETROLOOP_CLI_MISS:-}" = 'no-bun' ]; then
+    printf 'Retroloop: Bun is missing — install Bun, or set RETROLOOP_BUN to the bun program\n' >&2
+  else
+    printf "Retroloop's app is not installed on this machine — run /retroloop:setup\n" >&2
+  fi
   exit 127
 fi
 
