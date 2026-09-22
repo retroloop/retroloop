@@ -7,15 +7,23 @@
 # Two rulings are pinned here.
 #
 # First: every question setup asks goes through Claude Code's question panel,
-# and is written in the file the way the panel shows it — the question
-# sentence, then its options, the recommended one first and marked
+# and is written in the file the way the panel shows it — a header chip, the
+# question sentence, then its options, the recommended one first and marked
 # "(Recommended)", one line of description each. The panel adds a free-text
 # choice of its own, so the file never writes one: an option called "something
 # else" is that free-text choice under a second name, and leaves the user two
-# ways to type one answer. Labels stay short, because the panel's label is a
-# narrow field and "(Recommended)" is exactly the part a truncation would eat.
-# A question the AI cannot honestly recommend an answer to says so in the
-# question itself instead of pretending.
+# ways to type one answer. A question the AI cannot honestly recommend an
+# answer to says so in the question itself instead of pretending.
+#
+# The shape of a panel is not ours to choose — these are the `AskUserQuestion`
+# tool's own limits, and a file that breaks them is a panel that never draws:
+#
+#   · between 2 and 4 written options; one option is not a panel, and the
+#     free-text choice the panel adds is not one of the written ones, so a
+#     second option has to be a real alternative rather than "type your own";
+#   · each option label is 1 to 5 words, with "(Recommended)" on top of that
+#     and the reasoning in the description line, not the label;
+#   · each panel names a header chip of at most 12 characters.
 #
 # Setup used to pose most of its questions as plain prose, and only a few said
 # "through the question tool" — so the user saw a wall of sentences and no
@@ -89,10 +97,20 @@ for n in $qlines; do
   nopts="$(printf '%s\n' "$opts" | grep -c '^> ' || true)"
   first="$(printf '%s\n' "$opts" | head -1)"
 
-  if [ "$nopts" -ge 1 ]; then
-    ok "the real choices are listed as options — $q"
+  if [ "$nopts" -ge 2 ] && [ "$nopts" -le 4 ]; then
+    ok "the panel has between two and four written options — $q"
   else
-    ko "the real choices are listed as options — $q" "found $nopts option lines"
+    ko "the panel has between two and four written options — $q" \
+      "found $nopts option lines; the tool takes 2 to 4"
+  fi
+
+  header="$(awk -v s="$n" 'NR > s { if ($0 !~ /^>/) exit; if ($0 ~ /^> *Header: /) print }' "$SKILL" |
+    head -1 | sed -n 's/^> *Header: `\([^`]*\)`.*/\1/p')"
+  if [ -n "$header" ] && [ "${#header}" -le 12 ]; then
+    ok "the panel names a header chip of at most twelve characters — $q"
+  else
+    ko "the panel names a header chip of at most twelve characters — $q" \
+      "header is \"$header\" (${#header} characters)"
   fi
 
   freetext="$(printf '%s\n' "$opts" | grep -iE '^> +- \*\*((some|any)(thing|where) else|other)\b' || true)"
@@ -102,12 +120,13 @@ for n in $qlines; do
     ko "no option repeats the free-text choice the panel adds by itself — $q" "$freetext"
   fi
 
-  long="$(printf '%s\n' "$opts" | sed -n 's/^> *- \*\*\([^*]*\)\*\*.*/\1/p' | awk 'length > 32')"
+  long="$(printf '%s\n' "$opts" | sed -n 's/^> *- \*\*\([^*]*\)\*\*.*/\1/p' |
+    sed 's/ *(Recommended)//' | awk 'NF < 1 || NF > 5')"
   if [ -z "$long" ]; then
-    ok "every option label is short enough for the panel to show it whole — $q"
+    ok "every option label is one to five words, as the tool takes them — $q"
   else
-    ko "every option label is short enough for the panel to show it whole — $q" \
-      "over 32 characters: $long"
+    ko "every option label is one to five words, as the tool takes them — $q" \
+      "not one to five words: $long"
   fi
 
   if printf '%s' "$first" | grep -q '(Recommended)' ||
