@@ -263,6 +263,10 @@ retroloop_root() {
 retroloop_resolve_cli() {
   local repo_root="${1:-}"
   local root="${RETROLOOP_HOME:-${HOME:-}/.retroloop}"
+  # The hint's answer, read off a command that is ALLOWED to fail: under
+  # `set -e` a bare call that returns 2 ends the caller's shell right here,
+  # and the rungs below would never be walked.
+  local hint_rc=0
   # An app was found somewhere and there was no Bun to run it with. It does not
   # end the walk — a later rung may answer with something that needs no Bun —
   # but if nothing else answers, this is what the miss is called.
@@ -285,8 +289,9 @@ retroloop_resolve_cli() {
 
   # 2 · the environment, for this shell only.
   if [ -n "${RETROLOOP_APP:-}" ]; then
-    retroloop_cli_from_hint "$RETROLOOP_APP"
-    case "$?" in
+    hint_rc=0
+    retroloop_cli_from_hint "$RETROLOOP_APP" || hint_rc=$?
+    case "$hint_rc" in
       0)
         RETROLOOP_CLI_SOURCE=env
         return 0

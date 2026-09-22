@@ -190,12 +190,17 @@ arm() {
 # ── print ─────────────────────────────────────────────────────────────────────
 # The dry run: exactly what arming would exec, on one line, waiting on nothing.
 # It resolves the CLI when it can and says so when it cannot, so the argv can be
-# read in an environment where no app is installed at all.
+# read in an environment where no app is installed at all — and it tells the two
+# misses apart like every other line here, because someone reading this is
+# working out why a watch will not start and "no retroloop CLI" would send them
+# to setup when the CLI is installed and Bun is what is hiding.
 print_argv() {
   local retro="$1" timeout="$2"
   build_wait_argv "$retro" "$timeout"
   if retroloop_resolve_cli "$ROOT"; then
     printf '%s %s\n' "${RETROLOOP_CLI[*]}" "${WAIT_ARGV[*]}"
+  elif [[ "${RETROLOOP_CLI_MISS:-}" == 'no-bun' ]]; then
+    printf '<no retroloop CLI — Bun is missing> %s\n' "${WAIT_ARGV[*]}"
   else
     printf '<no retroloop CLI> %s\n' "${WAIT_ARGV[*]}"
   fi
@@ -215,8 +220,11 @@ where() {
   fi
 
   if [[ -n "${RETROLOOP_APP:-}" ]]; then
-    retroloop_cli_from_hint "$RETROLOOP_APP"
-    case "$?" in
+    # Read off a command that is allowed to fail, the way the resolver itself
+    # does it: a bare call whose answer is 1 or 2 is a failing command.
+    local hint_rc=0
+    retroloop_cli_from_hint "$RETROLOOP_APP" || hint_rc=$?
+    case "$hint_rc" in
       0) printf 'RETROLOOP_APP:    %s  (%s)\n' "$RETROLOOP_APP" "${RETROLOOP_CLI[*]}" ;;
       2) printf 'RETROLOOP_APP:    %s  (an app checkout, and no Bun to run it)\n' "$RETROLOOP_APP" ;;
       *) printf 'RETROLOOP_APP:    [%s]  (set but unusable)\n' "$RETROLOOP_APP" ;;
