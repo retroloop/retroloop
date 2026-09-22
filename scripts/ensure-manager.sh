@@ -41,7 +41,12 @@ set -u
 # pins every `--name` that persona prints). Only the manager's name is ever
 # matched by this script — managers(), below, looks for nobody else.
 MANAGER_NAME='retroloop-manager'
-DEFAULT_MODEL='fable'
+
+# The model the manager runs on when the plugin's note names none. Opus,
+# because every account can run it — Fable is the top-tier model and many
+# corporate accounts do not have it, so it is a choice the human makes and
+# never the one they fall back to.
+DEFAULT_MODEL='opus'
 
 # How long a caller that loses the race waits for the winner, how old a lock
 # has to be before it is assumed abandoned, and how long a launch is given to
@@ -233,7 +238,7 @@ lock_is_stale() {
 # ── the launch, and the resume ───────────────────────────────────────────────
 # The model is the human's choice, recorded at setup in the plugin's own note
 # as plain lines. A missing file or a missing line is not a problem worth
-# stopping for: the default is the manager's model.
+# stopping for: DEFAULT_MODEL above is what the manager runs on instead.
 read_model() {
   local note="$PLUGIN_DIR/retroloop.md" model=''
   if [ -f "$note" ]; then

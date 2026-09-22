@@ -396,8 +396,8 @@ edit it by hand or run setup again.
 >
 > Header: `Model`
 >
-> - **Fable (Recommended)** — the model of the standing manager session and of each worker team's tech lead.
-> - **Opus** — the heavier model on the manager and the leads as well.
+> - **Opus (Recommended)** — available on every account, corporate ones included, and it runs the standing manager session and each worker team's tech lead.
+> - **Fable** — the top-tier model, only where the account has it.
 
 Their subagents run on **Opus** either way, unless the user says otherwise. Any
 other model is typed into the panel's own free-text choice.
@@ -412,7 +412,7 @@ keep the shape exactly as it is — plain lines, one per choice.
 Choices recorded by /retroloop:setup. Plain lines; edit them by hand or run setup again.
 
 tracking: this tool only
-model: fable
+model: opus
 subagent model: opus
 ```
 
