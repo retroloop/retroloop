@@ -15,6 +15,14 @@
 # follow from it: Bun called by its full path after a mid-run install (including
 # the check that a script shell can find it), and the review page built right
 # after the app's dependencies.
+#
+# A later round adds the cases that pin the probes themselves, because a probe
+# that lies is worse than no probe: the script-shell check must inherit this
+# session's environment rather than wipe it (a wiped environment reports Bun
+# missing on a healthy Mac), the full path after a mid-run install must be the
+# one the install actually produced rather than one spelling assumed for every
+# route, the elevation look must start with the passive signals, and the file's
+# own opening rules must not forbid the route step one exists to work out.
 
 set -uo pipefail
 
@@ -39,12 +47,23 @@ readme_has() { if printf '%s' "$READMEFLAT" | grep -qE -- "$2"; then ok "$1"; el
 [ -f "$SKILL" ] || { printf 'FAIL no skill at %s\n' "$SKILL"; exit 1; }
 [ -f "$README" ] || { printf 'FAIL no readme at %s\n' "$README"; exit 1; }
 
+# --- 0 · the file's own rules do not forbid what step one does
+
+lacks 'the preamble no longer forbids the route step one works out' \
+  'never improvise an alternative install path'
+has 'the preamble says step 1 is the step that works out a route' \
+  'Step 1 is the one step that works out a route'
+has 'every other step runs the commands as written' \
+  'run the commands as they are written here'
+
 # --- 1 · everything setup's own commands need is checked, before anything changes
 
 has 'the step checks all four tools in one pass' \
   'bun --version git --version unzip -v curl --version'
 has 'all four are named as what setup itself needs' \
   'Setup needs four tools'
+has 'unzip is named as the installer.s need, not setup.s own' \
+  'only matters if Bun has to be installed'
 has 'the check happens before anything is touched' \
   'Check all four before touching anything'
 has 'the step only looks, so setup is safe to run again' \
@@ -71,6 +90,12 @@ has 'the package manager is established, not assumed' \
   'package manager that is actually present'
 has 'usable elevation is established without a blocking prompt' \
   'Never run a command that can block on a password prompt'
+has 'the passive signals of elevation come first' \
+  'start with what is passive'
+has 'the sudo probe is left until last' \
+  'Leave `sudo -n true` until last'
+has 'a sudo attempt is not free on a managed machine' \
+  'logged and mailed to the administrator'
 has 'the corporate or managed machine is named' \
   'corporate or managed machine'
 has 'the managed signals are named' \
@@ -114,14 +139,24 @@ has 'setup can be run again and picks up where it left off' \
 
 has 'a mid-run Bun install does not put bun on the path' \
   'does not make the word `bun` work mid-run'
-has 'the rest of the run calls Bun by its full installed location' \
+has 'the bare word is tried first, so no substitution is invented' \
+  'ask the bare word first'
+has 'the full path is whichever one the install actually produced' \
+  'the full path the install actually produced'
+has 'Bun.s own installer.s path is given as the example it is' \
   'BUN_INSTALL:-\$HOME/\.bun\}/bin/bun'
 has 'a script shell is checked for Bun too' \
-  'non-interactive'
+  'check that a script shell finds it too'
 has 'the script-shell check is a command, not a hope' \
   "bash -c 'command -v bun'"
+lacks 'the script-shell check does not wipe the environment first' \
+  'env -i'
+has 'the script shell inherits this session.s environment' \
+  'inherits this session.s environment'
 has 'a script shell that cannot find Bun is fixed to fit this machine' \
   'fix it in the way that fits this machine'
+has 'that fix asks for consent like any other change to the machine' \
+  'goes through the same consent as an install'
 has 'the reason is that hooks and watch scripts run in that shell' \
   'hooks and watch scripts run in exactly that kind of shell'
 
@@ -138,6 +173,12 @@ readme_has 'the front page names unzip and curl among the prerequisites' \
   '`unzip` and `curl`'
 readme_has 'the front page says setup checks and offers to install on a yes' \
   'only on your yes'
+readme_has 'the front page says git on macOS may come back to you' \
+  'click through'
+readme_has 'the front page keeps the commands for the do-it-yourself reader' \
+  'xcode-select --install'
+readme_has 'the front page keeps Bun.s own install line too' \
+  'https://bun\.sh/install'
 
 printf '\n%d passed, %d failed\n' "$pass" "$fail"
 [ "$fail" -eq 0 ]
