@@ -30,15 +30,27 @@ different plugin name), honor them wherever this file names a default.
 laid out and picks one, and the panel adds a free-text choice of its own, so
 never write one into the options yourself: a question whose other answer is a
 value the user types lists just the real choices, and lets the panel carry the
-rest. Every question carries a recommendation — the option you recommend comes
-first, and its label ends with `(Recommended)`. Keep the label short, a few
-words and that marker, and put the explanation in the description line under
-it; the panel's label is a narrow field, and what runs past the end of it is
-not shown. When you are genuinely unsure which option is right for this user,
-say so in the question itself and mark nothing; a recommendation you do not
-believe is worse than none. Each question below is written the way the panel
-shows it: the question sentence, then its options, one line of description
-each.
+rest.
+
+The panel's own shape is not yours to choose, and a question that breaks it
+never draws at all:
+
+- **Two to four written options**, each one a real choice. One option is not a
+  panel, so a question with a single obvious answer still needs a second that
+  genuinely differs — never "type your own", which is the free-text choice the
+  panel already adds by itself.
+- **A header of at most twelve characters** — the chip the panel shows above
+  the question. Each question below names its own.
+- **A label of one to five words** on every option, `(Recommended)` aside.
+  Keep the label short and put the reasoning underneath, in the description
+  line: one line, plain words, what happens if this one is chosen.
+
+Every question carries a recommendation — the option you recommend comes
+first, and its label ends with `(Recommended)`. When you are genuinely unsure
+which option is right for this user, say so in the question itself and mark
+nothing; a recommendation you do not believe is worse than none. Each question
+below is written the way the panel shows it: the header, the question
+sentence, then its options, one line of description each.
 
 ## 1 · Check what this machine already has
 
@@ -71,6 +83,8 @@ Name the tools this machine actually lacks — the question below is a shape, no
 a sentence to copy — and ask it through the question panel, and nothing more:
 
 > **<the missing tools, named> are missing. Shall I look into how to install them on this machine?**
+>
+> Header: `Install`
 >
 > - **Look into it (Recommended)** — work out the way that fits this machine and show you the commands before anything runs.
 > - **Not now** — stop here and print the list of what is missing, for you to install yourself.
@@ -114,6 +128,8 @@ saying why this route on this machine. Then ask, through the question panel,
 once, for the whole missing set — never one question per tool:
 
 > **Approve all at once, or one at a time?**
+>
+> Header: `Approval`
 >
 > - **All at once (Recommended)** — run the commands above in order; you have seen every one of them.
 > - **One at a time** — stop for a yes before each command.
@@ -167,6 +183,8 @@ change to someone's machine. Name the exact file and the exact line, then ask
 through the question panel:
 
 > **Script shells cannot find Bun. Shall I fix that?**
+>
+> Header: `Bun on path`
 >
 > - **Make the change (Recommended)** — the one line named above, in the file named above, and nothing else.
 > - **Leave it to me** — the line is printed for you instead; until it is there, Retroloop's hooks and watch scripts cannot find Bun.
@@ -272,10 +290,13 @@ git already reports — it is the identity the user's other repositories carry:
 
 > **Which name and email should your plugin's history carry?**
 >
-> - **Use this identity (Recommended)** — `<the name git reports>`, `<the email git reports>`: the identity your other repositories already use.
+> Header: `Git identity`
+>
+> - **Use this identity (Recommended)** — `<the name git reports>`, `<the email git reports>`: the identity your other repositories already use, written into this repository so it holds whatever your global one becomes later.
+> - **Follow your global identity** — nothing is written here, and every commit takes whatever `git config --global` says at the time.
 
-That is the only option to write. Any other name and email is typed into the
-panel's own free-text choice.
+Both are real answers. Any other name and email is typed into the panel's own
+free-text choice.
 
 If git reports neither, there is nothing to recommend, and the question says so
 itself rather than dressing a guess up as advice. Ask this instead, through the
@@ -283,13 +304,21 @@ same question panel:
 
 > **This machine has no git identity set, so I have nothing to recommend here. Which name and email should your plugin's history carry?**
 >
+> Header: `Git identity`
+>
 > - **Let git invent one** — git builds a name and email from your account and this machine's name, and the plugin's history carries that.
+> - **Use a neutral identity** — the history carries `me <me@localhost>` instead, so your account and this machine's name stay out of it.
 
-Either way, set the answer for this repository only:
+Then write the answer into this repository, and nowhere else — the identity git
+reports, the neutral one, or whatever came back from the free-text choice:
 
 ```
 cd ~/.retroloop/plugins/my && git config user.name "<name>" && git config user.email "<email>"
 ```
+
+On **Follow your global identity** or **Let git invent one** there is nothing
+to write: git works an author out for itself on every commit, and the plugin's
+history follows it.
 
 Then make the first commit:
 
@@ -331,6 +360,8 @@ the question panel:
 
 > **Where would you like to browse your plugin from?**
 >
+> Header: `Shortcut`
+>
 > - **`~/Developer/my` (Recommended)** — a folder you already open, one link away from the real thing.
 > - **No shortcut** — nothing is linked; the plugin stays at `~/.retroloop/plugins/my`.
 
@@ -354,12 +385,16 @@ edit it by hand or run setup again.
 
 > **Where do you track issues?**
 >
+> Header: `Tracking`
+>
 > - **This tool only (Recommended)** — the retrospective is the record, and nothing leaves Retroloop.
 > - **Elsewhere** — GitHub, Asana, anything: after every finished review the closing session runs your plugin's own `/my:file-issues` skill, which you adapt to your tracker, so the approved records land where you already work.
 
 **2 · The model.** Ask through the question panel:
 
 > **Which model runs the manager and the tech leads?**
+>
+> Header: `Model`
 >
 > - **Fable (Recommended)** — the model of the standing manager session and of each worker team's tech lead.
 > - **Opus** — the heavier model on the manager and the leads as well.
@@ -403,6 +438,8 @@ rely on auto mode there. Print the rule, say that much, and ask through the
 question panel whether to keep it or remove it:
 
 > **Keep the launch rule that lets the manager start worker teams?**
+>
+> Header: `Launch rule`
 >
 > - **Keep it (Recommended)** — the manager can launch worker teams; the rule reaches only sessions running from this folder.
 > - **Remove it** — the file is deleted and committed, and the manager stops at its first launch and says so.
