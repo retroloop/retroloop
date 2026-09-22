@@ -240,6 +240,7 @@ expect_contains 'stderr points at setup' "$ERR" '/retroloop:setup'
 run_watch 3 --print
 expect_eq 'the dry run still exits 0' "$RC" '0'
 expect_contains 'the dry run still prints the argv' "$OUT" "$PRINT_TAIL"
+expect_contains 'and says there is no CLI at all' "$OUT" '<no retroloop CLI>'
 end
 
 begin W9 'the app is installed but Bun is missing — the refusal names Bun, not setup'
@@ -258,6 +259,22 @@ run_watch where
 expect_contains 'where names Bun too' "$OUT" 'Bun is missing'
 end
 
+# ── W10 · the dry run tells the two misses apart as well ─────────────────────
+# Every other line this script prints learned the difference between "no
+# Retroloop" and "no Bun". The dry run is read by someone working out why a
+# watch will not start, so "no retroloop CLI" on a machine where the CLI is
+# installed and Bun is what is hiding sends them to exactly the wrong place.
+begin W10 'the dry run on a machine with the app and no Bun names Bun, not the CLI'
+new_sandbox
+SB_PATH="$SB/nowhere:$BASE_PATH"
+mkdir -p "$SB/home/.retroloop/apps/retroloop/apps/cli/src"
+: >"$SB/home/.retroloop/apps/retroloop/apps/cli/src/bin.ts"
+run_watch 3 --print
+expect_eq 'exit' "$RC" '0'
+expect_contains 'the argv is still printed in full' "$OUT" "$PRINT_TAIL"
+expect_contains 'and it names Bun' "$OUT" 'Bun is missing'
+end
+
 begin W8 'a bad retro id is refused before anything is armed'
 new_sandbox
 run_watch not-a-number
@@ -267,7 +284,7 @@ expect_eq 'nothing armed' "$(wc -l <"$SB/retroloop.calls" | tr -d ' ')" '0'
 end
 
 # ── verdict ──────────────────────────────────────────────────────────────────
-total=9
+total=10
 n_failed=0
 for _ in $FAILED_IDS; do n_failed=$((n_failed + 1)); done
 n_passed=$((total - n_failed))

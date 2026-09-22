@@ -32,7 +32,11 @@
 # Four probes, one per surface:
 #   run_hook       runs hooks/session-start.sh and captures its one line
 #   run_resolver   sources scripts/resolve-cli.sh in a subshell and reports
-#                  RETROLOOP_CLI_SOURCE + RETROLOOP_CLI
+#                  RETROLOOP_CLI_SOURCE + RETROLOOP_CLI; RL02_REPO_ROOT is the
+#                  repo root a caller passes, which is the resolver's last rung
+#   run_resolver_strict  the same, under `set -euo pipefail` and called as a
+#                  bare command, which is the only way the errexit promise in
+#                  the resolver's header can be tested at all
 #   run_where      runs scripts/watch-review.sh where
 #   run_shipped    runs the command the plugin ships in bin/, found by name on
 #                  a PATH that carries the plugin's own bin directory — which
@@ -235,7 +239,7 @@ run_resolver() { # [VAR=VALUE ...]
     set -uo pipefail
     [ -f "$1" ] || exit 3
     . "$1"
-    if retroloop_resolve_cli; then
+    if retroloop_resolve_cli "${RL02_REPO_ROOT:-}"; then
       printf "%s\n" "$RETROLOOP_CLI_SOURCE"
       printf "%s\n" ${RETROLOOP_CLI[@]+"${RETROLOOP_CLI[@]}"}
       exit 0
@@ -270,6 +274,33 @@ expect_resolution() { # <source> <cli>
 
 expect_resolver_miss() {
   [ "$RES_RC" -ne 0 ] || miss "resolver: resolved to [$RES_CLI] ($RES_SOURCE) — expected a miss"
+}
+
+# The same resolver, sourced under `set -euo pipefail` and called as a BARE
+# command rather than inside an `if`. The distinction is the whole point: a
+# call in a condition switches errexit off for everything the function does, so
+# it can never see this. The file's header promises the resolver is safe under
+# `set -e`; a rung that reads an exit status by letting a command fail breaks
+# that promise, and the run then dies where the rung is, with no output at all
+# and later rungs never walked.
+run_resolver_strict() { # [VAR=VALUE ...]
+  local out
+  out="$(env -i HOME="$SB/home" PATH="$PATH_PREFIX$SB/bin:$BASE_PATH" RETROLOOP_BUN_DIRS="$BUN_DIRS" "$@" bash -c '
+    set -euo pipefail
+    [ -f "$1" ] || exit 3
+    . "$1"
+    retroloop_resolve_cli "${RL02_REPO_ROOT:-}"
+    printf "%s\n" "$RETROLOOP_CLI_SOURCE"
+    printf "%s\n" ${RETROLOOP_CLI[@]+"${RETROLOOP_CLI[@]}"}
+  ' rl02-probe "$RESOLVER" 2>/dev/null)"
+  RES_RC=$?
+  RES_SOURCE=''
+  RES_CLI=''
+  RES_MISS=''
+  if [ "$RES_RC" -eq 0 ]; then
+    RES_SOURCE="$(printf '%s\n' "$out" | sed -n '1p')"
+    RES_CLI="$(printf '%s\n' "$out" | sed -n '2,$p' | tr '\n' ' ' | sed 's/[[:space:]]*$//')"
+  fi
 }
 
 WHERE_OUT=''
@@ -628,13 +659,12 @@ fake_bun_at "$SB/sys/bin/bun"
 run_resolver
 expect_resolution 'default' "$SB/sys/bin/bun $SB/home/.retroloop/apps/retroloop/apps/cli/src/bin.ts"
 
+# The list is walked first hit wins, so its ORDER is part of the contract, not
+# just its membership: Homebrew on a Mac, the place a person links a program
+# into, Homebrew on Linux, then the system one.
 shipped_dirs="$(sed -n 's/^RETROLOOP_BUN_DIRS_DEFAULT=.\(.*\).$/\1/p' "$RESOLVER")"
-for d in /opt/homebrew/bin /usr/local/bin /home/linuxbrew/.linuxbrew/bin /usr/bin; do
-  case ":$shipped_dirs:" in
-    *":$d:"*) ;;
-    *) miss "the shipped folder list does not include $d: [$shipped_dirs]" ;;
-  esac
-done
+expect_eq 'the shipped folder list, in order' "$shipped_dirs" \
+  '/opt/homebrew/bin:/usr/local/bin:/home/linuxbrew/.linuxbrew/bin:/usr/bin'
 end
 
 # ── A21 · no Bun anywhere ────────────────────────────────────────────────────
@@ -659,6 +689,64 @@ expect_contains 'the shipped command names Bun' "$SHIPPED_OUT" 'Bun is missing'
 expect_contains 'and names the escape hatch' "$SHIPPED_OUT" 'RETROLOOP_BUN'
 end
 
+# ── A22 · an app the variable names, and no Bun ──────────────────────────────
+# The hint reads three ways and now answers three ways: a command, nothing
+# here, or — this case — a real app checkout that cannot be run because there
+# is no Bun anywhere. It is the arm that decides which sentence a human gets,
+# and "set but unusable" would be the wrong one: the variable is right, the app
+# is there, and Bun is what is hiding.
+begin A22 'RETROLOOP_APP names a real checkout and no Bun exists — the miss names Bun'
+new_sandbox
+run_resolver RETROLOOP_APP="$SB/checkout"
+expect_resolver_miss
+expect_eq 'the miss says Bun is what is missing' "$RES_MISS" 'no-bun'
+run_hook RETROLOOP_APP="$SB/checkout"
+expect_hook "$BUN_MISSING"
+run_where RETROLOOP_APP="$SB/checkout"
+expect_contains 'where calls it an app with no Bun' "$WHERE_OUT" \
+  "RETROLOOP_APP:    $SB/checkout  (an app checkout, and no Bun to run it)"
+expect_not_contains 'where does not call the variable unusable' "$WHERE_OUT" 'set but unusable'
+# The .ts reading of the same variable answers the same way.
+run_resolver RETROLOOP_APP="$SB/checkout/apps/cli/src/bin.ts"
+expect_resolver_miss
+expect_eq 'the miss says Bun is what is missing' "$RES_MISS" 'no-bun'
+end
+
+# ── A23 · the repo rung, with Bun and without ────────────────────────────────
+# The last rung: a caller that knows its own checkout passes it in (the finish
+# watch does). It runs a .ts file like the two rungs above it, so it has the
+# same two outcomes, and the no-Bun one has to be told apart there too.
+begin A23 "a caller's own repo checkout — resolved with Bun, a Bun miss without"
+new_sandbox
+fake_bun_on_path
+run_resolver RL02_REPO_ROOT="$SB/checkout"
+expect_resolution 'repo' "$SB/bin/bun $SB/checkout/apps/cli/src/bin.ts"
+
+new_sandbox
+run_resolver RL02_REPO_ROOT="$SB/checkout"
+expect_resolver_miss
+expect_eq 'the miss says Bun is what is missing' "$RES_MISS" 'no-bun'
+end
+
+# ── A24 · safe under `set -e`, called bare ───────────────────────────────────
+# The resolver's header promises it is safe under `set -e`. A rung that reads
+# an exit status by letting a command fail keeps that promise only as long as
+# every caller happens to call it inside an `if` — and then the walk stops at
+# the first unrunnable answer instead of going on to the next rung. Here the
+# variable names an app with no Bun and the older spelling names a whole
+# command, which needs no Bun at all: the second must still be the answer.
+begin A24 'sourced under `set -e` and called bare — an app with no Bun does not end the walk'
+new_sandbox
+run_resolver_strict RETROLOOP_APP="$SB/checkout" WATCH_REVIEW_CLI='own-cli --wait'
+expect_resolution 'env' 'own-cli --wait'
+# And an ordinary resolution is unchanged under the same strictness.
+new_sandbox
+fake_bun_on_path
+fake_root_checkout "$SB/home/.retroloop"
+run_resolver_strict
+expect_resolution 'default' "$SB/bin/bun $SB/home/.retroloop/apps/retroloop/apps/cli/src/bin.ts"
+end
+
 # ── A11 · the hook's shape, across every case above ──────────────────────────
 begin A11 'the hook always prints exactly one line and exits 0'
 if [ -n "$SHAPE_VIOLATIONS" ]; then
@@ -668,7 +756,7 @@ fi
 end
 
 # ── verdict ──────────────────────────────────────────────────────────────────
-total=21
+total=24
 n_failed=0
 for _ in $FAILED_IDS; do n_failed=$((n_failed + 1)); done
 n_passed=$((total - n_failed))
