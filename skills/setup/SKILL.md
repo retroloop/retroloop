@@ -11,7 +11,9 @@ You are setting up Retroloop for this user. Setup installs software, so **every
 install step asks for consent before running** — name the command, say what it
 does, then run it only on the user's yes. Walk the steps in order; at the end,
 report the checklist. If a step fails, tell the user exactly what failed and
-what to do — never improvise an alternative install path.
+what to do. Step 1 is the one step that works out a route for this machine and
+proposes it before anything runs; everywhere else, run the commands as they are
+written here and never invent an install path of your own.
 
 Everything Retroloop keeps lives under one root, `~/.retroloop`: the app in
 `apps/`, the user's plugins in `plugins/`, and later the database, the session
@@ -24,11 +26,14 @@ different plugin name), honor them wherever this file names a default.
 
 ## 1 · Check what this machine already has
 
-Setup needs four tools, and all four are needed by setup's own commands:
-**bun**, the runtime the Retroloop app runs on; **git**, which clones the app
-and the template and keeps the user's plugin history; **unzip**, which Bun's
-installer unpacks with; and **curl**, which Bun's installer downloads with.
-Check all four before touching anything:
+Setup needs four tools. Three of them its own commands run: **bun**, the
+runtime the Retroloop app runs on; **git**, which clones the app and the
+template and keeps the user's plugin history; and **curl**, which step 3 asks
+the review page with. The fourth, **unzip**, together with curl again, is what
+Bun's own installer needs — it downloads with curl and unpacks with unzip — so
+unzip only matters if Bun has to be installed. All four are checked up front so
+the answer to "what is missing" is complete in one pass, before a route is
+worked out. Check all four before touching anything:
 
 ```
 bun --version
@@ -61,8 +66,13 @@ wrong or forbidden on a work laptop. Establish, with short read-only commands:
 
 - **The operating system, and the package manager that is actually present** —
   `apt-get`, `dnf`, `apk` and `brew` are the likely ones. Check; never assume.
-- **Whether elevation is usable at all** — `id -u`, then `sudo -n true`. Never
-  run a command that can block on a password prompt.
+- **Whether elevation is usable at all** — start with what is passive: `id -u`,
+  the groups the user is in, whether the package manager's own directories are
+  writable. Leave `sudo -n true` until last, and only if those leave the answer
+  open: sudo's defaults mean an attempt by a user who is not permitted is
+  logged and mailed to the administrator, so on the managed machine this whole
+  section is written for, the probe is not a free look. Never run a command
+  that can block on a password prompt.
 - **Signs of a corporate or managed machine** — no administrator rights, a
   company proxy or an internal package mirror in the environment or in the
   package manager's configuration, device-management software.
@@ -103,19 +113,32 @@ That same block is what you print on a plain "no". The stop is clean because
 nothing was half-installed — setup is a checklist, so running it again picks up
 from what is actually on the machine rather than from anything remembered.
 
-### If you installed Bun in this run, call it by its full path
+### If you installed Bun in this run, call it by the path that install produced
 
-Installing Bun mid-run does not make the word `bun` work mid-run: Bun's
-installer only appends a line to a shell start-up file, and the shells the rest
-of this run uses never read it. So when you installed Bun yourself, call it for
-the remainder of setup by its full installed location,
-`${BUN_INSTALL:-$HOME/.bun}/bin/bun`, everywhere below this file writes `bun`.
+Installing Bun mid-run does not make the word `bun` work mid-run when Bun's own
+installer did it: that installer appends a line to a shell start-up file, and
+the shells the rest of this run uses never read it. A package manager usually
+does put Bun straight on the path, so which case you are in depends on the
+route you took.
 
-Once Bun answers, check that a script shell finds it too — `env -i bash -c
-'command -v bun'` is the non-interactive, nothing-inherited case — and if it
-does not, fix it in the way that fits this machine, the same way you chose the
-install route. Retroloop's hooks and watch scripts run in exactly that kind of
-shell.
+So after the install, ask the bare word first — `bun --version`. If it answers,
+nothing needs substituting and the rest of this file is fine as written. If it
+does not, call Bun for the remainder of setup by the full path the install
+actually produced, and get that path from whatever did the installing — the
+installer's own closing lines, the package manager's file list, or `brew
+--prefix bun` with `/bin/bun` on the end. For Bun's own installer that path is
+`${BUN_INSTALL:-$HOME/.bun}/bin/bun`. Use whichever path you established
+everywhere below this file writes `bun`.
+
+Once Bun answers, check that a script shell finds it too — `bash -c 'command -v
+bun'`, which is non-interactive and reads no start-up file, but inherits this
+session's environment. Retroloop's hooks and watch scripts run in exactly that
+kind of shell, so that is the case worth testing; a lookup under a wiped
+environment proves nothing, because nothing Retroloop runs works that way. If
+it prints a path, there is nothing to fix. If it prints nothing, fix it in the
+way that fits this machine, the same way you chose the install route — and
+that fix goes through the same consent as an install, because it is one more
+change to someone's machine.
 
 ## 2 · Install the Retroloop app
 
