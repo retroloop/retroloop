@@ -10,6 +10,15 @@
 # and both must name the SSH tunnel as the way in from another computer — in
 # both command forms, the plain one and the one for someone who already runs
 # Retroloop locally and so needs a different local port.
+#
+# A note for whoever edits these skills next. The ban on `--bind`, on `LAN` and
+# on a wildcard address is a ban on the skills *offering* any of them: the
+# checks below look for the bare string anywhere in the file, which is the only
+# guard that a reworded reintroduction cannot slip past. If a later change ever
+# wants a skill to quote the app's own refusal message back to the agent, write
+# the quotation so it does not carry these strings — or narrow the check here
+# in the same commit, deliberately, rather than loosening it to make a run go
+# green.
 
 set -uo pipefail
 
@@ -39,6 +48,7 @@ has 'setup states the server only ever listens on this machine' \
 lacks 'setup offers no bind flag' '--bind' "$SETUP_FLAT"
 lacks 'setup hands over no network link' 'lanUrl' "$SETUP_FLAT"
 lacks 'setup never mentions a local network address' '\bLAN\b' "$SETUP_FLAT"
+lacks 'setup offers no wildcard address' '0\.0\.0\.0' "$SETUP_FLAT"
 has 'setup gives the tunnel command, same port on both ends' \
   'ssh -N -L 24100:127\.0\.0\.1:24100 you@your-server' "$SETUP_FLAT"
 has 'setup says to open the forwarded page locally' \
@@ -54,12 +64,16 @@ has 'setup says the tunnel is run from the human'"'"'s own computer' \
 
 lacks 'review hands over no network link' 'lanUrl' "$REVIEW_FLAT"
 lacks 'review offers no bind flag' '--bind' "$REVIEW_FLAT"
+lacks 'review never mentions a local network address' '\bLAN\b' "$REVIEW_FLAT"
+lacks 'review offers no wildcard address' '0\.0\.0\.0' "$REVIEW_FLAT"
 has 'review says the link handed over is always the local one' \
   'always the local link' "$REVIEW_FLAT"
 has 'review states the server only ever listens on this machine' \
   'only ever listens on this machine' "$REVIEW_FLAT"
 has 'review names the tunnel for a remote machine' \
   'ssh -N -L 24100:127\.0\.0\.1:24100 you@your-server' "$REVIEW_FLAT"
+has 'review says to open the forwarded page locally' \
+  'http://localhost:24100' "$REVIEW_FLAT"
 
 printf '\n%d passed, %d failed\n' "$pass" "$fail"
 [ "$fail" -eq 0 ]
