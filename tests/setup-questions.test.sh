@@ -10,11 +10,18 @@
 # and is written in the file the way the panel shows it — the question
 # sentence, then its options, the recommended one first and marked
 # "(Recommended)", one line of description each. The panel adds a free-text
-# choice of its own, so the file never writes one. A question whose answer the
-# AI cannot honestly recommend says it is unsure instead of pretending.
+# choice of its own, so the file never writes one: an option called "something
+# else" is that free-text choice under a second name, and leaves the user two
+# ways to type one answer. Labels stay short, because the panel's label is a
+# narrow field and "(Recommended)" is exactly the part a truncation would eat.
+# A question the AI cannot honestly recommend an answer to says so in the
+# question itself instead of pretending.
+#
 # Setup used to pose most of its questions as plain prose, and only a few said
 # "through the question tool" — so the user saw a wall of sentences and no
-# panel.
+# panel. So the count below is exact rather than a floor, and no line outside a
+# panel block may end in a question mark: a question added later has to be
+# written as a panel, and counted here on purpose.
 #
 # Second: the remote-backup question is gone. It assumed GitHub, and it
 # assumed a remote was a one-time chance the user could lose by saying no. A
@@ -54,6 +61,10 @@ rule_has 'the recommended option comes first and is marked' \
   '\(Recommended\)'
 rule_has 'an unsure question says so instead of inventing a recommendation' \
   'genuinely unsure'
+rule_has 'the rule says only the real choices are written as options' \
+  'lists just the real choices'
+rule_has 'the rule says a label stays short, and why' \
+  'Keep the label short'
 
 # --- 2 · every question in the file is written the way the panel shows it
 
@@ -78,14 +89,29 @@ for n in $qlines; do
   nopts="$(printf '%s\n' "$opts" | grep -c '^> ' || true)"
   first="$(printf '%s\n' "$opts" | head -1)"
 
-  if [ "$nopts" -ge 2 ]; then
-    ok "the options are listed, at least two of them — $q"
+  if [ "$nopts" -ge 1 ]; then
+    ok "the real choices are listed as options — $q"
   else
-    ko "the options are listed, at least two of them — $q" "found $nopts option lines"
+    ko "the real choices are listed as options — $q" "found $nopts option lines"
+  fi
+
+  freetext="$(printf '%s\n' "$opts" | grep -iE '^> +- \*\*((some|any)(thing|where) else|other)\b' || true)"
+  if [ -z "$freetext" ]; then
+    ok "no option repeats the free-text choice the panel adds by itself — $q"
+  else
+    ko "no option repeats the free-text choice the panel adds by itself — $q" "$freetext"
+  fi
+
+  long="$(printf '%s\n' "$opts" | sed -n 's/^> *- \*\*\([^*]*\)\*\*.*/\1/p' | awk 'length > 32')"
+  if [ -z "$long" ]; then
+    ok "every option label is short enough for the panel to show it whole — $q"
+  else
+    ko "every option label is short enough for the panel to show it whole — $q" \
+      "over 32 characters: $long"
   fi
 
   if printf '%s' "$first" | grep -q '(Recommended)' ||
-    printf '%s' "$q" | grep -qi 'not sure\|unsure'; then
+    printf '%s' "$q" | grep -qiE 'not sure|unsure|nothing to recommend'; then
     ok "the recommended option is first and marked, or the question says it is unsure — $q"
   else
     ko "the recommended option is first and marked, or the question says it is unsure — $q" \
@@ -100,11 +126,11 @@ for n in $qlines; do
   fi
 done
 
-if [ "$qcount" -ge 8 ]; then
-  ok "every question setup asks is written as a panel ($qcount found)"
+if [ "$qcount" -eq 9 ]; then
+  ok "every question setup asks is written as a panel — nine of them ($qcount found)"
 else
-  ko "every question setup asks is written as a panel ($qcount found)" \
-    'fewer panel questions than the steps ask for'
+  ko "every question setup asks is written as a panel — nine of them ($qcount found)" \
+    'the count is exact: a question added or dropped is a deliberate edit to this line'
 fi
 
 # --- 3 · the questions themselves, by name
@@ -119,12 +145,42 @@ has 'the issue-tracking question' 'Where do you track issues\?'
 has 'the model question' 'Which model runs the manager and the tech leads\?'
 has 'the launch-rule question' 'launch rule'
 
-has 'the git identity question has nothing to recommend when the machine has no identity' \
-  'no recommended option'
+has 'the missing-tools question names what this machine actually lacks' \
+  '<the missing tools, named> are missing'
+lacks 'the missing-tools question hard-codes no set of tools to copy out' \
+  'Bun, unzip and curl are missing'
+
+has 'the no-identity branch is a panel question of its own, written out' \
+  'This machine has no git identity set'
+has 'and that question says outright that there is nothing to recommend' \
+  'nothing to recommend'
+
+n_model="$(grep -c 'claude --model' "$SKILL")"
+if [ "$n_model" -eq 1 ]; then
+  ok 'what `model:` accepts is said once, where the file is written'
+else
+  ko 'what `model:` accepts is said once, where the file is written' \
+    "said on $n_model lines"
+fi
 
 # --- 4 · nothing is asked as prose any more
 
 lacks 'the vague "question tool" phrasing is gone, everywhere' 'question tool'
+
+stray="$(grep -nE '\?\**$' "$SKILL" | grep -vE '^[0-9]+:> \*\*.*\?\*\*$' || true)"
+if [ -z "$stray" ]; then
+  ok 'no question is posed as prose — every line ending in a question mark is a panel question'
+else
+  ko 'no question is posed as prose — every line ending in a question mark is a panel question' \
+    "$stray"
+fi
+
+wide="$(awk '/^```/ { inc = !inc; next } inc { next } NR <= 6 { next } /^>/ { next } length > 88 { printf "line %d is %d characters\n", NR, length }' "$SKILL")"
+if [ -z "$wide" ]; then
+  ok 'the prose is wrapped to the width the rest of the file uses'
+else
+  ko 'the prose is wrapped to the width the rest of the file uses' "$wide"
+fi
 
 # --- 5 · the remote-backup question, and everything hanging off it, is gone
 
@@ -135,6 +191,13 @@ lacks 'the permanent-decline wording is gone' 'that is the answer for good'
 lacks 'the once-and-never-again offer is gone' 'once, and never again'
 lacks 'the push permission rule that hung on a remote is gone' 'plugin-push'
 lacks 'no rule is conditional on having taken a remote' 'took a remote'
+
+declines="$(grep -rniE 'already declined|offered once at setup|the (user|human) declined' "$REPO_ROOT/scripts" || true)"
+if [ -z "$declines" ]; then
+  ok 'no script says the user was ever asked about a remote, or declined one'
+else
+  ko 'no script says the user was ever asked about a remote, or declined one' "$declines"
+fi
 
 CHECKLIST="$(awk '/^## 7 · The checklist/,0' "$SKILL" | tr '\n' ' ')"
 if printf '%s' "$CHECKLIST" | grep -qiE 'remote|backup|push'; then
