@@ -7,7 +7,7 @@
 # A remote is the user's own choice; setup does not ask about one. So this
 # script has exactly two behaviors: with a remote it pushes and says so in one
 # line; without one it does nothing and says nothing. It NEVER asks for a
-# remote to be added — nagging for a backup the human already declined is the
+# remote to be added — nagging for a backup the user never asked for is the
 # friction this shape exists to avoid.
 #
 # It always exits 0. A failed push is not a failed release: the fix is already

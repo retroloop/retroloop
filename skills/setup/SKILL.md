@@ -11,9 +11,10 @@ You are setting up Retroloop for this user. Setup installs software, so **every
 install step asks for consent before running** — name the command, say what it
 does, ask through the question panel, then run it only on the user's yes. Walk
 the steps in order; at the end, report the checklist. If a step fails, tell the
-user exactly what failed and what to do. Step 1 is the one step that works out a route for this machine and
-proposes it before anything runs; everywhere else, run the commands as they are
-written here and never invent an install path of your own.
+user exactly what failed and what to do. Step 1 is the one step that works out
+a route for this machine and proposes it before anything runs; everywhere else,
+run the commands as they are written here and never invent an install path of
+your own.
 
 Everything Retroloop keeps lives under one root, `~/.retroloop`: the app in
 `apps/`, the user's plugins in `plugins/`, and later the database, the session
@@ -27,10 +28,14 @@ different plugin name), honor them wherever this file names a default.
 **Every question goes through the question panel.** Ask with the
 `AskUserQuestion` tool, never as prose in a message: the user sees the options
 laid out and picks one, and the panel adds a free-text choice of its own, so
-never write one into the options yourself. Every question carries a
-recommendation — the option you recommend comes first, and its label ends with
-`(Recommended)`. When you are genuinely unsure which option is right for this
-user, say so in the question and mark nothing; a recommendation you do not
+never write one into the options yourself: a question whose other answer is a
+value the user types lists just the real choices, and lets the panel carry the
+rest. Every question carries a recommendation — the option you recommend comes
+first, and its label ends with `(Recommended)`. Keep the label short, a few
+words and that marker, and put the explanation in the description line under
+it; the panel's label is a narrow field, and what runs past the end of it is
+not shown. When you are genuinely unsure which option is right for this user,
+say so in the question itself and mark nothing; a recommendation you do not
 believe is worse than none. Each question below is written the way the panel
 shows it: the question sentence, then its options, one line of description
 each.
@@ -61,15 +66,18 @@ If all four answer, say so and go on to step 2:
 
 > Everything is already present. Nothing to install.
 
-If something is missing, say what is missing and what each missing one is for,
-then ask one question through the question panel and nothing more:
+If something is missing, say what is missing and what each missing one is for.
+Name the tools this machine actually lacks — the question below is a shape, not
+a sentence to copy — and ask it through the question panel, and nothing more:
 
-> **Bun, unzip and curl are missing. Shall I look into how to install them on this machine?**
+> **<the missing tools, named> are missing. Shall I look into how to install them on this machine?**
 >
 > - **Look into it (Recommended)** — work out the way that fits this machine and show you the commands before anything runs.
 > - **Not now** — stop here and print the list of what is missing, for you to install yourself.
 
-Do not propose a command yet, and do not install anything yet.
+With only Bun missing that reads `Bun is missing. Shall I look into how to
+install it on this machine?`; the two option lines never change. Do not propose
+a command yet, and do not install anything yet.
 
 ### On a yes, understand the machine before proposing anything
 
@@ -258,19 +266,26 @@ cd ~/.retroloop/plugins/my && rm -rf .git && git init -b main
 
 Check the identity git would use: `cd ~/.retroloop/plugins/my && git config
 user.name; git config user.email`. If either prints nothing, git invents one
-from the account and the machine name. Ask through the question panel which
-name and email the plugin's own history should carry, and recommend whatever
+from the account and the machine name. Ask which name and email the plugin's
+own history should carry, through the question panel, and recommend whatever
 git already reports — it is the identity the user's other repositories carry:
 
 > **Which name and email should your plugin's history carry?**
 >
-> - **<the name and email git reports> (Recommended)** — the identity your other repositories already use.
-> - **Something else** — a different name and email, on this repository only.
+> - **Use this identity (Recommended)** — `<the name git reports>`, `<the email git reports>`: the identity your other repositories already use.
 
-If git reports neither, there is nothing to recommend: ask the same question
-with no recommended option, and say plainly that this machine has no git
-identity set, so the choice is theirs. Then set the answer for this repository
-only:
+That is the only option to write. Any other name and email is typed into the
+panel's own free-text choice.
+
+If git reports neither, there is nothing to recommend, and the question says so
+itself rather than dressing a guess up as advice. Ask this instead, through the
+same question panel:
+
+> **This machine has no git identity set, so I have nothing to recommend here. Which name and email should your plugin's history carry?**
+>
+> - **Let git invent one** — git builds a name and email from your account and this machine's name, and the plugin's history carries that.
+
+Either way, set the answer for this repository only:
 
 ```
 cd ~/.retroloop/plugins/my && git config user.name "<name>" && git config user.email "<email>"
@@ -317,10 +332,10 @@ the question panel:
 > **Where would you like to browse your plugin from?**
 >
 > - **`~/Developer/my` (Recommended)** — a folder you already open, one link away from the real thing.
-> - **Somewhere else** — name any folder you actually open, and the link goes there.
 > - **No shortcut** — nothing is linked; the plugin stays at `~/.retroloop/plugins/my`.
 
-Then link it there:
+Any other folder is typed into the panel's own free-text choice. Then link it
+there:
 
 ```
 ln -s ~/.retroloop/plugins/my <the path they chose>
@@ -340,7 +355,7 @@ edit it by hand or run setup again.
 > **Where do you track issues?**
 >
 > - **This tool only (Recommended)** — the retrospective is the record, and nothing leaves Retroloop.
-> - **Elsewhere (GitHub, Asana, anything)** — after every finished review the closing session runs your plugin's own `/my:file-issues` skill, which you adapt to your tracker, so the approved records land where you already work.
+> - **Elsewhere** — GitHub, Asana, anything: after every finished review the closing session runs your plugin's own `/my:file-issues` skill, which you adapt to your tracker, so the approved records land where you already work.
 
 **2 · The model.** Ask through the question panel:
 
@@ -349,9 +364,8 @@ edit it by hand or run setup again.
 > - **Fable (Recommended)** — the model of the standing manager session and of each worker team's tech lead.
 > - **Opus** — the heavier model on the manager and the leads as well.
 
-Their subagents run on **Opus** either way, unless the user says otherwise.
-`model:` takes anything `claude --model` accepts, so the panel's own free-text
-choice answers this question too.
+Their subagents run on **Opus** either way, unless the user says otherwise. Any
+other model is typed into the panel's own free-text choice.
 
 Write both answers into `~/.retroloop/plugins/my/retroloop.md`. The template
 ships that file with the defaults already in it: overwrite the values, and
