@@ -378,11 +378,28 @@ job, not the user's.
 
 ## 7 · The checklist — report it, honestly
 
+First, verify the short command the way every later session calls it:
+
+```
+retroloop --version
+```
+
+The plugin ships that command, so it is on the search path of every session
+Retroloop is installed in: nothing is installed for it, and there is no
+directory to change into first. A version string means every later session
+reaches Retroloop by that name alone. If it is not found here, say so plainly
+and carry on — this session began before the plugin version that ships it, and
+the restart at the end of this checklist is what brings it in.
+
 Walk these and report each with its evidence (the actual command output), then
 tell the user to restart their Claude Code session so the new plugin loads:
 
 - **CLI answers** — `retroloop --version` printed a version, from
   `~/.retroloop/apps/retroloop`.
+- **Short command works** — plain `retroloop --version` answered, with nothing
+  to change into first; it is the form every later session uses. If it did not
+  answer here, say it counts from the next session, which is the restart this
+  checklist already asks for.
 - **Server up** — `retroloop up --json` reported a URL.
 - **Review page loads** — the URL answered 200.
 - **Plugin created** — `~/.retroloop/plugins/my` is a git repo with one commit,

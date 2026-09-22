@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+#
+# `retroloop` — the command this plugin ships, so every session can reach the
+# app by its short name. Claude Code puts an installed plugin's bin directory
+# on the search path of every session it runs, at the plugin version that
+# session started with, so nothing is installed, copied or linked anywhere on
+# the user's machine for this to work — and a plugin update carries it forward.
+#
+# It decides nothing of its own. The shared resolver (scripts/resolve-cli.sh)
+# picks which app to run, this runs it with every argument it was handed, and
+# the app's exit code is the one the caller gets back.
+#
+# THE MARKER. `bin/.retroloop-bin` sits beside this file, and the resolver
+# looks for it: a `retroloop` found on the search path whose directory carries
+# that marker is this script, and the resolver looks past it. Without the
+# marker the resolver's first answer is this very command, which would then run
+# itself for ever — and the session-start line would tell a user who has never
+# run setup that their session is tracked.
+#
+# THE SECOND LINE OF DEFENCE. The marker is one dotfile, and dotfiles get lost:
+# a packaging step that copies `bin/*`, a half-finished install, someone
+# copying the command out as the line above warns against. So this script never
+# trusts the marker alone — before it runs anything it checks whether the
+# answer it got back is this same file, and refuses in one line if it is. A
+# command that runs itself never returns and never prints, which for an agent
+# is a shell call that hangs the whole session; a refusal is always better.
+#
+# It is never copied out of the plugin folder: that folder's name carries the
+# plugin version, and a copy would be stranded by the next update while this
+# one follows it.
+
+set -uo pipefail
+
+_rl_dir="${BASH_SOURCE[0]%/*}"
+[ "$_rl_dir" = "${BASH_SOURCE[0]}" ] && _rl_dir='.'
+_rl_resolver="$_rl_dir/../scripts/resolve-cli.sh"
+
+if [ ! -f "$_rl_resolver" ]; then
+  printf 'Retroloop: this plugin is incomplete — no resolver at %s. Reinstall the plugin.\n' "$_rl_resolver" >&2
+  exit 127
+fi
+
+# shellcheck source=../scripts/resolve-cli.sh
+. "$_rl_resolver"
+
+if ! retroloop_resolve_cli; then
+  printf "Retroloop's app is not installed on this machine — run /retroloop:setup\n" >&2
+  exit 127
+fi
+
+# Is the answer this very file? `-ef` compares what is on disk, not the
+# spelling, so a bare name resolved through the search path, a different route
+# to the same place, and a symlink pointing here all answer yes.
+_rl_target="${RETROLOOP_CLI[0]}"
+case "$_rl_target" in
+  */*) ;;
+  *) _rl_target="$(command -v -- "$_rl_target" 2>/dev/null || printf '%s' "$_rl_target")" ;;
+esac
+if [ -n "$_rl_target" ] && [ "$_rl_target" -ef "${BASH_SOURCE[0]}" ]; then
+  printf 'Retroloop: the shipped command resolved to itself — the plugin install is incomplete; reinstall the plugin\n' >&2
+  exit 127
+fi
+
+exec "${RETROLOOP_CLI[@]}" "$@"
