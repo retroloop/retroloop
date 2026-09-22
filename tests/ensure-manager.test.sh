@@ -43,8 +43,8 @@ SETUP_LINE='setup has not run; no manager'
 
 # The launch line and the resume line, spelled out here so a change to either
 # has to be made twice, on purpose, in two files.
-LAUNCH_ARGV='--bg|--name|retroloop-manager|--agent|retroloop:manager|--permission-mode|auto|--model|fable|--settings|{"crossSessionInbound":"accept"}|start the resolve lane'
-LAUNCH_ARGV_OPUS='--bg|--name|retroloop-manager|--agent|retroloop:manager|--permission-mode|auto|--model|opus|--settings|{"crossSessionInbound":"accept"}|start the resolve lane'
+LAUNCH_ARGV='--bg|--name|retroloop-manager|--agent|retroloop:manager|--permission-mode|auto|--model|opus|--settings|{"crossSessionInbound":"accept"}|start the resolve lane'
+LAUNCH_ARGV_FABLE='--bg|--name|retroloop-manager|--agent|retroloop:manager|--permission-mode|auto|--model|fable|--settings|{"crossSessionInbound":"accept"}|start the resolve lane'
 # A resume carries NO options besides the id and --bg: a background session
 # restores its own saved options on an in-place resume, and any option passed
 # starts a copy under a new id instead.
@@ -52,7 +52,7 @@ RESUME_ARGV='--resume|old-1111-2222-3333|--bg|resume the resolve lane'
 
 # The same two lines when the caller names the retrospective it just finished:
 # the prompt grows one clause and nothing else moves.
-LAUNCH_ARGV_FINISHED='--bg|--name|retroloop-manager|--agent|retroloop:manager|--permission-mode|auto|--model|fable|--settings|{"crossSessionInbound":"accept"}|start the resolve lane; retrospective 18 just finished and is yours'
+LAUNCH_ARGV_FINISHED='--bg|--name|retroloop-manager|--agent|retroloop:manager|--permission-mode|auto|--model|opus|--settings|{"crossSessionInbound":"accept"}|start the resolve lane; retrospective 18 just finished and is yours'
 RESUME_ARGV_FINISHED='--resume|old-1111-2222-3333|--bg|resume the resolve lane; retrospective 18 just finished and is yours'
 
 MINTED='new-aaaa-bbbb-cccc'
@@ -406,16 +406,16 @@ expect_no_lock
 end
 
 # ── C5 · the model comes from the plugin's note ──────────────────────────────
-begin C5 'model: opus in retroloop.md — the launch runs --model opus'
+begin C5 'model: fable in retroloop.md — the launch runs --model fable'
 new_sandbox
 make_plugin
 cat >"$SB/root/plugins/my/retroloop.md" <<'NOTE'
-model: opus
+model: fable
 subagent model: opus
 tracking: this tool only
 NOTE
 run_ensure
-expect_eq 'launch argv' "$(launch_line)" "$LAUNCH_ARGV_OPUS"
+expect_eq 'launch argv' "$(launch_line)" "$LAUNCH_ARGV_FABLE"
 expect_eq 'exit' "$RC" '0'
 end
 
