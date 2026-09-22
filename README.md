@@ -18,6 +18,8 @@ In each AI session, you focus on your goal. The AI keeps running notes on everyt
 
 Setup installs the review app locally and creates your personalization plugin from the [template](https://github.com/retroloop/personalization-template). From that moment the plugin is yours — local by default, connected to GitHub only if you want it to be.
 
+**Running it on a remote machine?** The review page only ever listens on the machine it runs on, so you reach it by forwarding the port over your own SSH connection. On your own computer run `ssh -N -L 24100:127.0.0.1:24100 you@your-server`, then open `http://localhost:24100`. If Retroloop is already running on your own computer, forward to a free local port instead — `ssh -N -L 24101:127.0.0.1:24100 you@your-server`, then `http://localhost:24101`.
+
 ## Skills
 
 | Skill | Who invokes it | What it does |

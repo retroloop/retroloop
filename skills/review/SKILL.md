@@ -469,11 +469,12 @@ retroloop up --json
 
 `started` says whether **this call** started the server: `false` means it was
 already running, which is just as good. Either way the `url` is live, and it is
-the one to hand the human. (If `up` returns a `lanUrl`, the human bound the
-server to the network themselves with `--bind`; `url` is then that network
-address too, because a server bound to one interface answers only there — hand
-them `url`, and leave `lanUrl`, the link for their other device, alone unless
-they ask.)
+the one to hand the human. **It is always the local link**: the review server
+only ever listens on this machine, and there is no other address it can report.
+When the human is working on a remote machine over SSH, that same link is what
+they open — on their own computer they forward the port over their SSH
+connection, `ssh -N -L 24100:127.0.0.1:24100 you@your-server`, and then open
+`http://localhost:24100`.
 
 **Read the session back — including the human's side of it.** This is the one
 moment you are allowed to see the human's notes and their annotations on yours:
