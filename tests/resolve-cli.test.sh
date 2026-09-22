@@ -10,9 +10,19 @@
 #
 # Every case runs in its own sandbox: a temp HOME, a temp PATH holding only a
 # directory the case controls plus /usr/bin:/bin, and RETROLOOP_HOME,
-# RETRO_HOME, RETROLOOP_APP and WATCH_REVIEW_CLI unset unless the case sets
-# them (the child is started under `env -i`, so nothing leaks in from here).
-# `bun` is never needed: the resolver decides a command, it never runs one.
+# RETRO_HOME, RETROLOOP_APP, WATCH_REVIEW_CLI, RETROLOOP_BUN and BUN_INSTALL
+# unset unless the case sets them (the child is started under `env -i`, so
+# nothing leaks in from here).
+#
+# BUN IS PART OF THE ANSWER NOW, so the sandbox has to own every place Bun can
+# be found, and the last of those places is a list of fixed system folders that
+# no temp directory can hide. Every probe therefore passes
+# RETROLOOP_BUN_DIRS — the resolver's own name for that list — pointed at a
+# folder inside the sandbox, so a Bun installed on the machine running this
+# suite can never answer for one of the cases. The fixed list the product
+# actually ships is asserted separately, by reading it out of the script (A20).
+# Bun is still never RUN: a candidate is tested for being runnable and nothing
+# more.
 #
 # The app lives in one fixed place under one root: the root is
 # `$RETROLOOP_HOME`, else `~/.retroloop`, and the app is `<root>/apps/retroloop`.
@@ -45,6 +55,9 @@ PLUGIN_BIN="$REPO_ROOT/bin"
 # tests/session-dir.test.sh.
 TRACKED='This session is tracked by Retroloop: keep friction notes (skill: notes); /retroloop:review when the session winds down.'
 NOT_SET_UP='Retroloop is installed but not set up — run /retroloop:setup'
+# Setup already succeeded for this person; what is missing is Bun, and the line
+# says so rather than sending them back to setup.
+BUN_MISSING='Retroloop is set up, but Bun is missing — install Bun, or set RETROLOOP_BUN to the bun program'
 
 BASE_PATH='/usr/bin:/bin'
 
@@ -58,13 +71,17 @@ PATH_PREFIX=''
 # The bin directory `run_shipped` puts first on PATH. Normally the plugin's own;
 # a case that needs a damaged plugin tree points it at its own copy.
 SHIPPED_BIN=''
+# The sandbox's stand-in for the fixed folders the Bun lookup walks last — the
+# Homebrew and system folders. Empty unless a case puts a Bun in it.
+BUN_DIRS=''
 
 new_sandbox() {
   SB="$(mktemp -d "${TMPDIR:-/tmp}/rl02-XXXXXX")"
   SANDBOXES="$SANDBOXES $SB"
-  mkdir -p "$SB/home" "$SB/bin"
+  mkdir -p "$SB/home" "$SB/bin" "$SB/sys/bin"
   PATH_PREFIX=''
   SHIPPED_BIN="$PLUGIN_BIN"
+  BUN_DIRS="$SB/sys/bin"
   fake_checkout "$SB/checkout"
 }
 
@@ -89,17 +106,23 @@ shipped_on_path() { PATH_PREFIX="$PLUGIN_BIN:"; }
 
 # A bun that runs nothing: it prints the command line it was handed and records
 # one line per call, so a case can count how many times the app was reached.
-fake_bun_on_path() {
+# Put anywhere a case wants one — on PATH, in the home-folder install place, in
+# the folder BUN_INSTALL names, in the sandbox's stand-in for the fixed folders.
+fake_bun_at() { # <path to the bun program>
+  mkdir -p "${1%/*}"
   {
     printf '#!/bin/sh\n'
     printf 'printf "call\\n" >>"%s"\n' "$SB/calls"
     printf 'printf "bun"\n'
     printf 'for a in "$@"; do printf " [%%s]" "$a"; done\n'
     printf 'printf "\\n"\n'
-  } >"$SB/bin/bun"
-  chmod +x "$SB/bin/bun"
+  } >"$1"
+  chmod +x "$1"
   : >"$SB/calls"
 }
+
+# The one the shell's own lookup finds: a bun on the sandbox's PATH.
+fake_bun_on_path() { fake_bun_at "$SB/bin/bun"; }
 
 # An app in the executable reading of RETROLOOP_APP: it prints each argument it
 # was given, one per line, and exits with the code the case asks for.
@@ -180,7 +203,7 @@ HOOK_RC=0
 HOOK_LINES=0
 
 run_hook() { # [VAR=VALUE ...]
-  HOOK_OUT="$(env -i HOME="$SB/home" PATH="$PATH_PREFIX$SB/bin:$BASE_PATH" "$@" bash "$HOOK" 2>/dev/null </dev/null)"
+  HOOK_OUT="$(env -i HOME="$SB/home" PATH="$PATH_PREFIX$SB/bin:$BASE_PATH" RETROLOOP_BUN_DIRS="$BUN_DIRS" "$@" bash "$HOOK" 2>/dev/null </dev/null)"
   HOOK_RC=$?
   if [ -z "$HOOK_OUT" ]; then
     HOOK_LINES=0
@@ -202,24 +225,33 @@ expect_hook() { # <expected line>
 RES_RC=0
 RES_SOURCE=''
 RES_CLI=''
+# Why a miss was a miss: `none` (no app anywhere) or `no-bun` (an app, and no
+# Bun to run it with). The messages a human reads are chosen off this.
+RES_MISS=''
 
 run_resolver() { # [VAR=VALUE ...]
   local out
-  out="$(env -i HOME="$SB/home" PATH="$PATH_PREFIX$SB/bin:$BASE_PATH" "$@" bash -c '
+  out="$(env -i HOME="$SB/home" PATH="$PATH_PREFIX$SB/bin:$BASE_PATH" RETROLOOP_BUN_DIRS="$BUN_DIRS" "$@" bash -c '
     set -uo pipefail
     [ -f "$1" ] || exit 3
     . "$1"
-    retroloop_resolve_cli || exit 1
-    printf "%s\n" "$RETROLOOP_CLI_SOURCE"
-    printf "%s\n" ${RETROLOOP_CLI[@]+"${RETROLOOP_CLI[@]}"}
+    if retroloop_resolve_cli; then
+      printf "%s\n" "$RETROLOOP_CLI_SOURCE"
+      printf "%s\n" ${RETROLOOP_CLI[@]+"${RETROLOOP_CLI[@]}"}
+      exit 0
+    fi
+    printf "miss:%s\n" "${RETROLOOP_CLI_MISS:-}"
+    exit 1
   ' rl02-probe "$RESOLVER" 2>/dev/null)"
   RES_RC=$?
+  RES_SOURCE=''
+  RES_CLI=''
+  RES_MISS=''
   if [ "$RES_RC" -eq 0 ]; then
     RES_SOURCE="$(printf '%s\n' "$out" | sed -n '1p')"
     RES_CLI="$(printf '%s\n' "$out" | sed -n '2,$p' | tr '\n' ' ' | sed 's/[[:space:]]*$//')"
-  else
-    RES_SOURCE=''
-    RES_CLI=''
+  elif [ "$RES_RC" -eq 1 ]; then
+    RES_MISS="$(printf '%s\n' "$out" | sed -n 's/^miss://p')"
   fi
 }
 
@@ -245,7 +277,7 @@ WHERE_OUT=''
 run_where() { # [VAR=VALUE ...]
   # cwd is the sandbox, so the resolver's repo step (git rev-parse) finds
   # nothing and cannot mask the step under test.
-  WHERE_OUT="$(cd "$SB" && env -i HOME="$SB/home" PATH="$PATH_PREFIX$SB/bin:$BASE_PATH" "$@" bash "$WATCH" where 2>&1 </dev/null)"
+  WHERE_OUT="$(cd "$SB" && env -i HOME="$SB/home" PATH="$PATH_PREFIX$SB/bin:$BASE_PATH" RETROLOOP_BUN_DIRS="$BUN_DIRS" "$@" bash "$WATCH" where 2>&1 </dev/null)"
 }
 
 SHIPPED_OUT=''
@@ -271,6 +303,7 @@ run_shipped() {
 
   : >"$SB/shipped.out"
   env -i HOME="$SB/home" PATH="${SHIPPED_BIN:-$PLUGIN_BIN}:$SB/bin:$BASE_PATH" \
+    RETROLOOP_BUN_DIRS="$BUN_DIRS" \
     ${envs[@]+"${envs[@]}"} retroloop ${args[@]+"${args[@]}"} \
     >"$SB/shipped.out" 2>&1 </dev/null &
   local pid=$! waited=0 alive=1
@@ -332,19 +365,21 @@ end
 # ── A3 · env, directory form ─────────────────────────────────────────────────
 begin A3 'RETROLOOP_APP is an app checkout directory'
 new_sandbox
+fake_bun_on_path
 run_hook RETROLOOP_APP="$SB/checkout"
 expect_hook "$TRACKED"
 run_resolver RETROLOOP_APP="$SB/checkout"
-expect_resolution 'env' "bun $SB/checkout/apps/cli/src/bin.ts"
+expect_resolution 'env' "$SB/bin/bun $SB/checkout/apps/cli/src/bin.ts"
 end
 
 # ── A4 · env, file form ──────────────────────────────────────────────────────
 begin A4 'RETROLOOP_APP is a .ts CLI entry'
 new_sandbox
+fake_bun_on_path
 run_hook RETROLOOP_APP="$SB/checkout/apps/cli/src/bin.ts"
 expect_hook "$TRACKED"
 run_resolver RETROLOOP_APP="$SB/checkout/apps/cli/src/bin.ts"
-expect_resolution 'env' "bun $SB/checkout/apps/cli/src/bin.ts"
+expect_resolution 'env' "$SB/bin/bun $SB/checkout/apps/cli/src/bin.ts"
 end
 
 # ── A5 · env unusable falls through ──────────────────────────────────────────
@@ -376,21 +411,23 @@ end
 # ── A7 · the fixed place under the default root ──────────────────────────────
 begin A7 'the app at ~/.retroloop/apps/retroloop, no variable set'
 new_sandbox
+fake_bun_on_path
 fake_root_checkout "$SB/home/.retroloop"
 run_hook
 expect_hook "$TRACKED"
 run_resolver
-expect_resolution 'default' "bun $SB/home/.retroloop/apps/retroloop/apps/cli/src/bin.ts"
+expect_resolution 'default' "$SB/bin/bun $SB/home/.retroloop/apps/retroloop/apps/cli/src/bin.ts"
 end
 
 # ── A8 · the root moves with RETROLOOP_HOME ──────────────────────────────────
 begin A8 'RETROLOOP_HOME names the root; the app is <root>/apps/retroloop'
 new_sandbox
+fake_bun_on_path
 fake_root_checkout "$SB/rlhome"
 run_hook RETROLOOP_HOME="$SB/rlhome"
 expect_hook "$TRACKED"
 run_resolver RETROLOOP_HOME="$SB/rlhome"
-expect_resolution 'default' "bun $SB/rlhome/apps/retroloop/apps/cli/src/bin.ts"
+expect_resolution 'default' "$SB/bin/bun $SB/rlhome/apps/retroloop/apps/cli/src/bin.ts"
 # The default root is not consulted once RETROLOOP_HOME is set.
 new_sandbox
 fake_root_checkout "$SB/home/.retroloop"
@@ -408,10 +445,11 @@ run_resolver RETRO_HOME="$SB/rthome"
 expect_resolver_miss
 # And it cannot outvote the default root either.
 new_sandbox
+fake_bun_on_path
 fake_root_checkout "$SB/home/.retroloop"
 fake_root_checkout "$SB/rthome"
 run_resolver RETRO_HOME="$SB/rthome"
-expect_resolution 'default' "bun $SB/home/.retroloop/apps/retroloop/apps/cli/src/bin.ts"
+expect_resolution 'default' "$SB/bin/bun $SB/home/.retroloop/apps/retroloop/apps/cli/src/bin.ts"
 end
 
 # ── A10 · first hit wins ─────────────────────────────────────────────────────
@@ -428,9 +466,10 @@ run_resolver
 expect_resolution 'path' "$SB/bin/retroloop"
 
 new_sandbox
+fake_bun_on_path
 fake_root_checkout "$SB/home/.retroloop"
 run_resolver RETROLOOP_APP="$SB/checkout"
-expect_resolution 'env' "bun $SB/checkout/apps/cli/src/bin.ts"
+expect_resolution 'env' "$SB/bin/bun $SB/checkout/apps/cli/src/bin.ts"
 end
 
 # ── A12 · the shipped command never resolves to itself ───────────────────────
@@ -443,7 +482,7 @@ shipped_on_path
 fake_bun_on_path
 fake_root_checkout "$SB/home/.retroloop"
 run_resolver
-expect_resolution 'default' "bun $SB/home/.retroloop/apps/retroloop/apps/cli/src/bin.ts"
+expect_resolution 'default' "$SB/bin/bun $SB/home/.retroloop/apps/retroloop/apps/cli/src/bin.ts"
 run_hook
 expect_hook "$TRACKED"
 run_shipped -- --version
@@ -459,6 +498,7 @@ new_sandbox
 shipped_on_path
 run_resolver
 expect_resolver_miss
+expect_eq 'the miss says no app was found at all' "$RES_MISS" 'none'
 run_hook
 expect_hook "$NOT_SET_UP"
 run_shipped -- --version
@@ -524,6 +564,101 @@ expect_contains 'the message says what to do about it' "$SHIPPED_OUT" 'reinstall
 expect_eq 'one line, nothing more' "$(printf '%s\n' "$SHIPPED_OUT" | wc -l | tr -d ' ')" '1'
 end
 
+# ── A17 · Bun where its own installer puts it, and nowhere else ──────────────
+# The bug this suite grew for: Bun's installer writes `~/.bun/bin` into the
+# start-up file Debian and Ubuntu stop reading for a script, so a script shell
+# asking for `bun` gets nothing while the program sits there in plain sight.
+# The lookup goes and reads it, and the answer is the full path.
+begin A17 'Bun only in the home-folder install place — the answer carries its full path'
+new_sandbox
+fake_root_checkout "$SB/home/.retroloop"
+fake_bun_at "$SB/home/.bun/bin/bun"
+run_resolver
+expect_resolution 'default' "$SB/home/.bun/bin/bun $SB/home/.retroloop/apps/retroloop/apps/cli/src/bin.ts"
+run_hook
+expect_hook "$TRACKED"
+end
+
+# ── A18 · BUN_INSTALL outranks the home-folder place ─────────────────────────
+# Bun's installer sets BUN_INSTALL when it is told to install somewhere else,
+# so that variable is a statement about where Bun actually is and beats the
+# default guess.
+begin A18 'BUN_INSTALL names the install folder and wins over ~/.bun'
+new_sandbox
+fake_root_checkout "$SB/home/.retroloop"
+fake_bun_at "$SB/home/.bun/bin/bun"
+fake_bun_at "$SB/elsewhere/bin/bun"
+run_resolver BUN_INSTALL="$SB/elsewhere"
+expect_resolution 'default' "$SB/elsewhere/bin/bun $SB/home/.retroloop/apps/retroloop/apps/cli/src/bin.ts"
+end
+
+# ── A19 · RETROLOOP_BUN outranks everything ──────────────────────────────────
+# The escape hatch, for a Bun in a place no list can know. It is a statement
+# about this shell, so it beats the shell's own lookup and every folder; and an
+# unusable one falls through rather than killing the session start.
+begin A19 'RETROLOOP_BUN names Bun outright and wins; an unusable one falls through'
+new_sandbox
+fake_root_checkout "$SB/home/.retroloop"
+fake_bun_on_path
+fake_bun_at "$SB/home/.bun/bin/bun"
+fake_bun_at "$SB/own/bun"
+run_resolver RETROLOOP_BUN="$SB/own/bun"
+expect_resolution 'default' "$SB/own/bun $SB/home/.retroloop/apps/retroloop/apps/cli/src/bin.ts"
+run_resolver RETROLOOP_BUN="$SB/no/such/bun"
+expect_resolution 'default' "$SB/bin/bun $SB/home/.retroloop/apps/retroloop/apps/cli/src/bin.ts"
+run_hook RETROLOOP_BUN="$SB/no/such/bun"
+expect_hook "$TRACKED"
+end
+
+# ── A20 · the shell's answer, then the fixed folders ─────────────────────────
+# Asking the shell is the cheap rung and it answers with a full path. The last
+# rung is the fixed folders — Homebrew's on a Mac and on Linux, and the system
+# ones — which no sandbox can move, so the mechanism is proved against the
+# sandbox's stand-in and the shipped list is read out of the script itself.
+begin A20 "the shell's own answer is a full path; the fixed folders are the last resort"
+new_sandbox
+fake_root_checkout "$SB/home/.retroloop"
+fake_bun_on_path
+run_resolver
+expect_resolution 'default' "$SB/bin/bun $SB/home/.retroloop/apps/retroloop/apps/cli/src/bin.ts"
+
+new_sandbox
+fake_root_checkout "$SB/home/.retroloop"
+fake_bun_at "$SB/sys/bin/bun"
+run_resolver
+expect_resolution 'default' "$SB/sys/bin/bun $SB/home/.retroloop/apps/retroloop/apps/cli/src/bin.ts"
+
+shipped_dirs="$(sed -n 's/^RETROLOOP_BUN_DIRS_DEFAULT=.\(.*\).$/\1/p' "$RESOLVER")"
+for d in /opt/homebrew/bin /usr/local/bin /home/linuxbrew/.linuxbrew/bin /usr/bin; do
+  case ":$shipped_dirs:" in
+    *":$d:"*) ;;
+    *) miss "the shipped folder list does not include $d: [$shipped_dirs]" ;;
+  esac
+done
+end
+
+# ── A21 · no Bun anywhere ────────────────────────────────────────────────────
+# The app is installed and setup succeeded; Bun is what is missing. Handing
+# back the bare word would move the failure somewhere else and blame Retroloop
+# for it, so the resolver stops, says which of the two is missing, and every
+# message a human reads names Bun instead of sending them back to setup.
+begin A21 'no Bun anywhere — a miss of its own, and every message names Bun'
+new_sandbox
+fake_root_checkout "$SB/home/.retroloop"
+run_resolver
+expect_resolver_miss
+expect_eq 'the miss says Bun is what is missing' "$RES_MISS" 'no-bun'
+run_hook
+expect_hook "$BUN_MISSING"
+run_where
+expect_contains 'where names Bun' "$WHERE_OUT" 'Bun is missing'
+expect_not_contains 'where does not send them back to setup' "$WHERE_OUT" '/retroloop:setup'
+run_shipped -- --version
+expect_eq 'the shipped command stops rather than running a word' "$SHIPPED_RC" '127'
+expect_contains 'the shipped command names Bun' "$SHIPPED_OUT" 'Bun is missing'
+expect_contains 'and names the escape hatch' "$SHIPPED_OUT" 'RETROLOOP_BUN'
+end
+
 # ── A11 · the hook's shape, across every case above ──────────────────────────
 begin A11 'the hook always prints exactly one line and exits 0'
 if [ -n "$SHAPE_VIOLATIONS" ]; then
@@ -533,7 +668,7 @@ fi
 end
 
 # ── verdict ──────────────────────────────────────────────────────────────────
-total=16
+total=21
 n_failed=0
 for _ in $FAILED_IDS; do n_failed=$((n_failed + 1)); done
 n_passed=$((total - n_failed))

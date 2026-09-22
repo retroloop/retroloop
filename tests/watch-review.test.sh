@@ -44,11 +44,17 @@ PRINT_TAIL_TIMED='review wait --follow --retro 3 --timeout 30 --json'
 SB=''
 SB_PATH=''
 SANDBOXES=''
+BUN_DIRS=''
 
 new_sandbox() {
   SB="$(mktemp -d "${TMPDIR:-/tmp}/rl52w-XXXXXX")"
   SANDBOXES="$SANDBOXES $SB"
-  mkdir -p "$SB/home" "$SB/bin" "$SB/nowhere"
+  mkdir -p "$SB/home" "$SB/bin" "$SB/nowhere" "$SB/sys/bin"
+  # The resolver looks for Bun in fixed system folders too, and no temp
+  # directory can hide those, so every run points that list at an empty folder
+  # inside the sandbox: a Bun on the machine running this suite answers for
+  # nothing here.
+  BUN_DIRS="$SB/sys/bin"
   : >"$SB/retroloop.calls"
   cat >"$SB/event.json" <<'JSON'
 {"kind":"ReviewFinished","retroId":3,"revision":1,"at":"2026-09-13T10:00:00.000Z","via":"stream"}
@@ -137,7 +143,7 @@ RC=0
 
 run_watch() { # <arg>...
   local errf="$SB/stderr.txt"
-  OUT="$(env -i HOME="$SB/home" PATH="$SB_PATH" bash "$WATCH" "$@" 2>"$errf" </dev/null)"
+  OUT="$(env -i HOME="$SB/home" PATH="$SB_PATH" RETROLOOP_BUN_DIRS="$BUN_DIRS" bash "$WATCH" "$@" 2>"$errf" </dev/null)"
   RC=$?
   ERR="$(cat "$errf" 2>/dev/null)"
 }
@@ -236,6 +242,22 @@ expect_eq 'the dry run still exits 0' "$RC" '0'
 expect_contains 'the dry run still prints the argv' "$OUT" "$PRINT_TAIL"
 end
 
+begin W9 'the app is installed but Bun is missing — the refusal names Bun, not setup'
+new_sandbox
+SB_PATH="$SB/nowhere:$BASE_PATH"
+mkdir -p "$SB/home/.retroloop/apps/retroloop/apps/cli/src"
+: >"$SB/home/.retroloop/apps/retroloop/apps/cli/src/bin.ts"
+run_watch 3
+expect_eq 'exit' "$RC" '2'
+expect_eq 'stdout' "$OUT" ''
+expect_contains 'stderr' "$ERR" 'watch-review: refusing —'
+expect_contains 'the refusal names Bun' "$ERR" 'Bun is missing'
+expect_contains 'and names the escape hatch' "$ERR" 'RETROLOOP_BUN'
+expect_lacks 'it does not send them back to setup' "$ERR" '/retroloop:setup'
+run_watch where
+expect_contains 'where names Bun too' "$OUT" 'Bun is missing'
+end
+
 begin W8 'a bad retro id is refused before anything is armed'
 new_sandbox
 run_watch not-a-number
@@ -245,7 +267,7 @@ expect_eq 'nothing armed' "$(wc -l <"$SB/retroloop.calls" | tr -d ' ')" '0'
 end
 
 # ── verdict ──────────────────────────────────────────────────────────────────
-total=8
+total=9
 n_failed=0
 for _ in $FAILED_IDS; do n_failed=$((n_failed + 1)); done
 n_passed=$((total - n_failed))
