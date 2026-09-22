@@ -27,9 +27,9 @@
 #   run_shipped    runs the command the plugin ships in bin/, found by name on
 #                  a PATH that carries the plugin's own bin directory — which
 #                  is what Claude Code does for every installed plugin. Every
-#                  such run is capped with `ulimit -t`, because the failure it
-#                  guards against is the command resolving to itself and
-#                  exec'ing forever.
+#                  such run is watched by a clock, because the failure it guards
+#                  against is the command resolving to itself and exec'ing
+#                  forever.
 
 set -uo pipefail
 
@@ -55,12 +55,16 @@ SANDBOXES=''
 # directory on it; empty everywhere else, so no case sees the shipped command
 # unless it asked for it.
 PATH_PREFIX=''
+# The bin directory `run_shipped` puts first on PATH. Normally the plugin's own;
+# a case that needs a damaged plugin tree points it at its own copy.
+SHIPPED_BIN=''
 
 new_sandbox() {
   SB="$(mktemp -d "${TMPDIR:-/tmp}/rl02-XXXXXX")"
   SANDBOXES="$SANDBOXES $SB"
   mkdir -p "$SB/home" "$SB/bin"
   PATH_PREFIX=''
+  SHIPPED_BIN="$PLUGIN_BIN"
   fake_checkout "$SB/checkout"
 }
 
@@ -266,7 +270,7 @@ run_shipped() {
   done
 
   : >"$SB/shipped.out"
-  env -i HOME="$SB/home" PATH="$PLUGIN_BIN:$SB/bin:$BASE_PATH" \
+  env -i HOME="$SB/home" PATH="${SHIPPED_BIN:-$PLUGIN_BIN}:$SB/bin:$BASE_PATH" \
     ${envs[@]+"${envs[@]}"} retroloop ${args[@]+"${args[@]}"} \
     >"$SB/shipped.out" 2>&1 </dev/null &
   local pid=$! waited=0 alive=1
@@ -301,6 +305,8 @@ preflight() {
   fi
   [ -f "$HOOK" ] || { printf 'ABORT: no hook at %s\n' "$HOOK" >&2; exit 2; }
   [ -f "$WATCH" ] || { printf 'ABORT: no watch script at %s\n' "$WATCH" >&2; exit 2; }
+  [ -x "$PLUGIN_BIN/retroloop" ] || { printf 'ABORT: no shipped command at %s\n' "$PLUGIN_BIN/retroloop" >&2; exit 2; }
+  [ -f "$PLUGIN_BIN/.retroloop-bin" ] || { printf 'ABORT: no marker beside the shipped command\n' >&2; exit 2; }
 }
 preflight
 
@@ -479,6 +485,45 @@ run_shipped RETROLOOP_APP="$SB/fake-cli" RL_FAKE_EXIT=4 -- review close
 expect_eq "the app's exit code comes back" "$SHIPPED_RC" '4'
 end
 
+# ── A15 · a user's own retroloop further along PATH still outranks everything ─
+# The shipped command sits first on PATH in every session, so asking the shell
+# for one answer ("which retroloop?") always returns the shipped one — and a
+# guard that only refuses that answer throws the whole rung away, along with a
+# user's own `retroloop` a couple of entries later. The rung must be walked.
+begin A15 "a user's own retroloop further along PATH is still the answer"
+new_sandbox
+shipped_on_path
+fake_retroloop_on_path
+fake_root_checkout "$SB/home/.retroloop"
+run_resolver
+expect_resolution 'path' "$SB/bin/retroloop"
+run_hook
+expect_hook "$TRACKED"
+run_shipped -- --version
+expect_eq 'shipped exit' "$SHIPPED_RC" '0'
+expect_contains "the shipped command ran the user's own binary" "$SHIPPED_OUT" '0.0.0-fake'
+end
+
+# ── A16 · the marker is missing: refuse, never run forever ───────────────────
+# The marker is one dotfile beside the command. A packaging step that drops
+# dotfiles (`cp bin/* …`), a half-finished install, someone copying the command
+# out — any of those leaves a command whose resolver answers with the command
+# itself. Exec'ing that is a process that never ends and never prints: for an
+# agent, a shell call that hangs the session. The command must notice and stop.
+begin A16 'no marker beside the shipped command — one line, a clean exit, no loop'
+new_sandbox
+mkdir -p "$SB/plugin/bin" "$SB/plugin/scripts"
+cp "$PLUGIN_BIN/retroloop" "$SB/plugin/bin/retroloop"
+cp "$RESOLVER" "$SB/plugin/scripts/resolve-cli.sh"
+chmod +x "$SB/plugin/bin/retroloop"
+SHIPPED_BIN="$SB/plugin/bin"
+run_shipped -- --version
+expect_eq 'it returned rather than being killed' "$SHIPPED_RC" '127'
+expect_contains 'the message says the command resolved to itself' "$SHIPPED_OUT" 'resolved to itself'
+expect_contains 'the message says what to do about it' "$SHIPPED_OUT" 'reinstall the plugin'
+expect_eq 'one line, nothing more' "$(printf '%s\n' "$SHIPPED_OUT" | wc -l | tr -d ' ')" '1'
+end
+
 # ── A11 · the hook's shape, across every case above ──────────────────────────
 begin A11 'the hook always prints exactly one line and exits 0'
 if [ -n "$SHAPE_VIOLATIONS" ]; then
@@ -488,7 +533,7 @@ fi
 end
 
 # ── verdict ──────────────────────────────────────────────────────────────────
-total=14
+total=16
 n_failed=0
 for _ in $FAILED_IDS; do n_failed=$((n_failed + 1)); done
 n_passed=$((total - n_failed))

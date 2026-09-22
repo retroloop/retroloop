@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 #
 # Acceptance suite — the sentences the shipped `retroloop` command changes in
-# the skills (`skills/review/SKILL.md`, `skills/setup/SKILL.md`).
+# the skills (`skills/review/SKILL.md`, `skills/setup/SKILL.md`) and in the
+# manager persona (`agents/manager.md`).
 #
 #   bash tests/skill-text.test.sh
 #
@@ -16,6 +17,7 @@ set -uo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 REVIEW="$REPO_ROOT/skills/review/SKILL.md"
 SETUP="$REPO_ROOT/skills/setup/SKILL.md"
+MANAGER="$REPO_ROOT/agents/manager.md"
 
 pass=0
 fail=0
@@ -24,9 +26,11 @@ ko() { fail=$((fail + 1)); printf 'FAIL %s\n  %s\n' "$1" "$2"; }
 
 [ -f "$REVIEW" ] || { printf 'FAIL no review skill at %s\n' "$REVIEW"; exit 1; }
 [ -f "$SETUP" ] || { printf 'FAIL no setup skill at %s\n' "$SETUP"; exit 1; }
+[ -f "$MANAGER" ] || { printf 'FAIL no manager persona at %s\n' "$MANAGER"; exit 1; }
 
 FLAT_REVIEW="$(tr '\n' ' ' <"$REVIEW" | sed 's/[[:space:]][[:space:]]*/ /g')"
 FLAT_SETUP="$(tr '\n' ' ' <"$SETUP" | sed 's/[[:space:]][[:space:]]*/ /g')"
+FLAT_MANAGER="$(tr '\n' ' ' <"$MANAGER" | sed 's/[[:space:]][[:space:]]*/ /g')"
 
 has() { # <name> <haystack> <regex>
   if printf '%s' "$2" | grep -qE -- "$3"; then ok "$1"; else ko "$1" "no match for: $3"; fi
@@ -59,6 +63,24 @@ has 'working inside the app checkout is still a way in' \
 has 'the missing-bun branch still says the true thing' \
   "$FLAT_REVIEW" '.bun. is not installed, and the CLI only runs under bun'
 
+# ── the review skill: the shipped command runs the INSTALLED app ─────────────
+# A behaviour change worth saying out loud. Before, an agent standing in the
+# app's own checkout with no `retroloop` on PATH ran that checkout's CLI. The
+# shipped command is now always on PATH and always runs the installed release,
+# so an agent working on the app's own code has to ask for the checkout on
+# purpose. Right for filing real retrospectives, surprising for whoever is
+# editing the app — so the skill has to say it.
+has 'the skill says the shipped command runs the installed app' \
+  "$FLAT_REVIEW" 'shipped command always runs the installed app'
+has 'it says how to reach the checkout you are standing in on purpose' \
+  "$FLAT_REVIEW" 'on the app.s own code'
+
+# ── the review skill: the exit-code sentence counts its own cases ────────────
+lacks 'the exit-code sentence no longer says "neither" of three things' \
+  "$FLAT_REVIEW" 'Neither is a condition to improvise around'
+has 'it covers all three of them' \
+  "$FLAT_REVIEW" 'None of those is a condition to improvise around'
+
 # ── the setup skill: it verifies the short command and reports it ────────────
 has 'setup verifies the short command the way later sessions call it' \
   "$FLAT_SETUP" 'verify the short command the way every later session calls it'
@@ -66,8 +88,17 @@ has 'the checklist reports the short command' \
   "$FLAT_SETUP" 'Short command works'
 has 'the checklist says it counts from the next session' \
   "$FLAT_SETUP" 'from the next session'
-has 'one permission rule covers every Retroloop call' \
-  "$FLAT_SETUP" 'Bash\(retroloop:\*\)'
+
+# ── the manager persona: no long form, no stale cross-reference ──────────────
+# The manager is the actor that copied the long form into every worker's prompt
+# in the session this change came from, and it points at § 0 of the review
+# skill — which no longer describes "worlds" and no longer offers a long form.
+lacks 'the manager no longer carries the long form' \
+  "$FLAT_MANAGER" 'cd ~/.retroloop/apps/retroloop && bun run'
+lacks 'the manager no longer asks which world it is in' \
+  "$FLAT_MANAGER" 'which world you are in'
+has 'the manager runs the command the plugin ships' \
+  "$FLAT_MANAGER" 'the plugin ships the command'
 
 printf '\n%d passed, %d failed\n' "$pass" "$fail"
 [ "$fail" -eq 0 ]
